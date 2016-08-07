@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Chess board</string>
+
+    <!-- список существующих цветовых схем для доски. Первая в списке - схема по умолчанию-->
+    <string-array name="color_schemes">
+        <item>cadet_grey</item>
+        <item>light_grey</item>
+        <item>grey</item>
+        <item>gradient_grey</item>
+        <item>light_blue</item>
+        <item>blue</item>
+        <item>gradient_blue</item>
+        <item>brown</item>
+        <item>green</item>
+    </string-array>
+
+    <!--список существующих наборов фигур в формате prefix=name, где prefix - префикс для имени ресурсов соответствующего набора, name - отображаемое имя-->
+    <string-array name="piecesets">
+        <item>classic=Classic</item>
+        <item>alpha=Alpha</item>
+        <item>uscf=USCF</item>
+        <item>wiki=Wiki</item>
+    </string-array>
+</resources>

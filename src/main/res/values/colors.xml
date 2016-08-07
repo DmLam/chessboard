@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="chessnotationview_text">#ff5446ff</color>
+    <color name="chessnotationview_lastmove">#ffffbc45</color>
+    <color name="chessnotationview_comment">#ffa0a0a0</color>
+
+    <string name="cadet_grey_name">Cadet grey</string>
+    <color name="cadet_grey_border">#ff363a3d</color>
+    <color name="cadet_grey_coordinates">#ffcccccc</color>
+    <color name="cadet_grey_white_square_start">#fffdfdfd</color>
+    <color name="cadet_grey_white_square_finish">#fffdfdfd</color>
+    <color name="cadet_grey_black_square_start">#ff7795a3</color>
+    <color name="cadet_grey_black_square_finish">#ff9aabaf</color>
+    <color name="cadet_grey_current_move_source_square">#ff444444</color>  <!-- DKGRAY -->
+    <color name="cadet_grey_current_move_target_square">#ff888888</color>  <!-- GRAY -->
+    <color name="cadet_grey_last_move_source_square">#ff9f9fff</color>
+    <color name="cadet_grey_last_move_target_square">#ff557fff</color>
+
+    <string name="blue_name">Blue</string>
+    <color name="blue_border">#ff363a3d</color>
+    <color name="blue_coordinates">#ffcccccc</color>
+    <color name="blue_white_square_start">#ffeae9d2</color>
+    <color name="blue_white_square_finish">#ffeae9d2</color>
+    <color name="blue_black_square_start">#ff4b7399</color>
+    <color name="blue_black_square_finish">#ff4b7399</color>
+    <color name="blue_current_move_source_square">#ffaaee88</color>
+    <color name="blue_current_move_target_square">#ffaaee88</color>
+    <color name="blue_last_move_source_square">#ff9f9fff</color>
+    <color name="blue_last_move_target_square">#ff557fff</color>
+
+    <string name="gradient_blue_name">Gradient blue</string>
+    <color name="gradient_blue_border">#ff363a3d</color>
+    <color name="gradient_blue_coordinates">#ffcccccc</color>
+    <color name="gradient_blue_white_square_start">#ffdfdfdf</color>
+    <color name="gradient_blue_white_square_finish">#ffdfdfdf</color>
+    <color name="gradient_blue_black_square_start">#ff8199cd</color>
+    <color name="gradient_blue_black_square_finish">#ff637cb2</color>
+    <color name="gradient_blue_current_move_source_square">#ffaaee88</color>
+    <color name="gradient_blue_current_move_target_square">#ffaaee88</color>
+    <color name="gradient_blue_last_move_source_square">#ff9f9fff</color>
+    <color name="gradient_blue_last_move_target_square">#ff557fff</color>
+
+    <string name="light_blue_name">Light blue</string>
+    <color name="light_blue_border">#6faede</color>
+    <color name="light_blue_coordinates">#ffcccccc</color>
+    <color name="light_blue_white_square_start">#ffefefef</color>
+    <color name="light_blue_white_square_finish">#ffefefef</color>
+    <color name="light_blue_black_square_start">#ffc2d7e2</color>
+    <color name="light_blue_black_square_finish">#ffc2d7e2</color>
+    <color name="light_blue_current_move_source_square">#ffaaee88</color>
+    <color name="light_blue_current_move_target_square">#ffaaee88</color>
+    <color name="light_blue_last_move_source_square">#ff9f9fff</color>
+    <color name="light_blue_last_move_target_square">#ff557fff</color>
+
+    <string name="brown_name">Brown</string>
+    <color name="brown_border">#ff9c6c3c</color>
+    <color name="brown_coordinates">#ffcccccc</color>
+    <color name="brown_white_square_start">#ffd9c4a3</color>
+    <color name="brown_white_square_finish">#ffd9c4a3</color>
+    <color name="brown_black_square_start">#ffa37b59</color>
+    <color name="brown_black_square_finish">#ffa37b59</color>
+    <color name="brown_current_move_source_square">#ffaaee88</color>
+    <color name="brown_current_move_target_square">#ffaaee88</color>
+    <color name="brown_last_move_source_square">#ff9f9fff</color>
+    <color name="brown_last_move_target_square">#ff557fff</color>
+
+    <string name="light_grey_name">Light grey</string>
+    <color name="light_grey_border">#ff777777</color>
+    <color name="light_grey_coordinates">#ffcccccc</color>
+    <color name="light_grey_white_square_start">#ffcdcdcd</color>
+    <color name="light_grey_white_square_finish">#ffcdcdcd</color>
+    <color name="light_grey_black_square_start">#ffaaaaaa</color>
+    <color name="light_grey_black_square_finish">#ffaaaaaa</color>
+    <color name="light_grey_current_move_source_square">#ffaaee88</color>
+    <color name="light_grey_current_move_target_square">#ffaaee88</color>
+    <color name="light_grey_last_move_source_square">#ff9f9fff</color>
+    <color name="light_grey_last_move_target_square">#ff557fff</color>
+
+    <string name="grey_name">Grey</string>
+    <color name="grey_border">#ff555555</color>
+    <color name="grey_coordinates">#ffcccccc</color>
+    <color name="grey_white_square_start">#ff8d8d8d</color>
+    <color name="grey_white_square_finish">#ff8d8d8d</color>
+    <color name="grey_black_square_start">#ff666666</color>
+    <color name="grey_black_square_finish">#ff666666</color>
+    <color name="grey_current_move_source_square">#ffaaee88</color>
+    <color name="grey_current_move_target_square">#ffaaee88</color>
+    <color name="grey_last_move_source_square">#ff9f9fff</color>
+    <color name="grey_last_move_target_square">#ff557fff</color>
+
+    <string name="gradient_grey_name">Gradient grey</string>
+    <color name="gradient_grey_border">#ff111111</color>
+    <color name="gradient_grey_coordinates">#ffcccccc</color>
+    <color name="gradient_grey_white_square_start">#fffdfdfd</color>
+    <color name="gradient_grey_white_square_finish">#fffdfdfd</color>
+    <color name="gradient_grey_black_square_start">#ffcbcbcb</color>
+    <color name="gradient_grey_black_square_finish">#ff777777</color>
+    <color name="gradient_grey_current_move_source_square">#ffaaee88</color>
+    <color name="gradient_grey_current_move_target_square">#ffaaee88</color>
+    <color name="gradient_grey_last_move_source_square">#ff9f9fff</color>
+    <color name="gradient_grey_last_move_target_square">#ff557fff</color>
+
+    <string name="green_name">Green</string>
+    <color name="green_border">#366b3a</color>
+    <color name="green_coordinates">#ffcccccc</color>
+    <color name="green_white_square_start">#ffeeeed2</color>
+    <color name="green_white_square_finish">#ffeeeed2</color>
+    <color name="green_black_square_start">#ff769656</color>
+    <color name="green_black_square_finish">#ff769656</color>
+    <color name="green_current_move_source_square">#ffaaee88</color>
+    <color name="green_current_move_target_square">#ffaaee88</color>
+    <color name="green_last_move_source_square">#ff9f9fff</color>
+    <color name="green_last_move_target_square">#ff557fff</color>
+
+</resources>

@@ -1,0 +1,16 @@
+bin
+gen
+
+*.iml
+*.apk
+
+.idea
+.gradle
+
+uciengine/src/main/libs/
+uciengine/src/main/obj/
+*.a
+*.o
+*.o.d
+
+build
