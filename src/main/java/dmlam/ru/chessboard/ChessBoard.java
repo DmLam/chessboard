@@ -64,8 +64,8 @@ public class ChessBoard {
                                  // необходим для применения правила 50 ходов
     private int lastMoveIndex = -1;       // индекс последнего хода в вариантах последнего хода (lastMoveVariants)
     private Piece lastMovedPiece = null; // последняя сходившая фигура. Используется для сохранения хода в записи партии после окончания хода
-    private Move.MoveList lastMoveVariants = null;  // список вариантов последнего хода (если был rollback, если нет, то в в lastMoveVariants[0] последний ход)
-    private Move.MoveList firstMoveVariants = null; // варианты первого хода. Если lastMoveVariants == null, то смотрим firstMoveVariants
+    private MoveList lastMoveVariants = null;  // список вариантов последнего хода (если был rollback, если нет, то в в lastMoveVariants[0] последний ход)
+    private MoveList firstMoveVariants = null; // варианты первого хода. Если lastMoveVariants == null, то смотрим firstMoveVariants
     private int moveIdGenerator = 0; // id последнего хода. используется для генерации уникальных id-ов
 
     private boolean currentPlayerChecked;     // игрок, чья очередь хода находится под шахом
@@ -382,7 +382,7 @@ public class ChessBoard {
         if (move != null) {
             beginUpdate();
             try {
-                Move.MoveList saveFirstMoveVariants = firstMoveVariants;
+                MoveList saveFirstMoveVariants = firstMoveVariants;
                 Move prevMove = move.getPrevMove();
 
                 restoreBoardState(move);
@@ -434,7 +434,7 @@ public class ChessBoard {
         }
     }
 
-    public Move.MoveList getLastMoveVariants() {
+    public MoveList getLastMoveVariants() {
         return lastMoveVariants;
     }
 
@@ -442,7 +442,7 @@ public class ChessBoard {
         return lastMoveVariants.get(variantNumber);
     }
 
-    public Move.MoveList getFirstMoveVariants() {
+    public MoveList getFirstMoveVariants() {
         return firstMoveVariants;
     }
 
@@ -468,7 +468,7 @@ public class ChessBoard {
             Move lastMove = getLastMove();
             /* получение variants разбито на два этапа и две переменные для отладки - чтобы понять, где возникало nullPointer */
             Move prevMove = move.getPrevMove();
-            Move.MoveList variants = prevMove.getVariants();
+            MoveList variants = prevMove.getVariants();
 
             if (move != lastMove) {
                 if (variants.size() > 1 || variants.get(0).getVariantCount() == 0) {
@@ -1117,7 +1117,7 @@ public class ChessBoard {
         return gameDrawn;
     }
 
-    public void setMoveList(Move.MoveList moves) {
+    public void setMoveList(MoveList moves) {
         if (firstMoveVariants != moves) {
             firstMoveVariants = moves;
             lastMoveVariants = null;
@@ -1171,7 +1171,7 @@ public class ChessBoard {
                 lastMoveVariants = firstMoveVariants;
             }
             else {
-                lastMoveVariants = new Move.MoveList();
+                lastMoveVariants = new MoveList();
                 firstMoveVariants = lastMoveVariants;
             }
         }
