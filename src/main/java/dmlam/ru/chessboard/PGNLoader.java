@@ -29,10 +29,15 @@ public class PGNLoader {
             if (in.read(c) == 1 && c[0] == '[') {
                 String line = in.readLine().trim();
 
-                if (line != null && line.charAt(line.length()) == ']') {
+                if (line != null && line.charAt(line.length() - 1) == ']') {
                     int spacePos = line.indexOf(' ');
                     if (spacePos >= 0) {
+                        String name = line.substring(0, spacePos);
+                        String value = line.substring(spacePos + 2, line.length() - 2);  // deleting also quotation
 
+                        if (game.tagByName(name) == null) {
+                            game.addTag(name, value);
+                        }
                     }
                     else {
                         throw new WrongPGN();
@@ -92,8 +97,8 @@ public class PGNLoader {
                 try {
 
                     while (readGame(in)) ;
-                } catch (WrongPGN E) {
-
+                }
+                catch (WrongPGN E) {
                 }
             }
             finally {

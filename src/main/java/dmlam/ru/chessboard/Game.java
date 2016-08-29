@@ -21,16 +21,25 @@ public class Game {
     private MoveList moves = new MoveList();
 
     public void addTag(String name, String value) {
+        if (name == null) {
+            throw new RuntimeException("Tag name can't be empty");
+        }
         if (tagByName(name) != null) {
             throw new RuntimeException(String.format("Tag %s already exists", name));
         }
-        tags.add(new Tag(name, value));
+
+        tags.add(new Tag(name.toUpperCase(), value));
     }
 
     public String tagByName(String name) {
-        for (Tag tag: tags) {
-            if (tag.name.equals(name)) {
-                return tag.value;
+
+        if (name != null) {
+            name = name.toUpperCase();
+
+            for (Tag tag : tags) {
+                if (tag.name.equals(name)) {
+                    return tag.value;
+                }
             }
         }
 
