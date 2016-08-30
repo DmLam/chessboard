@@ -27,7 +27,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     private String textColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_text));
     private String lastMoveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_lastmove));
     private String commentColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_comment));
-    private ArrayList<String> branches = new ArrayList<String>();
+//    private ArrayList<String> branches = new ArrayList<String>();
     private Move lastMove;
     private int fontSize = 0;
 
@@ -195,10 +195,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     .append("&nbsp;&hellip;");
         }
         do {
-            if (mainLine) {
-                branches.clear();
-            }
-
             if (wasBranch) {
                 if (move != null) {
                     result.append(move.getMoveNumber())
@@ -224,6 +220,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             wasBranch = false;
             if (!FirstPass || mainLine) {
                 if (prevMove != null && prevMove.getVariantCount() > 1) {
+                    ArrayList<String> branches = new ArrayList<String>();
+
                     for (int i = 1; i < prevMove.getVariantCount(); i++) {
                         if (prevMove.getVariants(i) != null) {
                             String variant = branchNotation(prevMove.getVariants(i), false).
@@ -237,9 +235,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                         result.append("<span class=\"").append("secbranch").append("\">")
                                 .append(branches.get(i))
                                 .append("</span>");
+
                     }
 
-                    result.append("<br>");
+//                    result.append("<br>");
 
                     wasBranch = true;
                 }

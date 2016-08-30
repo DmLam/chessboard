@@ -1033,7 +1033,7 @@ public class ChessBoard {
             endUpdate();
         }
 
-        doOnBoardChange();
+//        doOnBoardChange();  // будет сделано в endUpdate()
     }
 
     private void doOnBoardChange() {
