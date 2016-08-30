@@ -5,6 +5,7 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.util.ArrayList;
 
 /**
@@ -15,21 +16,39 @@ import java.util.ArrayList;
 public class PGNLoader {
     private static final String LOGTAG = PGNLoader.class.getName();
 
-    private class WrongPGN extends Exception{};
+    private int lineNum = 0;
+
+    private class WrongPGN extends Exception{
+        public WrongPGN(String message) {
+            super(message);
+        }
+    };
     private ArrayList<Game> games = new ArrayList<Game>();
 
-    private boolean readTag(BufferedReader in, Game game) throws WrongPGN {
+    private String readLine(BufferedReader in) throws IOException {
+        String line;
+
+        line = in.readLine();
+        if (line != null) {
+            line = line.trim();
+            lineNum++;
+        }
+
+        return line;
+    }
+
+    private boolean readTag(BufferedReader in, Game game) throws WrongPGN, IOException {
         boolean result = false;
 
-        try {
-            char[] c = new char[1];
-            int count = 0;
+        char[] c = new char[1];
+        int count = 0;
 
-            in.mark(1);
-            if (in.read(c) == 1 && c[0] == '[') {
-                String line = in.readLine().trim();
+        in.mark(1);
+        if (in.read(c) == 1 && c[0] == '[') {
+            String line = readLine(in);
 
-                if (line != null && line.charAt(line.length() - 1) == ']') {
+            if (line != null) {
+                if (line.charAt(line.length() - 1) == ']') {
                     int spacePos = line.indexOf(' ');
                     if (spacePos >= 0) {
                         String name = line.substring(0, spacePos);
@@ -40,27 +59,25 @@ public class PGNLoader {
                         }
                     }
                     else {
-                        throw new WrongPGN();
+                        throw new WrongPGN("Wrong PGN format (no space after tag name)");
                     }
-
                 }
                 else {
-                    throw new WrongPGN();
+                    throw new WrongPGN("Unexpected end of line");
                 }
             }
             else {
-                in.reset();
+                throw new WrongPGN("Unexpected end of file: no moves section");
             }
-
         }
-        catch (IOException E) {
-            Log.e(LOGTAG, String.format(LOGTAG + " Error marking position: %s", E.toString()));
+        else {
+            in.reset();
         }
 
         return result;
     }
 
-    private boolean readTags(BufferedReader in, Game game) throws WrongPGN  {
+    private boolean readTags(BufferedReader in, Game game) throws WrongPGN, IOException  {
         boolean result = false;
 
         while (readTag(in, game)) {
@@ -70,13 +87,23 @@ public class PGNLoader {
         return result;
     }
 
-    private boolean readMoves(BufferedReader in, Game game) {
+    private boolean readMoves(BufferedReader in, Game game) throws IOException {
         boolean result = false;
+
+        String moves = null;
+        String line;
+
+        line = readLine(in);
+        while (line != null) {
+            if (!line.isEmpty()) {
+            }
+            line = readLine(in);
+        }
 
         return result;
     }
 
-    private boolean readGame(BufferedReader in) throws WrongPGN  {
+    private boolean readGame(BufferedReader in) throws WrongPGN, IOException  {
         boolean result = false;
         Game game = new Game();
 
@@ -89,24 +116,32 @@ public class PGNLoader {
     }
 
     public PGNLoader(String fileName) {
+        FileReader fr = null;
 
         try {
-            BufferedReader in = new BufferedReader(new FileReader(fileName));
+            fr = new FileReader(fileName);
+        }
+        catch(IOException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + " PGN file not found (%s)", fileName));
+        }
 
+
+        BufferedReader in = new BufferedReader(fr);
+
+        try {
             try {
                 try {
 
                     while (readGame(in)) ;
+                } catch (WrongPGN E) {
+                    Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (line %d):\n%s", fileName, lineNum, E.getMessage()));
                 }
-                catch (WrongPGN E) {
-                }
-            }
-            finally {
+            } finally {
                 in.close();
             }
         }
-        catch(IOException E) {
-            Log.e(LOGTAG, String.format(LOGTAG + " PGN file not found (%s)", fileName));
+        catch (IOException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + " Error reading file %s:\n%s", fileName, E.toString()));
         }
     }
 

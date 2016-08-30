@@ -8,6 +8,8 @@ import java.util.ArrayList;
 public class Game {
     private static final String LOGTAG = Game.class.getName();
 
+    public enum GameResult {WHITE, DRAW, BLACK, UNKNOWN};
+
     private class Tag {
         protected String name, value;
 
@@ -19,6 +21,7 @@ public class Game {
 
     private ArrayList<Tag> tags = new ArrayList<Tag>();
     private MoveList moves = new MoveList();
+    private GameResult gameResult = null;
 
     public void addTag(String name, String value) {
         if (name == null) {
@@ -46,5 +49,11 @@ public class Game {
         return null;
     }
 
+    public GameResult getGameResult() {
+        return gameResult;
+    }
 
+    public void setGameResult (GameResult gameResult) {
+        this.gameResult = gameResult;
+    }
 }
