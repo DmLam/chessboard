@@ -90,12 +90,37 @@ public class PGNLoader {
     private boolean readMoves(BufferedReader in, Game game) throws IOException {
         boolean result = false;
 
-        String moves = null;
+        String moves = "";
         String line;
+        boolean lastMoveLine = false;
 
         line = readLine(in);
-        while (line != null) {
+        while (line != null && !lastMoveLine) {
             if (!line.isEmpty()) {
+                line = line.trim();
+
+                if (line.endsWith("1-0")) {
+                    line = line.substring(0, line.length() - 4);
+                    lastMoveLine = true;
+                    game.setGameResult(Game.GameResult.WHITE);
+                }
+                if (line.endsWith("0-1")) {
+                    line = line.substring(0, line.length() - 4);
+                    lastMoveLine = true;
+                    game.setGameResult(Game.GameResult.BLACK);
+                }
+                if (line.endsWith("1/2-1/2")) {
+                    line = line.substring(0, line.length() - 8);
+                    lastMoveLine = true;
+                    game.setGameResult(Game.GameResult.DRAW);
+                }
+                if (line.endsWith("*")) {
+                    line = line.substring(0, line.length() - 2);
+                    lastMoveLine = true;
+                    game.setGameResult(Game.GameResult.WHITE);
+                }
+
+                moves = moves + line;
             }
             line = readLine(in);
         }
