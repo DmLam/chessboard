@@ -5,7 +5,6 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.util.ArrayList;
 
 /**
@@ -56,6 +55,7 @@ public class PGNLoader {
 
                         if (game.tagByName(name) == null) {
                             game.addTag(name, value);
+                            result = true;
                         }
                     }
                     else {
@@ -84,6 +84,16 @@ public class PGNLoader {
             result = true;
         }
 
+        if (game.tagByName("FEN") == null) {
+            throw new WrongPGN("No FEN tag");
+        }
+
+        return result;
+    }
+
+    private boolean parseMoves(String moves) {
+        boolean result = true;
+
         return result;
     }
 
@@ -94,36 +104,21 @@ public class PGNLoader {
         String line;
         boolean lastMoveLine = false;
 
+        line = readLine(in);  // skip empty line between tags and moves
+
         line = readLine(in);
-        while (line != null && !lastMoveLine) {
-            if (!line.isEmpty()) {
-                line = line.trim();
+        while (line != null && !line.isEmpty()) {
+            line = line.trim();
 
-                if (line.endsWith("1-0")) {
-                    line = line.substring(0, line.length() - 4);
-                    lastMoveLine = true;
-                    game.setGameResult(Game.GameResult.WHITE);
-                }
-                if (line.endsWith("0-1")) {
-                    line = line.substring(0, line.length() - 4);
-                    lastMoveLine = true;
-                    game.setGameResult(Game.GameResult.BLACK);
-                }
-                if (line.endsWith("1/2-1/2")) {
-                    line = line.substring(0, line.length() - 8);
-                    lastMoveLine = true;
-                    game.setGameResult(Game.GameResult.DRAW);
-                }
-                if (line.endsWith("*")) {
-                    line = line.substring(0, line.length() - 2);
-                    lastMoveLine = true;
-                    game.setGameResult(Game.GameResult.WHITE);
-                }
-
-                moves = moves + line;
+            if (!moves.isEmpty()) {
+                moves = moves + ' ';
             }
+            moves = moves + line;
+
             line = readLine(in);
         }
+
+        result = parseMoves(moves);
 
         return result;
     }
