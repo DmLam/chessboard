@@ -56,4 +56,5 @@ public class Game {
     public void setGameResult (GameResult gameResult) {
         this.gameResult = gameResult;
     }
+
 }

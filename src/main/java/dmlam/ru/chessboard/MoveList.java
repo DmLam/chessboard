@@ -9,9 +9,9 @@ import static java.lang.Math.min;
  * Created by LamdanDY on 29.08.2016.
  */
 public class MoveList extends ArrayList<Move> {
-    public MoveList() {
-        super();
-    }
+    private static final String LOGTAG = MoveList.class.getName();
+
+    private String comment = null; // comment on the variant. May be placed before the first move of the variant
 
     public Move locateMove(int id) {
         for (int i = 0; i < size(); i++) {
@@ -108,5 +108,13 @@ public class MoveList extends ArrayList<Move> {
             line.getVariants(i).prevVariants = this;
         }
         add(line);
+    }
+
+    public void setComment(String cooment) {
+        this.comment = comment;
+    }
+
+    public String getComment() {
+        return comment;
     }
 }
