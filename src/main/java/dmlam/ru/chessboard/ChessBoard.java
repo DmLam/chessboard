@@ -62,17 +62,19 @@ public class ChessBoard {
     private int moveNumber = 1;
     private int halfmoveQnt = 0; // счетчик количества последних незначащих полуходов (не ходов пешкой и ходов, не являющихся взятием фигуры)
                                  // необходим для применения правила 50 ходов
+
+    Game game = new Game();
     private int lastMoveIndex = -1;       // индекс последнего хода в вариантах последнего хода (lastMoveVariants)
     private Piece lastMovedPiece = null; // последняя сходившая фигура. Используется для сохранения хода в записи партии после окончания хода
     private MoveList lastMoveVariants = null;  // список вариантов последнего хода (если был rollback, если нет, то в в lastMoveVariants[0] последний ход)
-    private MoveList firstMoveVariants = null; // варианты первого хода. Если lastMoveVariants == null, то смотрим firstMoveVariants
     private int moveIdGenerator = 0; // id последнего хода. используется для генерации уникальных id-ов
+
 
     private boolean currentPlayerChecked;     // игрок, чья очередь хода находится под шахом
     private boolean currentPlayerMated;       // игрок, чья очередь хода получил мат
     private boolean currentPlayerStalemated;  // игрок, чья очередь хода находится в патовой ситуации
     private boolean gameDrawn;                // игра завершилась вничью
-    private char transformation = ' ';        // какая фигура появится при превращении пешки если ход делается методом pgnmove
+    private char transformation = ' ';        // какая фигура появится при превращении пешки если ход делается методом fromtomove
 
     public interface OnNeedPieceForTransformation {
         void onNeedPieceForTransformation(Point sourceSquare);
@@ -198,7 +200,7 @@ public class ChessBoard {
                 if (y == lastLine) {
                     // ура, мы прошли!
                     promotedPawn = new Point(x, y);
-                    // если ход делался из PGN методом pgnmove, то фигура превращения может быть указана в transformation
+                    // если ход делался методом fromtomove, то фигура превращения может быть указана в transformation
                     if (transformation != ' ') {
                         switch (Character.toUpperCase(transformation)) {
                             case 'N':
@@ -271,17 +273,17 @@ public class ChessBoard {
     }
 
     // ход в записи вроде "d2d4" или "с7с8q"
-    public boolean pgnmove(String pgnMove) {
+    public boolean fromtomove(String fromtoMove) {
         boolean result = false;
 
-        if (pgnMove.length() == 5) {
-            transformation = pgnMove.charAt(4);
+        if (fromtoMove.length() == 5) {
+            transformation = fromtoMove.charAt(4);
         }
-        if (pgnMove.length() == 4 || pgnMove.length() == 5) {
-            Piece piece = getPiece(getPointFromSquareName(pgnMove.substring(0, 2)));
+        if (fromtoMove.length() == 4 || fromtoMove.length() == 5) {
+            Piece piece = getPiece(getPointFromSquareName(fromtoMove.substring(0, 2)));
 
             if (piece != null) {
-                result = movePieceTo(piece, getPointFromSquareName(pgnMove.substring(2, 4)));
+                result = movePieceTo(piece, getPointFromSquareName(fromtoMove.substring(2, 4)));
             }
         }
 
@@ -353,8 +355,8 @@ public class ChessBoard {
         Move nextMove = null;
 
         if (lastMoveVariants == null) {
-            if (firstMoveVariants != null) {
-                lastMoveVariants = firstMoveVariants;
+            if (!game.getMoves().isEmpty()) {
+                lastMoveVariants = game.getMoves();
                 nextMove = lastMoveVariants.get(variantIndex);
             }
         }
@@ -382,18 +384,18 @@ public class ChessBoard {
         if (move != null) {
             beginUpdate();
             try {
-                MoveList saveFirstMoveVariants = firstMoveVariants;
+                MoveList saveFirstMoveVariants = game.getMoves();
                 Move prevMove = move.getPrevMove();
 
                 restoreBoardState(move);
 
-                firstMoveVariants = saveFirstMoveVariants;
+                game.setMoves(saveFirstMoveVariants);
                 if (prevMove != null) {
                     lastMoveVariants = prevMove.getVariants();
                     lastMoveIndex = prevMove.getVariants().indexOf(move);
                 } else {
-                    lastMoveVariants = firstMoveVariants;
-                    lastMoveIndex = firstMoveVariants.indexOf(move);
+                    lastMoveVariants = game.getMoves();
+                    lastMoveIndex = game.getMoves().indexOf(move);
                 }
 
                 doOnGoto(move);
@@ -422,10 +424,10 @@ public class ChessBoard {
         }
 
         // проверим, что уже был сделан хотя бы один ход
-        if (firstMoveVariants != null) {
+        if (!game.getMoves().isEmpty()) {
             gotoInitialPosition();
 
-            Move move = firstMoveVariants.get(0);
+            Move move = game.getMoves().get(0);
             while (number > 1) {
                 number--;
                 move = move.getMainVariant();
@@ -443,11 +445,11 @@ public class ChessBoard {
     }
 
     public MoveList getFirstMoveVariants() {
-        return firstMoveVariants;
+        return game.getMoves();
     }
 
     public Move getFirstMoveVariants(int variantNumber) {
-        return firstMoveVariants.get(variantNumber);
+        return game.getMoves().get(variantNumber);
     }
 
     public int getLastMoveIndex() {
@@ -877,7 +879,7 @@ public class ChessBoard {
                 initialPositionFEN = FEN;
 
                 lastMoveVariants = null;
-                firstMoveVariants = null;
+                game.getMoves().clear();
             }
 
             // строки доски
@@ -1118,8 +1120,8 @@ public class ChessBoard {
     }
 
     public void setMoveList(MoveList moves) {
-        if (firstMoveVariants != moves) {
-            firstMoveVariants = moves;
+        if (game.getMoves() != moves) {
+            game.setMoves(moves);
             lastMoveVariants = null;
             lastMoveIndex = -1;
 
@@ -1167,12 +1169,12 @@ public class ChessBoard {
         lastMove.saveMoveState(this);
 
         if (lastMoveVariants == null) {
-            if (firstMoveVariants != null) {
-                lastMoveVariants = firstMoveVariants;
+            if (!game.getMoves().isEmpty()) {
+                lastMoveVariants = game.getMoves();
             }
             else {
                 lastMoveVariants = new MoveList();
-                firstMoveVariants = lastMoveVariants;
+                game.setMoves(lastMoveVariants);
             }
         }
         else {
@@ -1230,8 +1232,8 @@ public class ChessBoard {
     public Move findMove(int id) {
         Move result = null;
 
-        if (firstMoveVariants != null) {
-            result = firstMoveVariants.findMove(id);
+        if (!game.getMoves().isEmpty()) {
+            result = game.getMoves().findMove(id);
         }
 
         return result;

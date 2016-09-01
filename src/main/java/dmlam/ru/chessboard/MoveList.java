@@ -117,4 +117,11 @@ public class MoveList extends ArrayList<Move> {
     public String getComment() {
         return comment;
     }
+
+    @Override
+    public void clear() {
+        super.clear();
+
+        comment = null;
+    }
 }

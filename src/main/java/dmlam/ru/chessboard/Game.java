@@ -19,9 +19,17 @@ public class Game {
         }
     }
 
+    public Game(){
+    }
+
+    public Game(String startPosition) {
+        New(startPosition);
+    }
+
+    private String startPosition = null;  // FEN for starting position
     private ArrayList<Tag> tags = new ArrayList<Tag>();
-    private MoveList moves = new MoveList();
-    private GameResult gameResult = null;
+    private MoveList moves = new MoveList();  // variants of the first move
+    private GameResult result = null;
 
     public void addTag(String name, String value) {
         if (name == null) {
@@ -49,12 +57,35 @@ public class Game {
         return null;
     }
 
-    public GameResult getGameResult() {
-        return gameResult;
+    public GameResult getResult() {
+        return result;
     }
 
-    public void setGameResult (GameResult gameResult) {
-        this.gameResult = gameResult;
+    public void setResult (GameResult gameResult) {
+        this.result = gameResult;
+    }
+
+    public String getStartPosition() {
+        return startPosition;
+    }
+
+    public void New() {
+        tags.clear();
+        moves.clear();
+        result = GameResult.UNKNOWN;
+    }
+
+    public void New(String startPosition) {
+        New();
+        this.startPosition = startPosition;
+    }
+
+    public MoveList getMoves() {
+        return moves;
+    }
+
+    public void setMoves(MoveList moves) {
+        this.moves = moves;
     }
 
 }
