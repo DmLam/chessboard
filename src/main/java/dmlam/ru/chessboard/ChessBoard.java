@@ -73,7 +73,6 @@ public class ChessBoard {
     private boolean currentPlayerChecked;     // игрок, чья очередь хода находится под шахом
     private boolean currentPlayerMated;       // игрок, чья очередь хода получил мат
     private boolean currentPlayerStalemated;  // игрок, чья очередь хода находится в патовой ситуации
-    private boolean gameDrawn;                // игра завершилась вничью
     private char transformation = ' ';        // какая фигура появится при превращении пешки если ход делается методом fromtomove
 
     public interface OnNeedPieceForTransformation {
@@ -297,20 +296,15 @@ public class ChessBoard {
         if (piecesToMove.size() == 0) {
             currentPlayerMated = currentPlayerChecked;
             currentPlayerStalemated = !currentPlayerChecked;
-            if (currentPlayerStalemated) {
-                gameDrawn = true;
-            }
         }
     }
 
     public void restoreBoardState(Move move) {
         loadFromFEN(move.getFEN(), true);
-        gameDrawn = move.isGameDrawn();
     }
 
     private void gotoInitialPosition() {
         loadFromFEN(initialPositionFEN, true);
-        gameDrawn = false;
     }
 
     // возврат хода
@@ -1115,10 +1109,6 @@ public class ChessBoard {
         return currentPlayerStalemated;
     }
 
-    public boolean isGameDrawn() {
-        return gameDrawn;
-    }
-
     public void setMoveList(MoveList moves) {
         if (game.getMoves() != moves) {
             game.setMoves(moves);
@@ -1236,6 +1226,30 @@ public class ChessBoard {
             result = game.getMoves().findMove(id);
         }
 
+        return result;
+    }
+
+    // make move by short notation (like e4, d1Q, Rae2, ...)
+    public boolean shortMove(String move) {
+        boolean result = false;
+
+        if (move != null && !move.isEmpty()) {
+            char pieceLetter = move.charAt(0);
+            Piece piece;
+
+            if ("KQRBN".indexOf(pieceLetter) == -1) {
+                pieceLetter = 'P';
+            }
+
+            if (fromtoMove.length() == 4 || fromtoMove.length() == 5) {
+                Piece piece = getPiece(getPointFromSquareName(fromtoMove.substring(0, 2)));
+
+                if (piece != null) {
+                    result = movePieceTo(piece, getPointFromSquareName(fromtoMove.substring(2, 4)));
+                }
+            }
+
+        }
         return result;
     }
 }

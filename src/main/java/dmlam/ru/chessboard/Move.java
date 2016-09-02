@@ -174,7 +174,6 @@ final public class Move {
         this.opponentChecked = board.isCurrentPlayerChecked();
         this.opponentCheckmated = board.isCurrentPlayerCheckmated();
         this.opponentStalemated = board.isCurrentPlayerStalemated();
-        this.gameDrawn = board.isGameDrawn();
         this.prevVariants = board.getLastMoveVariants();
         this.id = board.generateId();
         this.FEN = board.saveToFEN();
