@@ -16,20 +16,37 @@ public abstract class Piece {
     };
     public enum Kind {KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN;
 
-    public String getNotationLetter() {
-        switch(this) {
-            case KING:
-                return "K";
-            case QUEEN:
-                return "Q";
-            case ROOK:
-                return "R";
-            case BISHOP:
-                return "B";
-            case KNIGHT:
-                return "N";
-            default:
-                return "";
+        public String getNotationLetter() {
+            switch(this) {
+                case KING:
+                    return "K";
+                case QUEEN:
+                    return "Q";
+                case ROOK:
+                    return "R";
+                case BISHOP:
+                    return "B";
+                case KNIGHT:
+                    return "N";
+                default:
+                    return "";
+                }
+            }
+
+        static public Kind kindByLetter(char letter) {
+            switch(letter) {
+                case 'K':
+                    return KING;
+                case 'Q':
+                    return QUEEN;
+                case 'R':
+                    return ROOK;
+                case 'B':
+                    return BISHOP;
+                case 'N':
+                    return KNIGHT;
+                default:
+                    return null;
             }
         }
     };

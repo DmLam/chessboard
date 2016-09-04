@@ -5,6 +5,9 @@ import android.graphics.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import dmlam.ru.chessboard.Piece.Color;
+import dmlam.ru.chessboard.Piece.Kind;
+
 import static java.lang.Math.min;
 
 /**
@@ -57,7 +60,7 @@ public class ChessBoard {
     private Piece[][] squares = new Piece[8][8];
     private boolean castling[][] = new boolean[2][2];  // [color][castling]
     private Point enPassantSquare = null;  // поле на котором возможно взятие на проходе на текущем ходе (пешка только что прошла через него)
-    private Piece.Color moveOrder = Piece.Color.WHITE;
+    private Color moveOrder = Color.WHITE;
     private Point promotedPawn = null;  // проведенная пешка если есть
     private int moveNumber = 1;
     private int halfmoveQnt = 0; // счетчик количества последних незначащих полуходов (не ходов пешкой и ходов, не являющихся взятием фигуры)
@@ -160,7 +163,7 @@ public class ChessBoard {
 
             // если на новой клетке уже что-то есть, то это взятие и нужно сбросить счетчик нерезультативных ходов (для правила 50-ти ходов)
             // аналогично, если ход пешкой
-            if ( getPiece(x, y) != null || piece.getKind() == Piece.Kind.PAWN)
+            if ( getPiece(x, y) != null || piece.getKind() == Kind.PAWN)
             {
                 halfmoveQnt = -1;  // -1 т.к. в passMoveToOpponent счетчик будет увеличен на 1
             }
@@ -168,9 +171,9 @@ public class ChessBoard {
             piece.moveTo(x, y);
             setPieceAt(x, y, piece);
 
-            if (piece.getKind() == Piece.Kind.ROOK) {
+            if (piece.getKind() == Kind.ROOK) {
                 // если был ход ладьей, то установим невозможность соответствующих рокировок
-                int horz = piece.getColor() == Piece.Color.WHITE ? 0 : 7;
+                int horz = piece.getColor() == Color.WHITE ? 0 : 7;
 
                 if (piece.getX() == 0 && piece.getY() == horz) {
                     castling[piece.getColor().ordinal()][Castling.QUEEN.ordinal()] = false;
@@ -178,14 +181,14 @@ public class ChessBoard {
                     castling[piece.getColor().ordinal()][Castling.KING.ordinal()] = false;
                 }
                 passMoveToOpponent();
-            } else if (piece.getKind() == Piece.Kind.KING) {
+            } else if (piece.getKind() == Kind.KING) {
                 // если ход королем, то установим невозможность рокировок и если это собственно рокировка - двинем и соответствующую ладье тоже
                 castling[piece.getColor().ordinal()][Castling.KING.ordinal()] = false;
                 castling[piece.getColor().ordinal()][Castling.QUEEN.ordinal()] = false;
                 passMoveToOpponent();
 
 
-            } else if (piece.getKind() == Piece.Kind.PAWN && (transformation != ' ' || mOnNeedPieceForTransformation != null)) {
+            } else if (piece.getKind() == Kind.PAWN && (transformation != ' ' || mOnNeedPieceForTransformation != null)) {
                 // проверим, не дошла ли пешка до последней горизонтали и если да - превратим в фигуру
                 int lastLine = -1;
                 switch (piece.getColor()) {
@@ -478,11 +481,11 @@ public class ChessBoard {
         }
     }
 
-    public Piece.Color getMoveOrder() {
+    public Color getMoveOrder() {
         return moveOrder;
     }
 
-    public void setMoveOrder(Piece.Color moveOrder) {
+    public void setMoveOrder(Color moveOrder) {
         this.moveOrder = moveOrder;
     }
 
@@ -523,7 +526,7 @@ public class ChessBoard {
         loadFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", false);
     }
 
-    public boolean isCastlingPossible(Piece.Color color, Castling castling) {
+    public boolean isCastlingPossible(Color color, Castling castling) {
         boolean result = this.castling[color.ordinal()][castling.ordinal()];
 
         return result;
@@ -549,7 +552,7 @@ public class ChessBoard {
                         result = false;
                     } else {
                         // нельзя взять короля
-                        if (targetPiece.getKind() == Piece.Kind.KING) {
+                        if (targetPiece.getKind() == Kind.KING) {
                             result = false;
                         }
                     }
@@ -576,7 +579,7 @@ public class ChessBoard {
         return result;
     }
 
-    public int generateAvailableMoves(Piece.Color color) {
+    public int generateAvailableMoves(Color color) {
         int result = 0;
 
         beginUpdate();
@@ -604,16 +607,16 @@ public class ChessBoard {
         return result;
     }
 
-    public boolean getPlayerChecked(Piece.Color color) {
+    public boolean getPlayerChecked(Color color) {
         return getMoveOrder() == color && currentPlayerChecked;
     }
 
-    public boolean getPlayerCheckmated(Piece.Color color) {
+    public boolean getPlayerCheckmated(Color color) {
         return getMoveOrder() == color && currentPlayerMated;
     }
 
     // Возвращает true, если король игрока color находится под шахом
-    boolean isInCheck(Piece.Color color) {
+    boolean isInCheck(Color color) {
         boolean result = false;
         Piece King = null;
 
@@ -622,7 +625,7 @@ public class ChessBoard {
             for (int y = 0; King == null && y <= 7; y++)
             {
                 Piece piece = getPiece(x, y);
-                if (piece != null && piece.getKind() == Piece.Kind.KING && piece.getColor() == color) {
+                if (piece != null && piece.getKind() == Kind.KING && piece.getColor() == color) {
                     King = piece;
                 }
             }
@@ -642,7 +645,7 @@ public class ChessBoard {
         return result;
     }
 
-    public boolean isSquareThreaten(int x, int y, Piece.Color color) {
+    public boolean isSquareThreaten(int x, int y, Color color) {
         boolean result = false;
 
         for (int cx = 0; !result && cx <= 7; cx++)
@@ -706,10 +709,10 @@ public class ChessBoard {
         // возможность рокировки
         boolean haveCastling = false;
         builder.append(' ');
-        if (castling[Piece.Color.WHITE.ordinal()][Castling.KING.ordinal()]) { builder.append('K'); haveCastling = true;}
-        if (castling[Piece.Color.WHITE.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('Q'); haveCastling = true; }
-        if (castling[Piece.Color.BLACK.ordinal()][Castling.KING.ordinal()]) { builder.append('k'); haveCastling = true; }
-        if (castling[Piece.Color.BLACK.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('q'); haveCastling = true; }
+        if (castling[Color.WHITE.ordinal()][Castling.KING.ordinal()]) { builder.append('K'); haveCastling = true;}
+        if (castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('Q'); haveCastling = true; }
+        if (castling[Color.BLACK.ordinal()][Castling.KING.ordinal()]) { builder.append('k'); haveCastling = true; }
+        if (castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('q'); haveCastling = true; }
         if (!haveCastling) { builder.append('-'); }
 
         // возможность взятия пешки на проходе
@@ -727,7 +730,7 @@ public class ChessBoard {
 
         // номер хода
         builder.append(' ');
-        builder.append(moveOrder == Piece.Color.WHITE ? moveNumber + 1: moveNumber);
+        builder.append(moveOrder == Color.WHITE ? moveNumber + 1: moveNumber);
 
         return builder.toString();
     }
@@ -753,40 +756,40 @@ public class ChessBoard {
             else {
                 switch(c) {
                     case 'P':
-                        setPieceAt(x, line, new PawnPiece(this, Piece.Color.WHITE, x, line));
+                        setPieceAt(x, line, new PawnPiece(this, Color.WHITE, x, line));
                         break;
                     case 'R':
-                        setPieceAt(x, line, new RookPiece(this, Piece.Color.WHITE, x, line));
+                        setPieceAt(x, line, new RookPiece(this, Color.WHITE, x, line));
                         break;
                     case 'N':
-                        setPieceAt(x, line, new KnightPiece(this, Piece.Color.WHITE, x, line));
+                        setPieceAt(x, line, new KnightPiece(this, Color.WHITE, x, line));
                         break;
                     case 'B':
-                        setPieceAt(x, line, new BishopPiece(this, Piece.Color.WHITE, x, line));
+                        setPieceAt(x, line, new BishopPiece(this, Color.WHITE, x, line));
                         break;
                     case 'K':
-                        setPieceAt(x, line, new KingPiece(this, Piece.Color.WHITE, x, line));
+                        setPieceAt(x, line, new KingPiece(this, Color.WHITE, x, line));
                         break;
                     case 'Q':
-                        setPieceAt(x, line, new QueenPiece(this, Piece.Color.WHITE, x, line));
+                        setPieceAt(x, line, new QueenPiece(this, Color.WHITE, x, line));
                         break;
                     case 'p':
-                        setPieceAt(x, line, new PawnPiece(this, Piece.Color.BLACK, x, line));
+                        setPieceAt(x, line, new PawnPiece(this, Color.BLACK, x, line));
                         break;
                     case 'r':
-                        setPieceAt(x, line, new RookPiece(this, Piece.Color.BLACK, x, line));
+                        setPieceAt(x, line, new RookPiece(this, Color.BLACK, x, line));
                         break;
                     case 'n':
-                        setPieceAt(x, line, new KnightPiece(this, Piece.Color.BLACK, x, line));
+                        setPieceAt(x, line, new KnightPiece(this, Color.BLACK, x, line));
                         break;
                     case 'b':
-                        setPieceAt(x, line, new BishopPiece(this, Piece.Color.BLACK, x, line));
+                        setPieceAt(x, line, new BishopPiece(this, Color.BLACK, x, line));
                         break;
                     case 'k':
-                        setPieceAt(x, line, new KingPiece(this, Piece.Color.BLACK, x, line));
+                        setPieceAt(x, line, new KingPiece(this, Color.BLACK, x, line));
                         break;
                     case 'q':
-                        setPieceAt(x, line, new QueenPiece(this, Piece.Color.BLACK, x, line));
+                        setPieceAt(x, line, new QueenPiece(this, Color.BLACK, x, line));
                         break;
                     default:
                         throw new ErrorIllegalFEN(String.format("Unknown piece letter (%c)", c));
@@ -800,7 +803,7 @@ public class ChessBoard {
         }
     }
 
-    private boolean castlingPossible(Piece.Color color, Castling side) {
+    private boolean castlingPossible(Color color, Castling side) {
         boolean result = false;
         Piece pKing = null, pRook = null;
 
@@ -831,9 +834,9 @@ public class ChessBoard {
         }
 
         if (// проверим, что король на своем месте
-            pKing != null && pKing.getKind() == Piece.Kind.KING && pKing.getColor() == color &&
+            pKing != null && pKing.getKind() == Kind.KING && pKing.getColor() == color &&
             // проверим, что соответствующая ладья на своем месте
-            pRook != null && pRook.getKind() == Piece.Kind.ROOK && pRook.getColor() == color) {
+            pRook != null && pRook.getKind() == Kind.ROOK && pRook.getColor() == color) {
 
             result = true;
         }
@@ -864,10 +867,10 @@ public class ChessBoard {
             currentPlayerMated = false;
             currentPlayerStalemated = false;
 
-            castling[Piece.Color.WHITE.ordinal()][Castling.KING.ordinal()] = false;
-            castling[Piece.Color.WHITE.ordinal()][Castling.QUEEN.ordinal()] = false;
-            castling[Piece.Color.BLACK.ordinal()][Castling.KING.ordinal()] = false;
-            castling[Piece.Color.BLACK.ordinal()][Castling.QUEEN.ordinal()] = false;
+            castling[Color.WHITE.ordinal()][Castling.KING.ordinal()] = false;
+            castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()] = false;
+            castling[Color.BLACK.ordinal()][Castling.KING.ordinal()] = false;
+            castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()] = false;
 
             if (!restoring) {
                 initialPositionFEN = FEN;
@@ -902,10 +905,10 @@ public class ChessBoard {
                 char c = FEN.charAt(charIndex++);
                 switch (c) {
                     case 'w':
-                        setMoveOrder(Piece.Color.WHITE);
+                        setMoveOrder(Color.WHITE);
                         break;
                     case 'b':
-                        setMoveOrder(Piece.Color.BLACK);
+                        setMoveOrder(Color.BLACK);
                         break;
                     default:
                         throw new ErrorIllegalFEN(String.format("Unknown active color letter (%c)", c));
@@ -924,46 +927,46 @@ public class ChessBoard {
                     do {
                         switch (c) {
                             case 'K':
-                                if (castling[Piece.Color.WHITE.ordinal()][Castling.KING.ordinal()]) {
+                                if (castling[Color.WHITE.ordinal()][Castling.KING.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double white king-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки белых в короткую сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Piece.Color.WHITE, Castling.KING)) {
-                                        castling[Piece.Color.WHITE.ordinal()][Castling.KING.ordinal()] = true;
+                                    if (castlingPossible(Color.WHITE, Castling.KING)) {
+                                        castling[Color.WHITE.ordinal()][Castling.KING.ordinal()] = true;
                                     }
                                 }
                                 break;
                             case 'Q':
-                                if (castling[Piece.Color.WHITE.ordinal()][Castling.QUEEN.ordinal()]) {
+                                if (castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double white queen-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки белых в длинную сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Piece.Color.WHITE, Castling.QUEEN)) {
-                                        castling[Piece.Color.WHITE.ordinal()][Castling.QUEEN.ordinal()] = true;
+                                    if (castlingPossible(Color.WHITE, Castling.QUEEN)) {
+                                        castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()] = true;
                                     }
                                 }
                                 break;
                             case 'k':
-                                if (castling[Piece.Color.BLACK.ordinal()][Castling.KING.ordinal()]) {
+                                if (castling[Color.BLACK.ordinal()][Castling.KING.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double black king-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки черных в короткую сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Piece.Color.BLACK, Castling.KING)) {
-                                        castling[Piece.Color.BLACK.ordinal()][Castling.KING.ordinal()] = true;
+                                    if (castlingPossible(Color.BLACK, Castling.KING)) {
+                                        castling[Color.BLACK.ordinal()][Castling.KING.ordinal()] = true;
                                     }
                                 }
                                 break;
                             case 'q':
-                                if (castling[Piece.Color.BLACK.ordinal()][Castling.QUEEN.ordinal()]) {
+                                if (castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double black queen-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки черных в длинную сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Piece.Color.BLACK, Castling.QUEEN)) {
-                                        castling[Piece.Color.BLACK.ordinal()][Castling.QUEEN.ordinal()] = true;
+                                    if (castlingPossible(Color.BLACK, Castling.QUEEN)) {
+                                        castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()] = true;
                                     }
                                 }
                                 break;
@@ -1086,7 +1089,7 @@ public class ChessBoard {
         piecesToMove.clear();
     }
 
-    public int findMoveVariant(Piece.Kind kind, Piece.Color color,Point from, Point to, ChessBoard.PromoteTo promotePawnTo) {
+    public int findMoveVariant(Kind kind, Color color,Point from, Point to, ChessBoard.PromoteTo promotePawnTo) {
         int result = -1;
         Move lastMove = getLastMove();
 
@@ -1195,7 +1198,7 @@ public class ChessBoard {
         }
 
         if (doOnMove(lastMove)) {
-            if (moveOrder == Piece.Color.WHITE) {
+            if (moveOrder == Color.WHITE) {
                 Move last = getLastMove();
 
                 if (last == null) {
@@ -1229,24 +1232,71 @@ public class ChessBoard {
         return result;
     }
 
+    private void listPieces(Kind kind, Color color, ArrayList<Piece> pieces) {
+        for (int x = 0; x <= 7; x++)
+            for (int y = 0; y <= 7; y++)
+            {
+                Piece piece = getPiece(x, y);
+                if (piece != null && piece.getKind() == kind && piece.getColor() == color) {
+                    pieces.add(piece);
+                }
+            }
+    }
+
     // make move by short notation (like e4, d1Q, Rae2, ...)
-    public boolean shortMove(String move) {
+    public boolean shortMove(Color player, String move) {
         boolean result = false;
 
         if (move != null && !move.isEmpty()) {
             char pieceLetter = move.charAt(0);
             Piece piece;
 
-            if ("KQRBN".indexOf(pieceLetter) == -1) {
-                pieceLetter = 'P';
-            }
+            if ("KQRBN".indexOf(pieceLetter) >= 0) {
+                ArrayList<Piece> pieces = new ArrayList<Piece>();
+                String to = move.substring(move.length() - 2);
+                Point p = getPointFromSquareName(to);
 
-            if (fromtoMove.length() == 4 || fromtoMove.length() == 5) {
-                Piece piece = getPiece(getPointFromSquareName(fromtoMove.substring(0, 2)));
+                move = move.substring(1, move.length() - 3);
 
-                if (piece != null) {
-                    result = movePieceTo(piece, getPointFromSquareName(fromtoMove.substring(2, 4)));
+                listPieces(Piece.Kind.kindByLetter(pieceLetter), player, pieces);
+                for(int i = pieces.size(); i >= 0; i--) {
+                    if (!isMovePossible(pieces.get(i), p.x, p.y)) {
+                        pieces.remove(i);
+                    }
                 }
+
+                if (pieces.size() > 1) {
+                    // there are more than 1 piece can be placed on the square
+                    char fromposchar = move.charAt(0);
+
+                    if (Character.isDigit(fromposchar)) {
+                        int y = Integer.valueOf(fromposchar);
+
+                        for (int i = pieces.size(); i >= 0; i--) {
+                            if (pieces.get(i).getY() != y) {
+                                pieces.remove(i);
+                            }
+                        }
+                    }
+                    else {
+                        int x = getLetterRow(fromposchar);
+
+                        for (int i = pieces.size(); i >= 0; i--) {
+                            if (pieces.get(i).getX() != x) {
+                                pieces.remove(i);
+                            }
+                        }
+                    }
+
+                    if (pieces.size() == 1) {
+                        // the only possible move is rest
+                        movePieceTo(pieces.get(0), p);
+                    }
+                }
+            }
+            else {
+                // pawn move - special case
+!!!
             }
 
         }
