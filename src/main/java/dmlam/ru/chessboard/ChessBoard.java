@@ -8,6 +8,7 @@ import java.util.List;
 import dmlam.ru.chessboard.Piece.Color;
 import dmlam.ru.chessboard.Piece.Kind;
 
+import static dmlam.ru.chessboard.Piece.Color.*;
 import static dmlam.ru.chessboard.Piece.Kind.PAWN;
 import static java.lang.Math.min;
 
@@ -61,7 +62,7 @@ public class ChessBoard {
     private Piece[][] squares = new Piece[8][8];
     private boolean castling[][] = new boolean[2][2];  // [color][castling]
     private Point enPassantSquare = null;  // поле на котором возможно взятие на проходе на текущем ходе (пешка только что прошла через него)
-    private Color moveOrder = Color.WHITE;
+    private Color moveOrder = WHITE;
     private Point promotedPawn = null;  // проведенная пешка если есть
     private int moveNumber = 1;
     private int halfmoveQnt = 0; // счетчик количества последних незначащих полуходов (не ходов пешкой и ходов, не являющихся взятием фигуры)
@@ -91,6 +92,11 @@ public class ChessBoard {
 
     public static String squareName(Point p) {
         return getLetter(p.x) + Integer.toString(p.y + 1);
+    }
+
+    public void setNextMoveNumber(int nextMoveNumber) {
+
+        this.moveNumber = nextMoveNumber;
     }
 
     public static Point getPointFromSquareName(String square) {
@@ -174,7 +180,7 @@ public class ChessBoard {
 
             if (piece.getKind() == Kind.ROOK) {
                 // если был ход ладьей, то установим невозможность соответствующих рокировок
-                int horz = piece.getColor() == Color.WHITE ? 0 : 7;
+                int horz = piece.getColor() == WHITE ? 0 : 7;
 
                 if (piece.getX() == 0 && piece.getY() == horz) {
                     castling[piece.getColor().ordinal()][Castling.QUEEN.ordinal()] = false;
@@ -710,10 +716,10 @@ public class ChessBoard {
         // возможность рокировки
         boolean haveCastling = false;
         builder.append(' ');
-        if (castling[Color.WHITE.ordinal()][Castling.KING.ordinal()]) { builder.append('K'); haveCastling = true;}
-        if (castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('Q'); haveCastling = true; }
-        if (castling[Color.BLACK.ordinal()][Castling.KING.ordinal()]) { builder.append('k'); haveCastling = true; }
-        if (castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('q'); haveCastling = true; }
+        if (castling[WHITE.ordinal()][Castling.KING.ordinal()]) { builder.append('K'); haveCastling = true;}
+        if (castling[WHITE.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('Q'); haveCastling = true; }
+        if (castling[BLACK.ordinal()][Castling.KING.ordinal()]) { builder.append('k'); haveCastling = true; }
+        if (castling[BLACK.ordinal()][Castling.QUEEN.ordinal()]) { builder.append('q'); haveCastling = true; }
         if (!haveCastling) { builder.append('-'); }
 
         // возможность взятия пешки на проходе
@@ -731,7 +737,7 @@ public class ChessBoard {
 
         // номер хода
         builder.append(' ');
-        builder.append(moveOrder == Color.WHITE ? moveNumber + 1: moveNumber);
+        builder.append(moveOrder == WHITE ? moveNumber + 1: moveNumber);
 
         return builder.toString();
     }
@@ -757,40 +763,40 @@ public class ChessBoard {
             else {
                 switch(c) {
                     case 'P':
-                        setPieceAt(x, line, new PawnPiece(this, Color.WHITE, x, line));
+                        setPieceAt(x, line, new PawnPiece(this, WHITE, x, line));
                         break;
                     case 'R':
-                        setPieceAt(x, line, new RookPiece(this, Color.WHITE, x, line));
+                        setPieceAt(x, line, new RookPiece(this, WHITE, x, line));
                         break;
                     case 'N':
-                        setPieceAt(x, line, new KnightPiece(this, Color.WHITE, x, line));
+                        setPieceAt(x, line, new KnightPiece(this, WHITE, x, line));
                         break;
                     case 'B':
-                        setPieceAt(x, line, new BishopPiece(this, Color.WHITE, x, line));
+                        setPieceAt(x, line, new BishopPiece(this, WHITE, x, line));
                         break;
                     case 'K':
-                        setPieceAt(x, line, new KingPiece(this, Color.WHITE, x, line));
+                        setPieceAt(x, line, new KingPiece(this, WHITE, x, line));
                         break;
                     case 'Q':
-                        setPieceAt(x, line, new QueenPiece(this, Color.WHITE, x, line));
+                        setPieceAt(x, line, new QueenPiece(this, WHITE, x, line));
                         break;
                     case 'p':
-                        setPieceAt(x, line, new PawnPiece(this, Color.BLACK, x, line));
+                        setPieceAt(x, line, new PawnPiece(this, BLACK, x, line));
                         break;
                     case 'r':
-                        setPieceAt(x, line, new RookPiece(this, Color.BLACK, x, line));
+                        setPieceAt(x, line, new RookPiece(this, BLACK, x, line));
                         break;
                     case 'n':
-                        setPieceAt(x, line, new KnightPiece(this, Color.BLACK, x, line));
+                        setPieceAt(x, line, new KnightPiece(this, BLACK, x, line));
                         break;
                     case 'b':
-                        setPieceAt(x, line, new BishopPiece(this, Color.BLACK, x, line));
+                        setPieceAt(x, line, new BishopPiece(this, BLACK, x, line));
                         break;
                     case 'k':
-                        setPieceAt(x, line, new KingPiece(this, Color.BLACK, x, line));
+                        setPieceAt(x, line, new KingPiece(this, BLACK, x, line));
                         break;
                     case 'q':
-                        setPieceAt(x, line, new QueenPiece(this, Color.BLACK, x, line));
+                        setPieceAt(x, line, new QueenPiece(this, BLACK, x, line));
                         break;
                     default:
                         throw new ErrorIllegalFEN(String.format("Unknown piece letter (%c)", c));
@@ -868,10 +874,10 @@ public class ChessBoard {
             currentPlayerMated = false;
             currentPlayerStalemated = false;
 
-            castling[Color.WHITE.ordinal()][Castling.KING.ordinal()] = false;
-            castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()] = false;
-            castling[Color.BLACK.ordinal()][Castling.KING.ordinal()] = false;
-            castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()] = false;
+            castling[WHITE.ordinal()][Castling.KING.ordinal()] = false;
+            castling[WHITE.ordinal()][Castling.QUEEN.ordinal()] = false;
+            castling[BLACK.ordinal()][Castling.KING.ordinal()] = false;
+            castling[BLACK.ordinal()][Castling.QUEEN.ordinal()] = false;
 
             if (!restoring) {
                 initialPositionFEN = FEN;
@@ -906,10 +912,10 @@ public class ChessBoard {
                 char c = FEN.charAt(charIndex++);
                 switch (c) {
                     case 'w':
-                        setMoveOrder(Color.WHITE);
+                        setMoveOrder(WHITE);
                         break;
                     case 'b':
-                        setMoveOrder(Color.BLACK);
+                        setMoveOrder(BLACK);
                         break;
                     default:
                         throw new ErrorIllegalFEN(String.format("Unknown active color letter (%c)", c));
@@ -928,46 +934,46 @@ public class ChessBoard {
                     do {
                         switch (c) {
                             case 'K':
-                                if (castling[Color.WHITE.ordinal()][Castling.KING.ordinal()]) {
+                                if (castling[WHITE.ordinal()][Castling.KING.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double white king-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки белых в короткую сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Color.WHITE, Castling.KING)) {
-                                        castling[Color.WHITE.ordinal()][Castling.KING.ordinal()] = true;
+                                    if (castlingPossible(WHITE, Castling.KING)) {
+                                        castling[WHITE.ordinal()][Castling.KING.ordinal()] = true;
                                     }
                                 }
                                 break;
                             case 'Q':
-                                if (castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()]) {
+                                if (castling[WHITE.ordinal()][Castling.QUEEN.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double white queen-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки белых в длинную сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Color.WHITE, Castling.QUEEN)) {
-                                        castling[Color.WHITE.ordinal()][Castling.QUEEN.ordinal()] = true;
+                                    if (castlingPossible(WHITE, Castling.QUEEN)) {
+                                        castling[WHITE.ordinal()][Castling.QUEEN.ordinal()] = true;
                                     }
                                 }
                                 break;
                             case 'k':
-                                if (castling[Color.BLACK.ordinal()][Castling.KING.ordinal()]) {
+                                if (castling[BLACK.ordinal()][Castling.KING.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double black king-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки черных в короткую сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Color.BLACK, Castling.KING)) {
-                                        castling[Color.BLACK.ordinal()][Castling.KING.ordinal()] = true;
+                                    if (castlingPossible(BLACK, Castling.KING)) {
+                                        castling[BLACK.ordinal()][Castling.KING.ordinal()] = true;
                                     }
                                 }
                                 break;
                             case 'q':
-                                if (castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()]) {
+                                if (castling[BLACK.ordinal()][Castling.QUEEN.ordinal()]) {
                                     throw new ErrorIllegalFEN("Double black queen-side castling is represented");
                                 } else {
                                     // в FEN указана возможность рокировки черных в длинную сторону
                                     // проверим, находятся ли фигуры в соответствующих положениях
-                                    if (castlingPossible(Color.BLACK, Castling.QUEEN)) {
-                                        castling[Color.BLACK.ordinal()][Castling.QUEEN.ordinal()] = true;
+                                    if (castlingPossible(BLACK, Castling.QUEEN)) {
+                                        castling[BLACK.ordinal()][Castling.QUEEN.ordinal()] = true;
                                     }
                                 }
                                 break;
@@ -1199,7 +1205,7 @@ public class ChessBoard {
         }
 
         if (doOnMove(lastMove)) {
-            if (moveOrder == Color.WHITE) {
+            if (moveOrder == WHITE) {
                 Move last = getLastMove();
 
                 if (last == null) {
@@ -1257,9 +1263,30 @@ public class ChessBoard {
                 char pieceLetter = move.charAt(0);
                 ArrayList<Piece> pieces = new ArrayList<Piece>();
 
-                move = move.toUpperCase();
+                move = move.toLowerCase();
 
-                if ("KQRBN".indexOf(pieceLetter) >= 0) {
+                if (pieceLetter == 'o') {
+                    // castling
+                    if (move.equals("o-o")) {
+                        if (player == WHITE) {
+                            result = fromtomove("a5a7");
+                        }
+                        else {
+                            result = fromtomove("h5h7");
+                        }
+                    }
+                    else
+                    if (move.equals("o-o-o")) {
+                        if (player == WHITE) {
+                            result = fromtomove("a5a3");
+                        }
+                        else {
+                            result = fromtomove("h5h3");
+                        }
+                    }
+                }
+                else
+                if ("kqrbn".indexOf(pieceLetter) >= 0) {
                     String to = move.substring(move.length() - 2);
                     Point p;
 
@@ -1273,12 +1300,12 @@ public class ChessBoard {
                     if (p != null) {
                         Piece targetPiece = getPiece(p);
 
-                        move = move.substring(1, move.length() - 3);
-                        if ((move.equals("X") && targetPiece != null && targetPiece.getColor() != player) ||
+                        move = move.substring(1, move.length() - 2);
+                        if ((move.equals("x") && targetPiece != null && targetPiece.getColor() != player) ||
                                 ("".equals(move) && targetPiece == null)) {
 
                             listPieces(Piece.Kind.kindByLetter(pieceLetter), player, pieces);
-                            for (int i = pieces.size(); i >= 0; i--) {
+                            for (int i = pieces.size() - 1; i >= 0; i--) {
                                 if (!isMovePossible(pieces.get(i), p.x, p.y)) {
                                     pieces.remove(i);
                                 }
@@ -1291,7 +1318,7 @@ public class ChessBoard {
                                 if (Character.isDigit(fromposchar)) {
                                     int y = Integer.valueOf(fromposchar);
 
-                                    for (int i = pieces.size(); i >= 0; i--) {
+                                    for (int i = pieces.size() - 1; i >= 0; i--) {
                                         if (pieces.get(i).getY() != y) {
                                             pieces.remove(i);
                                         }
@@ -1299,7 +1326,7 @@ public class ChessBoard {
                                 } else {
                                     int x = getLetterRow(fromposchar);
 
-                                    for (int i = pieces.size(); i >= 0; i--) {
+                                    for (int i = pieces.size() - 1; i >= 0; i--) {
                                         if (pieces.get(i).getX() != x) {
                                             pieces.remove(i);
                                         }
@@ -1308,7 +1335,7 @@ public class ChessBoard {
 
                                 if (pieces.size() == 1) {
                                     // the only possible move is rest
-                                    movePieceTo(pieces.get(0), p);
+                                    result = movePieceTo(pieces.get(0), p);
                                 }
                             }
                         }
@@ -1322,9 +1349,9 @@ public class ChessBoard {
 
                     transformation = move.charAt(move.length() - 1);
 
-                    if ("QRBN".indexOf(transformation) >= 0) {
+                    if ("qrbn".indexOf(transformation) >= 0) {
                         // promoting
-                        move = move.substring(0, move.length() - 2);
+                        move = move.substring(0, move.length() - 1);
                     }
                     else {
                         transformation = ' ';
@@ -1339,7 +1366,7 @@ public class ChessBoard {
                     }
 
                     if (p != null) {
-                        move = move.substring(0, move.length() - 3);
+                        move = move.substring(0, move.length() - 2);
 
                         if (move.length() == 2 && move.charAt(1) == 'X') {
                             // capturing
@@ -1347,7 +1374,7 @@ public class ChessBoard {
                                 int fromRow = getLetterRow(move.charAt(0));
 
                                 if (fromRow >= 0 && fromRow <= 7) {
-                                    for (int i = pieces.size(); i >= 0; i--) {
+                                    for (int i = pieces.size() - 1; i >= 0; i--) {
                                         if (pieces.get(i).getX() != fromRow || !isMovePossible(pieces.get(i), p.x, p.y)) {
                                             pieces.remove(i);
                                         }
@@ -1355,7 +1382,7 @@ public class ChessBoard {
 
                                     if (pieces.size() == 1) {
                                         // the only possible move is rest
-                                        movePieceTo(pieces.get(0), p);
+                                        result = movePieceTo(pieces.get(0), p);
                                     }
                                 }
                             }
@@ -1363,7 +1390,7 @@ public class ChessBoard {
                         else
                         // move here should be empty, in other case this is a wrong move
                         if ("".equals(move)) {
-                            for (int i = pieces.size(); i >= 0; i--) {
+                            for (int i = pieces.size() - 1; i >= 0; i--) {
                                 if (!isMovePossible(pieces.get(i), p.x, p.y)) {
                                     pieces.remove(i);
                                 }
@@ -1371,7 +1398,7 @@ public class ChessBoard {
 
                             if (pieces.size() == 1) {
                                 // the only possible move is rest
-                                movePieceTo(pieces.get(0), p);
+                                result = movePieceTo(pieces.get(0), p);
                             }
                         }
                     }

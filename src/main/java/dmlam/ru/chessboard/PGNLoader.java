@@ -159,38 +159,43 @@ public class PGNLoader {
 
                 num.append(c);
 
-                for (i = 1; i <moves.length() && Character.isDigit(moves.charAt(i)); i++) {
+                for (i = 1; i < moves.length() && Character.isDigit(moves.charAt(i)); i++) {
                     num.append(moves.charAt(i));
-                };
+                }
+
                 moves.delete(0, i);  // delete move number from moves string
                 moveNumber = Integer.valueOf(num.toString());
+            }
 
-                skipSpace(moves);
-                if (moves.length() > 0 && moves.charAt(0) == '.') {
-                    if (moves.length() > 1) {
-                        if (moves.length() > 2 && moves.charAt(1) == '.' && moves.charAt(2) == '.') {
-                            moveOrder = BLACK;
-                            moves.delete(0, 3);
-                        }
-                        else {
-                            moveOrder = WHITE;
-                            moves.delete(0, 1);
-                        }
+            if (lastMove == null) {
+                chessboard.setNextMoveNumber(moveNumber);
+            }
+
+            skipSpace(moves);
+            if (moves.length() > 0 && moves.charAt(0) == '.') {
+                if (moves.length() > 1) {
+                    if (moves.length() > 2 && moves.charAt(1) == '.' && moves.charAt(2) == '.') {
+                        moveOrder = BLACK;
+                        moves.delete(0, 3);
                     }
                     else {
-                        throw new WrongPGN("Incorrect move number");
+                        moveOrder = WHITE;
+                        moves.delete(0, 1);
                     }
                 }
                 else {
-                    moveOrder = WHITE;
+                    throw new WrongPGN("Incorrect move number");
                 }
+            }
+            else {
+                moveOrder = WHITE;
             }
 
             skipSpace(moves);
 
             StringBuilder sb = new StringBuilder();
 
-            for (i = 0; i < moves.length() && "12345678abcdefghkqrbn+0-".indexOf(Character.toLowerCase(moves.charAt(i))) >= 0; i++) {
+            for (i = 0; i < moves.length() && "12345678abcdefghkqrbn+#o-".indexOf(Character.toLowerCase(moves.charAt(i))) >= 0; i++) {
                 sb.append(moves.charAt(i));
             }
             if (i == 0) {
@@ -200,11 +205,14 @@ public class PGNLoader {
             moves.delete(0, i);
             skipSpace(moves);
 
-            chessboard.shortMove(moveOrder, sb.toString());
-            moveOrder = moveOrder.opposite();
+            if (!chessboard.shortMove(moveOrder, sb.toString()))
+                throw new WrongPGN(String.format("Incorrect move '%s'", sb.toString()));
+
+            chessboard.getLastMove().getMoveNumber();
+
         }
 
-        return move;
+        return chessboard.getLastMove();
     }
 
     private boolean parseMoves(Game game, StringBuilder moves) throws WrongPGN {
