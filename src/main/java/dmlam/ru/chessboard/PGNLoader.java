@@ -98,30 +98,29 @@ public class PGNLoader {
     }
 
     @NonNull
-    private String skipSpace(String moves) {
+    private void skipSpace(StringBuilder moves) {
         int i;
 
         for (i = 0; i < moves.length() && moves.charAt(i) == ' '; i++);
         if (i > 0) {
-            moves = moves.substring(i);
+            moves.delete(0, i);
         }
-        return moves;
     }
 
-    private String parseComment(String moves) throws WrongPGN {
+    private String parseComment(StringBuilder moves) throws WrongPGN {
         String result = null;
 
         if (moves.length() > 0) {
-            moves = skipSpace(moves);
+            skipSpace(moves);
 
             char c = moves.charAt(0);
 
             if (c == '{') {
-                int commentEnd = moves.indexOf('}');
+                int commentEnd = moves.indexOf("}");
 
                 if (commentEnd > 0) {
                     result = moves.substring(1, commentEnd - 1);
-                    moves = moves.substring(commentEnd + 1);
+                    moves.delete(0, commentEnd + 1);
                 }
                 else {
                     throw new WrongPGN("End of comment not found");
@@ -133,14 +132,13 @@ public class PGNLoader {
         return result;
     }
 
-    private Move parseMove(Game game, String moves, Move lastMove) throws WrongPGN {
+    private Move parseMove(Game game, StringBuilder moves, Move lastMove) throws WrongPGN {
         Move move = null;
         int i;
 
-        if (moves != null && !moves.isEmpty()) {
+        if (moves != null && moves.length() > 0) {
             int moveNumber;
             Piece.Color moveOrder;
-            Piece piece;
 
             skipSpace(moves);
 
@@ -157,24 +155,26 @@ public class PGNLoader {
                 }
             }
             else {
-                StringBuilder num = new StringBuilder(c);
+                StringBuilder num = new StringBuilder();
+
+                num.append(c);
 
                 for (i = 1; i <moves.length() && Character.isDigit(moves.charAt(i)); i++) {
                     num.append(moves.charAt(i));
                 };
-                moves = moves.substring(i);  // delete move number from moves string
+                moves.delete(0, i);  // delete move number from moves string
                 moveNumber = Integer.valueOf(num.toString());
 
                 skipSpace(moves);
-                if (!moves.isEmpty() && moves.charAt(0) == '.') {
+                if (moves.length() > 0 && moves.charAt(0) == '.') {
                     if (moves.length() > 1) {
                         if (moves.length() > 2 && moves.charAt(1) == '.' && moves.charAt(2) == '.') {
                             moveOrder = BLACK;
-                            moves = moves.substring(3);
+                            moves.delete(0, 3);
                         }
                         else {
                             moveOrder = WHITE;
-                            moves = moves.substring(1);
+                            moves.delete(0, 1);
                         }
                     }
                     else {
@@ -190,33 +190,34 @@ public class PGNLoader {
 
             StringBuilder sb = new StringBuilder();
 
-            for (i = 0; i < moves.length() && Character.isLetterOrDigit(moves.charAt(i)); i++) {
+            for (i = 0; i < moves.length() && "12345678abcdefghkqrbn+0-".indexOf(Character.toLowerCase(moves.charAt(i))) >= 0; i++) {
                 sb.append(moves.charAt(i));
             }
             if (i == 0) {
                 throw new WrongPGN("Incorrect move");
             }
 
-            moves = moves.substring(i);
+            moves.delete(0, i);
             skipSpace(moves);
 
-            chessboard.shortMove(sb.toString());
+            chessboard.shortMove(moveOrder, sb.toString());
+            moveOrder = moveOrder.opposite();
         }
 
         return move;
     }
 
-    private boolean parseMoves(Game game, String moves) throws WrongPGN {
+    private boolean parseMoves(Game game, StringBuilder moves) throws WrongPGN {
         boolean result = true;
         int currentMoveNumber = 1;
         Move lastMove = null;
 
-        while (!moves.isEmpty()) {
+        while (moves.length() > 0) {
 
             game.getMoves().setComment(parseComment(moves));
 
             do {
-                lastMove = parseMove(game, moves, currentMoveNumber);
+                lastMove = parseMove(game, moves, lastMove);
                 lastMove.getVariants().add(lastMove);
             }
             while (lastMove != null);
@@ -233,10 +234,10 @@ public class PGNLoader {
         String line;
         boolean lastMoveLine = false;
 
-        line = readLine(in);  // skip empty line between tags and moves
+        readLine(in);  // skip empty line between tags and moves
 
         line = readLine(in);
-        while (line != null && !line.isEmpty()) {
+        while (!"".equals(line)) {
             line = line.trim();
 
             if (!moves.isEmpty()) {
@@ -247,7 +248,7 @@ public class PGNLoader {
             line = readLine(in);
         }
 
-        result = parseMoves(game, moves);
+        result = parseMoves(game, new StringBuilder(moves));
 
         return result;
     }

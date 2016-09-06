@@ -8,6 +8,7 @@ import java.util.List;
 import dmlam.ru.chessboard.Piece.Color;
 import dmlam.ru.chessboard.Piece.Kind;
 
+import static dmlam.ru.chessboard.Piece.Kind.PAWN;
 import static java.lang.Math.min;
 
 /**
@@ -163,7 +164,7 @@ public class ChessBoard {
 
             // если на новой клетке уже что-то есть, то это взятие и нужно сбросить счетчик нерезультативных ходов (для правила 50-ти ходов)
             // аналогично, если ход пешкой
-            if ( getPiece(x, y) != null || piece.getKind() == Kind.PAWN)
+            if ( getPiece(x, y) != null || piece.getKind() == PAWN)
             {
                 halfmoveQnt = -1;  // -1 т.к. в passMoveToOpponent счетчик будет увеличен на 1
             }
@@ -188,7 +189,7 @@ public class ChessBoard {
                 passMoveToOpponent();
 
 
-            } else if (piece.getKind() == Kind.PAWN && (transformation != ' ' || mOnNeedPieceForTransformation != null)) {
+            } else if (piece.getKind() == PAWN && (transformation != ' ' || mOnNeedPieceForTransformation != null)) {
                 // проверим, не дошла ли пешка до последней горизонтали и если да - превратим в фигуру
                 int lastLine = -1;
                 switch (piece.getColor()) {
@@ -1248,58 +1249,136 @@ public class ChessBoard {
         boolean result = false;
 
         if (move != null && !move.isEmpty()) {
-            char pieceLetter = move.charAt(0);
-            Piece piece;
+            if (move.charAt(move.length() - 1) == '+' || move.charAt(move.length() - 1) == '#') {
+                move = move.substring(0, move.length() - 2);
+            }
 
-            if ("KQRBN".indexOf(pieceLetter) >= 0) {
+            if (!move.isEmpty()) {
+                char pieceLetter = move.charAt(0);
                 ArrayList<Piece> pieces = new ArrayList<Piece>();
-                String to = move.substring(move.length() - 2);
-                Point p = getPointFromSquareName(to);
 
-                move = move.substring(1, move.length() - 3);
+                move = move.toUpperCase();
 
-                listPieces(Piece.Kind.kindByLetter(pieceLetter), player, pieces);
-                for(int i = pieces.size(); i >= 0; i--) {
-                    if (!isMovePossible(pieces.get(i), p.x, p.y)) {
-                        pieces.remove(i);
+                if ("KQRBN".indexOf(pieceLetter) >= 0) {
+                    String to = move.substring(move.length() - 2);
+                    Point p;
+
+                    try {
+                        p = getPointFromSquareName(to);
                     }
-                }
+                    catch(ErrorIllegalSquareName E) {
+                        p = null;
+                    }
 
-                if (pieces.size() > 1) {
-                    // there are more than 1 piece can be placed on the square
-                    char fromposchar = move.charAt(0);
+                    if (p != null) {
+                        Piece targetPiece = getPiece(p);
 
-                    if (Character.isDigit(fromposchar)) {
-                        int y = Integer.valueOf(fromposchar);
+                        move = move.substring(1, move.length() - 3);
+                        if ((move.equals("X") && targetPiece != null && targetPiece.getColor() != player) ||
+                                ("".equals(move) && targetPiece == null)) {
 
-                        for (int i = pieces.size(); i >= 0; i--) {
-                            if (pieces.get(i).getY() != y) {
-                                pieces.remove(i);
+                            listPieces(Piece.Kind.kindByLetter(pieceLetter), player, pieces);
+                            for (int i = pieces.size(); i >= 0; i--) {
+                                if (!isMovePossible(pieces.get(i), p.x, p.y)) {
+                                    pieces.remove(i);
+                                }
+                            }
+
+                            if (pieces.size() > 1) {
+                                // there are more than 1 piece can be placed on the square
+                                char fromposchar = move.charAt(0);
+
+                                if (Character.isDigit(fromposchar)) {
+                                    int y = Integer.valueOf(fromposchar);
+
+                                    for (int i = pieces.size(); i >= 0; i--) {
+                                        if (pieces.get(i).getY() != y) {
+                                            pieces.remove(i);
+                                        }
+                                    }
+                                } else {
+                                    int x = getLetterRow(fromposchar);
+
+                                    for (int i = pieces.size(); i >= 0; i--) {
+                                        if (pieces.get(i).getX() != x) {
+                                            pieces.remove(i);
+                                        }
+                                    }
+                                }
+
+                                if (pieces.size() == 1) {
+                                    // the only possible move is rest
+                                    movePieceTo(pieces.get(0), p);
+                                }
                             }
                         }
+                    }
+                } else {
+                    // pawn move - special case
+                    String to;
+                    Point p;
+
+                    listPieces(PAWN, player, pieces);
+
+                    transformation = move.charAt(move.length() - 1);
+
+                    if ("QRBN".indexOf(transformation) >= 0) {
+                        // promoting
+                        move = move.substring(0, move.length() - 2);
                     }
                     else {
-                        int x = getLetterRow(fromposchar);
+                        transformation = ' ';
+                    }
 
-                        for (int i = pieces.size(); i >= 0; i--) {
-                            if (pieces.get(i).getX() != x) {
-                                pieces.remove(i);
+                    to = move.substring(move.length() - 2);
+                    try {
+                        p = getPointFromSquareName(to);
+                    }
+                    catch(ErrorIllegalSquareName E) {
+                        p = null;
+                    }
+
+                    if (p != null) {
+                        move = move.substring(0, move.length() - 3);
+
+                        if (move.length() == 2 && move.charAt(1) == 'X') {
+                            // capturing
+                            if (getPiece(p) != null && getPiece(p).getColor() != player) {
+                                int fromRow = getLetterRow(move.charAt(0));
+
+                                if (fromRow >= 0 && fromRow <= 7) {
+                                    for (int i = pieces.size(); i >= 0; i--) {
+                                        if (pieces.get(i).getX() != fromRow || !isMovePossible(pieces.get(i), p.x, p.y)) {
+                                            pieces.remove(i);
+                                        }
+                                    }
+
+                                    if (pieces.size() == 1) {
+                                        // the only possible move is rest
+                                        movePieceTo(pieces.get(0), p);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        // move here should be empty, in other case this is a wrong move
+                        if ("".equals(move)) {
+                            for (int i = pieces.size(); i >= 0; i--) {
+                                if (!isMovePossible(pieces.get(i), p.x, p.y)) {
+                                    pieces.remove(i);
+                                }
+                            }
+
+                            if (pieces.size() == 1) {
+                                // the only possible move is rest
+                                movePieceTo(pieces.get(0), p);
                             }
                         }
                     }
-
-                    if (pieces.size() == 1) {
-                        // the only possible move is rest
-                        movePieceTo(pieces.get(0), p);
-                    }
                 }
             }
-            else {
-                // pawn move - special case
-!!!
-            }
-
         }
+
         return result;
     }
 }

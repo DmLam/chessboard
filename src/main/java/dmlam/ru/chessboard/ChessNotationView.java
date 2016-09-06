@@ -257,7 +257,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
         lastMove = chessBoard.getLastMove();
 
-        if (chessBoard.getFirstMoveVariants() != null) {
+        if (chessBoard.getFirstMoveVariants().size() > 0) {
             move = chessBoard.getFirstMoveVariants().get(0);
 
             notation.append("<html>").
