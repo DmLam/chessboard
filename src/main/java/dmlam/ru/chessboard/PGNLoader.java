@@ -221,13 +221,14 @@ public class PGNLoader {
             moves.delete(0, i);
             skipSpace(moves);
 
-            if (!chessboard.shortMove(moveOrder, sb.toString()))
+            if (!chessboard.shortMove(moveOrder, sb.toString(), true))
                 throw new WrongPGN(String.format("Incorrect move '%s'", sb.toString()));
         }
     }
 
-    private boolean parseMoves(Game game, StringBuilder moves) throws WrongPGN {
+    private boolean parseMoves(Game game, StringBuilder moves, int variantLevel) throws WrongPGN {
         boolean result = true;
+        boolean firstMove = true;
         String comment = parseComment(moves);
 
         if (!"".equals(comment)) {
@@ -274,6 +275,10 @@ public class PGNLoader {
                 }
 
                 parseMove(game, moves);
+                if (firstMove && variantLevel > 1) {
+                    chessboard.moveVariantDown(chessboard.getLastMove());
+                }
+                firstMove = false;
 
                 do {
                     if (moves.length() == 0) {
@@ -296,7 +301,7 @@ public class PGNLoader {
                         moves.delete(0, 1);
 
                         chessboard.rollback();
-                        parseMoves(game, moves);
+                        parseMoves(game, moves, variantLevel + 1);
                         chessboard.gotoMove(lastMoveId);
                         if (moves.length() == 0 || moves.charAt(0) != '(') {
                             // after a variant can be only another variant
@@ -344,7 +349,7 @@ public class PGNLoader {
             line = readLine(in);
         }
 
-        result = parseMoves(game, new StringBuilder(moves));
+        result = parseMoves(game, new StringBuilder(moves), 1);
 
         return result;
     }

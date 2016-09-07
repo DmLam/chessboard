@@ -567,8 +567,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     public void onNeedPieceForTransformation(Point sourceSquare) {
         if (animatingMove != null) {
             ChessBoard.PromoteTo promotion = animatingMove.getPromotePawnTo();
+
             if (promotion != null) {
-                chessBoard.promotePawnTo(sourceSquare, promotion);
+                chessBoard.promotePawnTo(sourceSquare, promotion, false);
             }
             else {
                 throw new RuntimeException("Can't promote pawn at animated move");
@@ -580,7 +581,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     public void onSelectPawnTransformation(ChessBoard.PromoteTo result) {
-        chessBoard.promotePawnTo(pawnTransformationSourceSquare, result);
+        chessBoard.promotePawnTo(pawnTransformationSourceSquare, result, false);
         selectingPawnTransformation = false;
         pawnTransformationSourceSquare = null;
         transformingPawnColor = null;

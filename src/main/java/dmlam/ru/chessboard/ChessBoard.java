@@ -147,7 +147,8 @@ public class ChessBoard {
         setPieceAt(point.x, point.y, piece);
     }
 
-    boolean movePieceTo(Piece piece, int x, int y) {
+    // forceNewVariant = true - если необходимо создать новый вариант, даже если в вариантах продолжения текущего хода уже есть такой ход
+    boolean movePieceTo(Piece piece, int x, int y, boolean forceNewVariant) {
         Point sourceSquare = piece.getXY();
 
         if (isInPawnPromotion())
@@ -187,12 +188,12 @@ public class ChessBoard {
                 } else if (piece.getX() == 7 && piece.getY() == horz) {
                     castling[piece.getColor().ordinal()][Castling.KING.ordinal()] = false;
                 }
-                passMoveToOpponent();
+                passMoveToOpponent(forceNewVariant);
             } else if (piece.getKind() == Kind.KING) {
                 // если ход королем, то установим невозможность рокировок и если это собственно рокировка - двинем и соответствующую ладье тоже
                 castling[piece.getColor().ordinal()][Castling.KING.ordinal()] = false;
                 castling[piece.getColor().ordinal()][Castling.QUEEN.ordinal()] = false;
-                passMoveToOpponent();
+                passMoveToOpponent(forceNewVariant);
 
 
             } else if (piece.getKind() == PAWN && (transformation != ' ' || mOnNeedPieceForTransformation != null)) {
@@ -213,16 +214,16 @@ public class ChessBoard {
                     if (transformation != ' ') {
                         switch (Character.toUpperCase(transformation)) {
                             case 'N':
-                                promotePawnTo(sourceSquare, PromoteTo.KNIGHT);
+                                promotePawnTo(sourceSquare, PromoteTo.KNIGHT, forceNewVariant);
                                 break;
                             case 'B':
-                                promotePawnTo(sourceSquare, PromoteTo.BISHOP);
+                                promotePawnTo(sourceSquare, PromoteTo.BISHOP, forceNewVariant);
                                 break;
                             case 'R':
-                                promotePawnTo(sourceSquare, PromoteTo.ROOK);
+                                promotePawnTo(sourceSquare, PromoteTo.ROOK, forceNewVariant);
                                 break;
                             case 'Q':
-                                promotePawnTo(sourceSquare, PromoteTo.QUEEN);
+                                promotePawnTo(sourceSquare, PromoteTo.QUEEN, forceNewVariant);
                                 break;
                             default:
                                 result = false;
@@ -237,11 +238,11 @@ public class ChessBoard {
                 else {
                     // если пешка не превращается в фигуру - меняем очередь хода.
                     // иначе поменяем когда будет выбрана фигура для превращения (т.к., ход может быть отменен)
-                    passMoveToOpponent();
+                    passMoveToOpponent(forceNewVariant);
                 }
             }
             else {
-                passMoveToOpponent();
+                passMoveToOpponent(forceNewVariant);
             }
         }
 
@@ -249,7 +250,11 @@ public class ChessBoard {
     }
 
     boolean movePieceTo(Piece piece, Point target) {
-        return movePieceTo(piece, target.x, target.y);
+        return movePieceTo(piece, target, false);
+    }
+
+    boolean movePieceTo(Piece piece, Point target, boolean forceNewVariant) {
+        return movePieceTo(piece, target.x, target.y, forceNewVariant);
     }
 
     boolean movePieceTo(Piece piece, Point target, PromoteTo pawnPromotion) {
@@ -283,6 +288,10 @@ public class ChessBoard {
 
     // ход в записи вроде "d2d4" или "с7с8q"
     public boolean fromtomove(String fromtoMove) {
+        return fromtomove(fromtoMove, false);
+    }
+
+    public boolean fromtomove(String fromtoMove, boolean forceNewVariant) {
         boolean result = false;
 
         if (fromtoMove.length() == 5) {
@@ -292,7 +301,7 @@ public class ChessBoard {
             Piece piece = getPiece(getPointFromSquareName(fromtoMove.substring(0, 2)));
 
             if (piece != null) {
-                result = movePieceTo(piece, getPointFromSquareName(fromtoMove.substring(2, 4)));
+                result = movePieceTo(piece, getPointFromSquareName(fromtoMove.substring(2, 4)), forceNewVariant);
             }
         }
 
@@ -382,6 +391,34 @@ public class ChessBoard {
     // возврат хода из основной линии
     public void rollup() {
         rollup(0);
+    }
+
+    public void moveVariantUp(Move move) {
+        if (move.getPrevMove() != null) {
+            MoveList variants = move.getPrevMove().getVariants();
+            if (variants != null) {
+                int index = variants.indexOf(move);
+
+                if (variants.size() > 1 && index > 0) {
+                    variants.remove(index);
+                    variants.add(index - 1, move);
+                }
+            }
+        }
+    }
+
+    public void moveVariantDown(Move move) {
+        if (move.getPrevMove() != null) {
+            MoveList variants = move.getPrevMove().getVariants();
+            if (variants != null) {
+                int index = variants.indexOf(move);
+
+                if (variants.size() > 1 && index < variants.size() - 1) {
+                    variants.remove(index);
+                    variants.add(index + 1, move);
+                }
+            }
+        }
     }
 
     private void gotoMove(Move move) {
@@ -512,13 +549,13 @@ public class ChessBoard {
         return promotedPawn != null;
     }
 
-    public void promotePawnTo(Point sourceSquare, PromoteTo piece) {
+    public void promotePawnTo(Point sourceSquare, PromoteTo piece, boolean forceNewVariant) {
         PawnPiece pawn = (PawnPiece) getPiece(promotedPawn);
 
         pawn.promoteTo(sourceSquare, piece);
 
         halfmoveQnt = -1; // -1 т.к. в passMoveToOpponent счетчик будет увеличен на 1
-        passMoveToOpponent();
+        passMoveToOpponent(forceNewVariant);
         promotedPawn = null;
     }
 
@@ -1152,7 +1189,7 @@ public class ChessBoard {
     }
 
     // передаем ход противнику
-    void passMoveToOpponent() {
+    void passMoveToOpponent(boolean forceNewVariant) {
         Move lastMove = lastMovedPiece.lastMove;
 
         lastMove.saveMoveNotation(this);
@@ -1185,6 +1222,7 @@ public class ChessBoard {
         if (lastMoveVariants.size() > 0) {
             // Проверим, что ранее в этой ветке не было уже такого хода. Если был, то не будем добавлять еще раз
             Move prevMove = lastMoveVariants.get(0).getPrevMove();
+
             if (prevMove != null) {
                 // prevMove == null => только что сделан первый ход
                 lastMoveIndex = prevMove.findVariant(lastMove.getPiece1Kind(), moveOrder.opposite(), lastMove.getPiece1From(), lastMove.getPiece1To(), lastMove.getPromotePawnTo());
@@ -1192,9 +1230,10 @@ public class ChessBoard {
         }
 
         // Если только что был сделан первый ход или не было такого варианта - добавим
-        if (lastMoveIndex == -1) {
+        if (lastMoveIndex == -1 || forceNewVariant) {
             int moveIndex = lastMoveVariants.locateMove(lastMove);
-            if (moveIndex == -1) {
+
+            if (moveIndex == -1 || forceNewVariant) {
                 lastMoveVariants.add(0, lastMove);
                 lastMoveIndex = 0;
             } else {
@@ -1249,9 +1288,12 @@ public class ChessBoard {
                 }
             }
     }
+    public boolean shortMove(Color player, String move) {
+        return shortMove(player, move, false);
+    }
 
     // make move by short notation (like e4, d1Q, Rae2, ...)
-    public boolean shortMove(Color player, String move) {
+    public boolean shortMove(Color player, String move, boolean forceNewVariant) {
         boolean result = false;
 
         if (move != null && !move.isEmpty()) {
@@ -1269,19 +1311,19 @@ public class ChessBoard {
                     // castling
                     if (move.equals("o-o")) {
                         if (player == WHITE) {
-                            result = fromtomove("a5a7");
+                            result = fromtomove("a5a7", forceNewVariant);
                         }
                         else {
-                            result = fromtomove("h5h7");
+                            result = fromtomove("h5h7", forceNewVariant);
                         }
                     }
                     else
                     if (move.equals("o-o-o")) {
                         if (player == WHITE) {
-                            result = fromtomove("a5a3");
+                            result = fromtomove("a5a3", forceNewVariant);
                         }
                         else {
-                            result = fromtomove("h5h3");
+                            result = fromtomove("h5h3", forceNewVariant);
                         }
                     }
                 }
@@ -1342,7 +1384,7 @@ public class ChessBoard {
 
                             if (pieces.size() == 1) {
                                 // the only possible move is rest
-                                result = movePieceTo(pieces.get(0), p);
+                                result = movePieceTo(pieces.get(0), p, forceNewVariant);
                             }
                         }
                     }
@@ -1392,7 +1434,7 @@ public class ChessBoard {
 
                                     if (pieces.size() == 1) {
                                         // the only possible move is rest
-                                        result = movePieceTo(pieces.get(0), p);
+                                        result = movePieceTo(pieces.get(0), p, forceNewVariant);
                                     }
                                 }
                             }
@@ -1408,7 +1450,7 @@ public class ChessBoard {
 
                             if (pieces.size() == 1) {
                                 // the only possible move is rest
-                                result = movePieceTo(pieces.get(0), p);
+                                result = movePieceTo(pieces.get(0), p, forceNewVariant);
                             }
                         }
                     }
