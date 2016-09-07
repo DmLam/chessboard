@@ -1256,7 +1256,7 @@ public class ChessBoard {
 
         if (move != null && !move.isEmpty()) {
             if (move.charAt(move.length() - 1) == '+' || move.charAt(move.length() - 1) == '#') {
-                move = move.substring(0, move.length() - 2);
+                move = move.substring(0, move.length() - 1);
             }
 
             if (!move.isEmpty()) {
@@ -1286,7 +1286,7 @@ public class ChessBoard {
                     }
                 }
                 else
-                if ("kqrbn".indexOf(pieceLetter) >= 0) {
+                if ("KQRBN".indexOf(pieceLetter) >= 0) {
                     String to = move.substring(move.length() - 2);
                     Point p;
 
@@ -1299,10 +1299,16 @@ public class ChessBoard {
 
                     if (p != null) {
                         Piece targetPiece = getPiece(p);
+                        boolean capturing;
 
                         move = move.substring(1, move.length() - 2);
-                        if ((move.equals("x") && targetPiece != null && targetPiece.getColor() != player) ||
-                                ("".equals(move) && targetPiece == null)) {
+                        capturing = move.length() > 0 && move.substring(move.length() - 1).equals("x");
+                        if (capturing) {
+                            move = move.substring(0, move.length() - 1);
+                        }
+
+                        if ((capturing && targetPiece != null && targetPiece.getColor() != player) ||
+                                (targetPiece == null)) {
 
                             listPieces(Piece.Kind.kindByLetter(pieceLetter), player, pieces);
                             for (int i = pieces.size() - 1; i >= 0; i--) {
@@ -1332,11 +1338,11 @@ public class ChessBoard {
                                         }
                                     }
                                 }
+                            }
 
-                                if (pieces.size() == 1) {
-                                    // the only possible move is rest
-                                    result = movePieceTo(pieces.get(0), p);
-                                }
+                            if (pieces.size() == 1) {
+                                // the only possible move is rest
+                                result = movePieceTo(pieces.get(0), p);
                             }
                         }
                     }
@@ -1352,6 +1358,10 @@ public class ChessBoard {
                     if ("qrbn".indexOf(transformation) >= 0) {
                         // promoting
                         move = move.substring(0, move.length() - 1);
+                        if (move.length() > 0 && "/=".indexOf(move.charAt(move.length()-1)) >= 0) {
+                            // notation like e8/Q or e8=Q - simply delete last character
+                            move = move.substring(0, move.length() - 1);
+                        }
                     }
                     else {
                         transformation = ' ';
@@ -1368,7 +1378,7 @@ public class ChessBoard {
                     if (p != null) {
                         move = move.substring(0, move.length() - 2);
 
-                        if (move.length() == 2 && move.charAt(1) == 'X') {
+                        if (move.length() == 2 && move.charAt(1) == 'x') {
                             // capturing
                             if (getPiece(p) != null && getPiece(p).getColor() != player) {
                                 int fromRow = getLetterRow(move.charAt(0));

@@ -8,6 +8,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static dmlam.ru.chessboard.Game.GameResult.DRAW;
+import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
 import static dmlam.ru.chessboard.Piece.Color.BLACK;
 import static dmlam.ru.chessboard.Piece.Color.WHITE;
 
@@ -107,6 +109,22 @@ public class PGNLoader {
         }
     }
 
+    private int parseNumericAnnotationGlyph(StringBuilder moves) {
+        StringBuilder sb = new StringBuilder();
+
+        if (moves.charAt(0) == '$') {
+            int i = 1;
+            while (i < moves.length() && Character.isDigit(moves.charAt(i))) {
+                sb.append(moves.charAt(i));
+                i++;
+            }
+            moves.delete(0, i);
+            skipSpace(moves);
+        }
+
+        return Integer.parseInt(sb.toString());
+    }
+
     private String parseComment(StringBuilder moves) throws WrongPGN {
         String result = null;
 
@@ -128,12 +146,10 @@ public class PGNLoader {
             }
         }
 
-
         return result;
     }
 
-    private Move parseMove(Game game, StringBuilder moves, Move lastMove) throws WrongPGN {
-        Move move = null;
+    private void parseMove(Game game, StringBuilder moves) throws WrongPGN {
         int i;
 
         if (moves != null && moves.length() > 0) {
@@ -145,16 +161,15 @@ public class PGNLoader {
             char c = moves.charAt(0);
 
             if (!Character.isDigit(c)) {
-                if (lastMove == null) {
+                if (chessboard.getLastMove() == null) {
                     moveNumber = 1;
-                    moveOrder = WHITE;
                 }
                 else {
-                    moveNumber = move.getMoveNumber();
-                    moveOrder = move.getMoveOrder().opposite();
+                    moveNumber = chessboard.getLastMove().getMoveNumber();
                 }
             }
-            else {
+            else
+            {
                 StringBuilder num = new StringBuilder();
 
                 num.append(c);
@@ -165,13 +180,13 @@ public class PGNLoader {
 
                 moves.delete(0, i);  // delete move number from moves string
                 moveNumber = Integer.valueOf(num.toString());
+                skipSpace(moves);
             }
 
-            if (lastMove == null) {
+            if (chessboard.getLastMove() == null) {
                 chessboard.setNextMoveNumber(moveNumber);
             }
 
-            skipSpace(moves);
             if (moves.length() > 0 && moves.charAt(0) == '.') {
                 if (moves.length() > 1) {
                     if (moves.length() > 2 && moves.charAt(1) == '.' && moves.charAt(2) == '.') {
@@ -188,16 +203,17 @@ public class PGNLoader {
                 }
             }
             else {
-                moveOrder = WHITE;
+                moveOrder = chessboard.getLastMove().getMoveOrder();
             }
 
             skipSpace(moves);
 
             StringBuilder sb = new StringBuilder();
 
-            for (i = 0; i < moves.length() && "12345678abcdefghkqrbn+#o-".indexOf(Character.toLowerCase(moves.charAt(i))) >= 0; i++) {
+            for (i = 0; i < moves.length() && "12345678abcdefghkqrbnx+#o-=/".indexOf(Character.toLowerCase(moves.charAt(i))) >= 0; i++) {
                 sb.append(moves.charAt(i));
             }
+
             if (i == 0) {
                 throw new WrongPGN("Incorrect move");
             }
@@ -207,28 +223,101 @@ public class PGNLoader {
 
             if (!chessboard.shortMove(moveOrder, sb.toString()))
                 throw new WrongPGN(String.format("Incorrect move '%s'", sb.toString()));
-
-            chessboard.getLastMove().getMoveNumber();
-
         }
-
-        return chessboard.getLastMove();
     }
 
     private boolean parseMoves(Game game, StringBuilder moves) throws WrongPGN {
         boolean result = true;
-        int currentMoveNumber = 1;
-        Move lastMove = null;
+        String comment = parseComment(moves);
+
+        if (!"".equals(comment)) {
+            if (chessboard.getLastMoveVariants() == null) {
+                game.getMoves().setComment(comment);
+            } else {
+                chessboard.getLastMoveVariants().setComment(comment);
+            }
+        }
 
         while (moves.length() > 0) {
-
-            game.getMoves().setComment(parseComment(moves));
-
             do {
-                lastMove = parseMove(game, moves, lastMove);
-                lastMove.getVariants().add(lastMove);
+                if (moves.length() > 0) {
+                    Game.GameResult r = null;
+
+                    if (moves.charAt(0) == '*') {
+                        r = UNKNOWN;
+                    }
+                    else
+                    if (moves.length() > 2) {
+                        String s = moves.substring(0, 3);
+
+                        if (s.equals("1/2")) {
+                            r = DRAW;
+                        } else
+                        if (s.equals("1-0")) {
+                            r = Game.GameResult.WHITE;
+                        } else
+                        if (s.equals("0-1")) {
+                            r = Game.GameResult.BLACK;
+                        }
+                    }
+
+                    if (r != null) {
+                        if (chessboard.getLastMove() != null) {
+                            chessboard.getLastMove().setGameResult(r);
+                            return true;
+                        }
+                        else {
+                            game.setResult(r);
+                            return true;
+                        }
+                    }
+                }
+
+                parseMove(game, moves);
+
+                do {
+                    if (moves.length() == 0) {
+                        break;
+                    }
+
+                    if (moves.charAt(0) == '{') {
+                        chessboard.getLastMove().setComment(parseComment(moves));
+                        skipSpace(moves);
+                    }
+                    else
+                    if (moves.charAt(0) == '$') {
+                        chessboard.getLastMove().setNumericAnnotationGlyph(parseNumericAnnotationGlyph(moves));
+                    }
+                    else
+                    if (moves.charAt(0) == '(') {
+                        // variant
+                        int lastMoveId = chessboard.getLastMove().getMoveId();
+
+                        moves.delete(0, 1);
+
+                        chessboard.rollback();
+                        parseMoves(game, moves);
+                        chessboard.gotoMove(lastMoveId);
+                        if (moves.length() == 0 || moves.charAt(0) != '(') {
+                            // after a variant can be only another variant
+                            break;
+                        }
+                    }
+                    else
+                    if (moves.charAt(0) == ')') {
+                        // end of variant
+                        moves.delete(0, 1);
+                        skipSpace(moves);
+
+                        return true;
+                    }
+                    else {
+                        break;
+                    }
+
+                } while (true);
             }
-            while (lastMove != null);
+            while (moves.length() > 0);
 
         }
 
@@ -240,7 +329,6 @@ public class PGNLoader {
 
         String moves = "";
         String line;
-        boolean lastMoveLine = false;
 
         readLine(in);  // skip empty line between tags and moves
 
@@ -287,12 +375,14 @@ public class PGNLoader {
         BufferedReader in = new BufferedReader(fr);
 
         try {
+            int gameNo = 1;
             try {
                 try {
-
-                    while (readGame(in)) ;
+                    while (readGame(in)) {
+                        gameNo++;
+                    };
                 } catch (WrongPGN E) {
-                    Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (line %d):\n%s", fileName, lineNum, E.getMessage()));
+                    Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, gameNo, lineNum, E.getMessage()));
                 }
             } finally {
                 in.close();

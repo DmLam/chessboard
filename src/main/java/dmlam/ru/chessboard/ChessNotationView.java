@@ -14,6 +14,8 @@ import android.webkit.WebViewClient;
 
 import java.util.ArrayList;
 
+import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
+
 /**
  * Created by LamdanDY on 03.07.2015.
  */
@@ -160,7 +162,73 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         if (move == lastMove) {
             result.append("<span style=\"color:").append(lastMoveColor).append("\">");
         }
+
         result.append(move.getNotation());
+
+        switch (move.getNumericAnnotationGlyph()) {
+            case 1:
+                result.append('!');
+                break;
+            case 2:
+                result.append('?');
+                break;
+            case 3:
+                result.append("&#x203C");
+                break;
+            case 4:
+                result.append("&#x2047");
+                break;
+            case 5:
+                result.append("&#x2049");
+                break;
+            case 6:
+                result.append("&#x2048");
+                break;
+            case 7:
+                result.append("&#x25A1");  // white square - forced move
+                break;
+            case 10:
+                result.append("=");
+                break;
+            case 13:
+                result.append("&infin;");  // ∞
+                break;
+            case 14:
+                result.append("&#x2A72");  // ⩲
+                break;
+            case 15:
+                result.append("&#x2A71");  // ⩱
+                break;
+            case 16:
+                result.append("&plusmn");  // ±
+                break;
+            case 17:
+                result.append("&#x2213");  // ∓
+                break;
+            case 18:
+                result.append("+-");
+                break;
+            case 19:
+                result.append("-+");
+                break;
+            default:
+                break;
+        }
+
+        if (move.getGameResult() != UNKNOWN) {
+            switch(move.getGameResult()) {
+                case WHITE:
+                    result.append("&nbsp;1-0");
+                    break;
+                case DRAW:
+                    result.append("&nbsp;1/2-1/2");
+                    break;
+                case BLACK:
+                    result.append("&nbsp;0-1");
+                    break;
+            }
+        }
+
         if (move == lastMove) {
             result.append("</span>");
         }

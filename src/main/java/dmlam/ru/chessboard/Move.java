@@ -4,13 +4,17 @@ import android.graphics.Point;
 
 import java.util.ArrayList;
 
+import dmlam.ru.chessboard.Game.GameResult;
+
+import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
+
 /**
  * Created by Lam on 01.07.2015.
  */
 
 final public class Move {
 
-    int id = 0;  // id хода по которому его можно будет найти, например, при клике пользователя по записи партии
+    private int id = 0;  // id хода по которому его можно будет найти, например, при клике пользователя по записи партии
     private Piece piece = null; // сходившая фигура
     private Piece.Kind piece1Kind, piece2Kind;
     private Point piece1From, piece1To, piece2From, piece2To;
@@ -30,13 +34,14 @@ final public class Move {
     private boolean opponentResign = false;     // противник сдался
     private boolean gameDrawn = false;          // игра завершилась вничью
 
+    private GameResult gameResult = UNKNOWN;
+
     protected MoveList prevVariants;
     private MoveList variants = new MoveList();
 
     public Move(Piece piece) {
         this.piece = piece;
     }
-
 
     @Override
     public String toString() {
@@ -77,6 +82,14 @@ final public class Move {
 
     public void setOpponentResign(boolean opponentResign) {
         this.opponentResign = opponentResign;
+    }
+
+    public void setGameResult(GameResult gameResult) {
+        this.gameResult = gameResult;
+    }
+
+    public GameResult getGameResult() {
+        return gameResult;
     }
 
     public Piece.Kind getPiece1Kind() {
@@ -177,6 +190,10 @@ final public class Move {
         this.prevVariants = board.getLastMoveVariants();
         this.id = board.generateId();
         this.FEN = board.saveToFEN();
+
+        if (numericAnnotationGlyph > 0) {
+
+        }
 
         if (opponentCheckmated || opponentResign) {
             notation += '#';
