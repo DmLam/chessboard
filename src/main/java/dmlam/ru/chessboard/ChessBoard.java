@@ -326,7 +326,39 @@ public class ChessBoard {
         loadFromFEN(initialPositionFEN, true);
     }
 
-    // возврат хода
+    // откат к предыдущему ходу
+    public void rollback(int variantIndex) {
+        if (lastMoveVariants != null && lastMoveVariants.size() > 0) {
+            Move lastMove;
+
+            lastMove = getLastMove();
+            lastMoveVariants = lastMove.getPrevVariants();
+            lastMoveIndex = -1;
+
+            if (lastMoveVariants != null || variantIndex > 0) {
+                // if current move is the first and variant index is defferent from 0 then we'll got the 'index out of range' exception
+                lastMoveIndex = variantIndex;
+                lastMove = lastMoveVariants.get(lastMoveIndex);
+
+                restoreBoardState(lastMove);
+            }
+            else {
+                beginUpdate();
+                try {
+                    gotoInitialPosition();
+                    lastMoveVariants = null;
+                }
+                finally {
+                    endUpdate();
+                }
+
+            }
+
+            doOnRollback(lastMove);
+        }
+    }
+
+    // откат к предыдущему ходу (из основной ветки)
     public void rollback() {
         if (lastMoveVariants != null && lastMoveVariants.size() > 0) {
             Move lastMove;
@@ -1364,7 +1396,7 @@ public class ChessBoard {
                                 char fromposchar = move.charAt(0);
 
                                 if (Character.isDigit(fromposchar)) {
-                                    int y = Integer.valueOf(fromposchar);
+                                    int y = getLetterColumn(fromposchar);
 
                                     for (int i = pieces.size() - 1; i >= 0; i--) {
                                         if (pieces.get(i).getY() != y) {

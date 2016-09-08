@@ -28,7 +28,7 @@ public class PGNLoader {
             super(message);
         }
     };
-    private ArrayList<Game> games = new ArrayList<Game>();
+    private ArrayList<Game> games = null;
     private ChessBoard chessboard = new ChessBoard();
 
     private String readLine(BufferedReader in) throws IOException {
@@ -228,7 +228,7 @@ public class PGNLoader {
 
     private boolean parseMoves(Game game, StringBuilder moves, int variantLevel) throws WrongPGN {
         boolean result = true;
-        boolean firstMove = true;
+        Move variantStart = null;
         String comment = parseComment(moves);
 
         if (!"".equals(comment)) {
@@ -275,10 +275,9 @@ public class PGNLoader {
                 }
 
                 parseMove(game, moves);
-                if (firstMove && variantLevel > 1) {
-                    chessboard.moveVariantDown(chessboard.getLastMove());
+                if (variantStart == null) {
+                    variantStart = chessboard.getLastMove();
                 }
-                firstMove = false;
 
                 do {
                     if (moves.length() == 0) {
@@ -297,14 +296,16 @@ public class PGNLoader {
                     if (moves.charAt(0) == '(') {
                         // variant
                         int lastMoveId = chessboard.getLastMove().getMoveId();
+                        MoveList prevVariants = chessboard.getLastMove().getPrevVariants();
+                        int prevMoveIndex = prevVariants == null ? 0 : prevVariants.size() - 1;
 
                         moves.delete(0, 1);
 
                         chessboard.rollback();
                         parseMoves(game, moves, variantLevel + 1);
                         chessboard.gotoMove(lastMoveId);
-                        if (moves.length() == 0 || moves.charAt(0) != '(') {
-                            // after a variant can be only another variant
+                        if (moves.length() == 0 || "()".indexOf(moves.charAt(0)) < 0) {
+                            // after a variant can be only another variant or earlier variant ending
                             break;
                         }
                     }
@@ -313,6 +314,7 @@ public class PGNLoader {
                         // end of variant
                         moves.delete(0, 1);
                         skipSpace(moves);
+                        chessboard.moveVariantDown(variantStart);
 
                         return true;
                     }
@@ -366,8 +368,10 @@ public class PGNLoader {
         return result;
     }
 
-    public PGNLoader(String fileName) {
+    public PGNLoader(String fileName, ArrayList<Game> games) {
         FileReader fr = null;
+
+        this.games = games;
 
         try {
             fr = new FileReader(fileName);
@@ -386,7 +390,8 @@ public class PGNLoader {
                     while (readGame(in)) {
                         gameNo++;
                     };
-                } catch (WrongPGN E) {
+                }
+                catch (Exception E) {
                     Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, gameNo, lineNum, E.getMessage()));
                 }
             } finally {
