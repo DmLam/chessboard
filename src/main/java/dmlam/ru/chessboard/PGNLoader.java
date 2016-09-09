@@ -29,7 +29,7 @@ public class PGNLoader {
         }
     };
     private ArrayList<Game> games = null;
-    private ChessBoard chessboard = new ChessBoard();
+    private ChessBoard chessboard;
 
     private String readLine(BufferedReader in) throws IOException {
         String line;
@@ -89,11 +89,6 @@ public class PGNLoader {
 
         while (readTag(in, game)) {
             result = true;
-        }
-
-        String FEN = game.tagByName("FEN");
-        if (FEN != null) {
-            chessboard.loadFromFEN(FEN);
         }
 
         return result;
@@ -233,7 +228,7 @@ public class PGNLoader {
 
         if (!"".equals(comment)) {
             if (chessboard.getLastMoveVariants() == null) {
-                game.getMoves().setComment(comment);
+                chessboard.getFirstMoveVariants().setComment(comment);
             } else {
                 chessboard.getLastMoveVariants().setComment(comment);
             }
@@ -325,7 +320,6 @@ public class PGNLoader {
                 } while (true);
             }
             while (moves.length() > 0);
-
         }
 
         return result;
@@ -333,9 +327,14 @@ public class PGNLoader {
 
     private boolean readMoves(BufferedReader in, Game game) throws IOException, WrongPGN {
         boolean result = false;
-
+        String FEN = game.tagByName("FEN");
         String moves = "";
         String line;
+
+        chessboard = new ChessBoard();
+        if (FEN != null) {
+            chessboard.loadFromFEN(FEN);
+        }
 
         readLine(in);  // skip empty line between tags and moves
 
@@ -352,6 +351,7 @@ public class PGNLoader {
         }
 
         result = parseMoves(game, new StringBuilder(moves), 1);
+        game.setMoves(chessboard.getFirstMoveVariants());
 
         return result;
     }
