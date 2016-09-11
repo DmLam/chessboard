@@ -333,6 +333,7 @@ public class PGNLoader {
 
         chessboard = new ChessBoard();
         if (FEN != null) {
+            game.setStartPosition(FEN);
             chessboard.loadFromFEN(FEN);
         }
 

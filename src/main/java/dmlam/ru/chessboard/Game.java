@@ -88,4 +88,7 @@ public class Game {
         this.moves = moves;
     }
 
+    public void setStartPosition(String startPosition) {
+        this.startPosition = startPosition;
+    }
 }
