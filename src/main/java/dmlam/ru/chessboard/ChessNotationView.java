@@ -232,13 +232,13 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         if (move == lastMove) {
             result.append("</span>");
         }
+        result.append("</a>");
         if (move.getComment() != null) {
-            result.append("</span class=\"comment\">")
+            result.append("<span class=\"").append("comment").append("\">")
                     .append(' ')
                     .append(move.getComment())
                     .append("</span>");
         }
-        result.append("</a>");
         if (move.getMoveOrder() == Piece.Color.WHITE) {
             // после хода черных добавим еще один пробел для визуальной приятности
             result.append(" ");

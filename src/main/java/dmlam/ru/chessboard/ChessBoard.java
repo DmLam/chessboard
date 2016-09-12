@@ -541,18 +541,20 @@ public class ChessBoard {
     public void removeMove(Move move) {
         if (move != null) {
             Move lastMove = getLastMove();
-            /* получение variants разбито на два этапа и две переменные для отладки - чтобы понять, где возникало nullPointer */
-            Move prevMove = move.getPrevMove();
-            MoveList variants = prevMove.getVariants();
 
-            if (move != lastMove) {
-                if (variants.size() > 1 || variants.get(0).getVariantCount() == 0) {
+            if (lastMove != null) {
+                Move prevMove = move.getPrevMove();
+                MoveList variants = prevMove.getVariants();
+
+                if (move != lastMove) {
+                    if (variants.size() > 1 || variants.get(0).getVariantCount() == 0) {
+                        variants.removeLine(move);
+                    }
+                } else {
+                    lastMoveVariants = move.getPrevVariants();
+                    lastMoveIndex = 0;
                     variants.removeLine(move);
                 }
-            } else {
-                lastMoveVariants = move.getPrevVariants();
-                lastMoveIndex = 0;
-                variants.removeLine(move);
             }
         }
     }

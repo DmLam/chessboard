@@ -204,7 +204,7 @@ final public class Move {
         }
 
         if (opponentStalemated || gameDrawn) {
-            notation += "1/2-1/2";
+            notation += " 1/2-1/2";
         }
     }
 
