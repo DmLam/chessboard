@@ -247,7 +247,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return result;
     }
 
-
     // todo Функция должна принимать в качестве параметра не Move, а MoveList чтобы можно было отображать ветки первого хода
     private StringBuilder branchNotation(Move move, boolean mainLine) {
         StringBuilder result = new StringBuilder();
@@ -288,22 +287,24 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             wasBranch = false;
             if (!FirstPass || mainLine) {
                 if (prevMove != null && prevMove.getVariantCount() > 1) {
-                    ArrayList<String> branches = new ArrayList<String>();
+                    ArrayList<StringBuilder> branches = new ArrayList<StringBuilder>();
 
                     for (int i = 1; i < prevMove.getVariantCount(); i++) {
                         if (prevMove.getVariants(i) != null) {
-                            String variant = branchNotation(prevMove.getVariants(i), false).
-                                    insert(0, "<br>&nbsp;&nbsp;(").append(')')
-                                    .toString();
+/*
+                            StringBuilder variant = new StringBuilder("<br>&nbsp;&nbsp;(").
+                                    append(branchNotation(prevMove.getVariants(i), false)).
+                                    append(')');
+*/
+                            StringBuilder variant = new StringBuilder("&nbsp;<span class=\"secbranch\">(").
+                                                        append(branchNotation(prevMove.getVariants(i), false)).
+                                                        append(")</span>&nbsp;");
 
                             branches.add(variant);
                         }
                     }
                     for (int i = 0; i < branches.size(); i++) {
-                        result.append("<span class=\"").append("secbranch").append("\">")
-                                .append(branches.get(i))
-                                .append("</span>");
-
+                        result.append(branches.get(i));
                     }
 
 //                    result.append("<br>");
