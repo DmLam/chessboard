@@ -954,7 +954,7 @@ public class ChessBoard {
                 initialPositionFEN = FEN;
 
                 lastMoveVariants = null;
-                game.getMoves().clear();
+                game.clearMoves();
             }
 
             // строки доски
@@ -1240,7 +1240,7 @@ public class ChessBoard {
         lastMove.saveMoveState(this);
 
         if (lastMoveVariants == null) {
-            if (!game.getMoves().isEmpty()) {
+            if (game.getMoves() != null && !game.getMoves().isEmpty()) {
                 lastMoveVariants = game.getMoves();
             }
             else {

@@ -91,4 +91,10 @@ public class Game {
     public void setStartPosition(String startPosition) {
         this.startPosition = startPosition;
     }
+
+    public void clearMoves() {
+        if (moves != null) {
+            moves.clear();
+        }
+    }
 }
