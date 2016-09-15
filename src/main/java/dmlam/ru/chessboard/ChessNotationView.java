@@ -12,8 +12,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import java.util.ArrayList;
-
 import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
 
 /**
@@ -25,17 +23,19 @@ import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
 public class ChessNotationView extends WebView implements IOnMoveListener{
     private static final String LOGTAG = ChessNotationView.class.getName();
 
+    final public static int FONT_SIZE_SMALL = 0;
+    final public static int FONT_SIZE_MIDDLE = 1;
+    final public static int FONT_SIZE_BIG = 2;
+
+    final private static boolean MAIN_LINE = true;
+    final private static boolean SECONDARY_LINE = false;
+
     private ChessBoard chessBoard = null;
     private String textColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_text));
     private String lastMoveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_lastmove));
     private String commentColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_comment));
-//    private ArrayList<String> branches = new ArrayList<String>();
     private Move lastMove;
     private int fontSize = 0;
-
-    final public static int FONT_SIZE_SMALL = 0;
-    final public static int FONT_SIZE_MIDDLE = 1;
-    final public static int FONT_SIZE_BIG = 2;
 
     // используем функцию для установки размера шрифта в WebView, т.к. на API до 14 для этого была функция setTextSize, которая ныне deprecated
     // сейчас же используется setTextZoom, которой нет в API ранее 14-го
@@ -247,8 +247,12 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return result;
     }
 
+    private StringBuilder branchNotation(MoveList moves, boolean mainLine) {
+        return null;
+    }
+
     // todo Функция должна принимать в качестве параметра не Move, а MoveList чтобы можно было отображать ветки первого хода
-    private StringBuilder branchNotation(Move move, boolean mainLine) {
+    private StringBuilder secondaryBranchNotation(Move move, boolean mainLine) {
         StringBuilder result = new StringBuilder();
         Move prevMove;
         boolean FirstPass = true, wasBranch = false;
@@ -287,28 +291,15 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             wasBranch = false;
             if (!FirstPass || mainLine) {
                 if (prevMove != null && prevMove.getVariantCount() > 1) {
-                    ArrayList<StringBuilder> branches = new ArrayList<StringBuilder>();
 
                     for (int i = 1; i < prevMove.getVariantCount(); i++) {
                         if (prevMove.getVariants(i) != null) {
-/*
-                            StringBuilder variant = new StringBuilder("<br>&nbsp;&nbsp;(").
-                                    append(branchNotation(prevMove.getVariants(i), false)).
-                                    append(')');
-*/
-                            StringBuilder variant = new StringBuilder("&nbsp;<span class=\"secbranch\">(").
-                                                        append(branchNotation(prevMove.getVariants(i), false)).
-                                                        append(")</span>&nbsp;");
-
-                            branches.add(variant);
+                            result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(").
+                                    append(secondaryBranchNotation(prevMove.getVariants(i), SECONDARY_LINE)).
+                                    append(")</span>");
                         }
                     }
-                    for (int i = 0; i < branches.size(); i++) {
-                        result.append(branches.get(i));
-                    }
-
-//                    result.append("<br>");
-
+                    result.append("<br>");
                     wasBranch = true;
                 }
             }
@@ -344,7 +335,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("</style>").
                     append("</head>").
                     append("<body>").
-                    append(branchNotation(move, true)).
+                    append(secondaryBranchNotation(move, MAIN_LINE)).
                             append("</body>").
                     append("</html>");
 
