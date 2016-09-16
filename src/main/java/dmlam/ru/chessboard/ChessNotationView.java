@@ -247,18 +247,25 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return result;
     }
 
-    private StringBuilder branchNotation(MoveList moves, boolean mainLine) {
+    private StringBuilder variantsNotation(MoveList variants, boolean mainLine) {
+        StringBuilder result = branchNotation(variants.get(0), mainLine);
+
+        for(int i = 1; i < variants.size(); i++) {
+            result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(").
+                    append(branchNotation(variants.get(i), SECONDARY_LINE)).
+                    append(")</span>");
+        }
+
         return null;
     }
 
     // todo Функция должна принимать в качестве параметра не Move, а MoveList чтобы можно было отображать ветки первого хода
-    private StringBuilder secondaryBranchNotation(Move move, boolean mainLine) {
+    private StringBuilder branchNotation(Move move, boolean mainLine) {
         StringBuilder result = new StringBuilder();
         Move prevMove;
         boolean FirstPass = true, wasBranch = false;
 
-        // Выведем номер хода.
-        // Если после данного хода наступила очередь белых, то этот ход был черных. Добавим многоточие вместо хода белых.
+        // Выведем номер хода. Если после данного хода наступила очередь белых, то этот ход был черных. Добавим многоточие вместо хода белых.
         if (move.getMoveOrder() == Piece.Color.WHITE) {
             // в Move сохраняется состояние всех параметров доски ПОСЛЕ хода, но это не касается номера хода. Он сохраняется по состоянию ПЕРЕД ходом
             result.append(move.getMoveNumber())
@@ -295,7 +302,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     for (int i = 1; i < prevMove.getVariantCount(); i++) {
                         if (prevMove.getVariants(i) != null) {
                             result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(").
-                                    append(secondaryBranchNotation(prevMove.getVariants(i), SECONDARY_LINE)).
+                                    append(branchNotation(prevMove.getVariants(i), SECONDARY_LINE)).
                                     append(")</span>");
                         }
                     }
@@ -310,7 +317,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return result;
     }
 
-    // todo разобраться почему приходим сюда два раза после каждого хода
     public void updateNotation() {
         Move move;
         StringBuilder notation = new StringBuilder(), m = new StringBuilder(), sb = new StringBuilder();
@@ -335,7 +341,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("</style>").
                     append("</head>").
                     append("<body>").
-                    append(secondaryBranchNotation(move, MAIN_LINE)).
+                    append(branchNotation(move, MAIN_LINE)).
                             append("</body>").
                     append("</html>");
 
