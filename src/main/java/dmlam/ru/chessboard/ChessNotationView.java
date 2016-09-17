@@ -248,7 +248,14 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     private StringBuilder variantsNotation(MoveList variants, boolean mainLine) {
-        StringBuilder result = branchNotation(variants.get(0), mainLine);
+        StringBuilder result;
+
+        if (mainLine) {
+            result = branchNotation(variants.get(0), mainLine);
+        }
+        else {
+            result = new StringBuilder();
+        }
 
         for(int i = 1; i < variants.size(); i++) {
             result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(").
@@ -256,7 +263,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append(")</span>");
         }
 
-        return null;
+        return result;
     }
 
     // todo Функция должна принимать в качестве параметра не Move, а MoveList чтобы можно было отображать ветки первого хода
@@ -299,6 +306,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             if (!FirstPass || mainLine) {
                 if (prevMove != null && prevMove.getVariantCount() > 1) {
 
+                    result.append(variantsNotation(prevMove.getVariants(), SECONDARY_LINE));
+/*
                     for (int i = 1; i < prevMove.getVariantCount(); i++) {
                         if (prevMove.getVariants(i) != null) {
                             result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(").
@@ -306,6 +315,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                                     append(")</span>");
                         }
                     }
+*/
                     result.append("<br>");
                     wasBranch = true;
                 }
@@ -341,7 +351,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("</style>").
                     append("</head>").
                     append("<body>").
-                    append(branchNotation(move, MAIN_LINE)).
+                    append(variantsNotation(chessBoard.getFirstMoveVariants(), MAIN_LINE)).
                             append("</body>").
                     append("</html>");
 
