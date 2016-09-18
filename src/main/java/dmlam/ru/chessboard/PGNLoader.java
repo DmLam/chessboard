@@ -227,10 +227,10 @@ public class PGNLoader {
         String comment = parseComment(moves);
 
         if (!"".equals(comment)) {
-            if (chessboard.getLastMoveVariants() == null) {
+            if (chessboard.getLastMove() == null) {
                 chessboard.getFirstMoveVariants().setComment(comment);
             } else {
-                chessboard.getLastMoveVariants().setComment(comment);
+                chessboard.getLastMove().getVariants().setComment(comment);
             }
         }
 

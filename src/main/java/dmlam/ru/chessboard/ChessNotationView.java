@@ -248,19 +248,34 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     private StringBuilder variantsNotation(MoveList variants, boolean mainLine) {
-        StringBuilder result;
+        StringBuilder result = new StringBuilder();;
 
         if (mainLine) {
-            result = branchNotation(variants.get(0), mainLine);
-        }
-        else {
-            result = new StringBuilder();
+            if (variants.getComment() != null) {
+                result.append("<span class=\"").append("comment").append("\">&nbsp;")
+                        .append(' ')
+                        .append(variants.getComment())
+                        .append("</span>&nbsp;");
+            }
+
+            result.append(branchNotation(variants.get(0), mainLine));
         }
 
-        for(int i = 1; i < variants.size(); i++) {
-            result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(").
-                    append(branchNotation(variants.get(i), SECONDARY_LINE)).
-                    append(")</span>");
+        if (variants.size() > 1) {
+            result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(&nbsp;");
+            if (variants.getComment() != null) {
+                result.append("<span class=\"").append("comment").append("\">&nbsp;")
+                        .append(' ')
+                        .append(variants.getComment())
+                        .append("</span>&nbsp;");
+            }
+            for (int i = 1; i < variants.size(); i++) {
+                result.append(branchNotation(variants.get(i), SECONDARY_LINE));
+                if (i < variants.size() - 1) {
+                    result.append(";<br>");
+                }
+            }
+            result.append(")</span>");
         }
 
         return result;
@@ -328,13 +343,11 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     public void updateNotation() {
-        Move move;
         StringBuilder notation = new StringBuilder(), m = new StringBuilder(), sb = new StringBuilder();
 
         lastMove = chessBoard.getLastMove();
 
         if (chessBoard.getFirstMoveVariants().size() > 0) {
-            move = chessBoard.getFirstMoveVariants().get(0);
 
             notation.append("<html>").
                     append("<head>").

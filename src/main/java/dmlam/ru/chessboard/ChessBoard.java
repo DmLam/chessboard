@@ -1240,7 +1240,7 @@ public class ChessBoard {
         lastMove.saveMoveState(this);
 
         if (lastMoveVariants == null) {
-            if (game.getMoves() != null && !game.getMoves().isEmpty()) {
+            if (game.getMoves() != null) {
                 lastMoveVariants = game.getMoves();
             }
             else {

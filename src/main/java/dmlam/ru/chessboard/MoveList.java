@@ -110,7 +110,7 @@ public class MoveList extends ArrayList<Move> {
         add(line);
     }
 
-    public void setComment(String cooment) {
+    public void setComment(String comment) {
         this.comment = comment;
     }
 
