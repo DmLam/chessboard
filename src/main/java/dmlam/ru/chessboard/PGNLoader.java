@@ -4,11 +4,10 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -376,7 +375,8 @@ public class PGNLoader {
 
     public void createFileIndex(String fileName, String indexFileName) throws PGNError {
         FileReader fr = null;
-        FileWriter fw = null;
+        FileOutputStream fos = null;
+
         ArrayList<Integer> idx = new ArrayList<Integer>();
 
         try {
@@ -396,7 +396,7 @@ public class PGNLoader {
                 f.setWritable(true);
             }
 
-            fw = new FileWriter(f);
+            fos = new FileOutputStream(f);
         }
         catch(IOException E) {
             Log.e(LOGTAG, String.format(LOGTAG + " PGN file not found (%s)", fileName));
@@ -428,18 +428,19 @@ public class PGNLoader {
             Log.e(LOGTAG, String.format(LOGTAG + " Error reading file %s:\n%s", fileName, E.toString()));
         }
 
-        BufferedWriter out = new BufferedWriter(fw);
+        byte[] buf = new byte[idx.size() * 4];
+
+        for (int i = 0; i < idx.size(); i++) {
+            int index = idx.get(i);
+            buf[i * 4] = (byte) index; index /= 256;
+            buf[i * 4 + 1] = (byte) index; index /= 256;
+            buf[i * 4 + 2] = (byte) index; index /= 256;
+            buf[i * 4 + 3] = (byte) index;
+        }
 
         try {
-            for (int i = 0; i < idx.size(); i++) {
-                int index = idx.get(i);
-                for (int j = 1; j <= 4; j++) {
-                    int c = index % 256;
-
-                    index = index >> 8;
-                    out.write(c);
-                }
-            }
+            fos.write(buf);
+            fos.close();
         }catch (IOException E) {
             Log.e(LOGTAG, String.format(LOGTAG + "Error writing index %s :\n%s", indexFileName, E.getMessage()));
 
@@ -447,17 +448,24 @@ public class PGNLoader {
         }
     }
 
-    public PGNLoader(String fileName) throws PGNError {
-        FileReader fr = null;
-        String indexFileName = fileName;
-        int pointPos = indexFileName.lastIndexOf(".");
+    private String removeExtension(String fileName) {
+        String result = fileName;
+        int pointPos = fileName.lastIndexOf('.'), slashPos = fileName.lastIndexOf('/');
+        int pos = pointPos > slashPos ? pointPos : -1;
 
-        if (pointPos > 0) {
-            indexFileName = indexFileName.substring(0, pointPos);
+        if (pos > 0) {
+            result = result.substring(pos);
         }
-        indexFileName.concat(".idx");
+
+        return result;
+    }
+
+    public PGNLoader(String fileName) throws PGNError {
+        String indexFileName = removeExtension(fileName).concat(".idx");
 
         createFileIndex(fileName, indexFileName);
+/*
+        FileReader fr = null;
 
         try {
             fr = new FileReader(fileName);
@@ -487,6 +495,7 @@ public class PGNLoader {
         catch (IOException E) {
             Log.e(LOGTAG, String.format(LOGTAG + " Error reading file %s:\n%s", fileName, E.toString()));
         }
+*/
     }
 
     public int getGamesCount() {
