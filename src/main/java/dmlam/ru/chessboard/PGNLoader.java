@@ -4,7 +4,11 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -23,12 +27,13 @@ public class PGNLoader {
 
     private int lineNum = 0;
 
-    private class WrongPGN extends Exception{
-        public WrongPGN(String message) {
+    public class PGNError extends Exception{
+        public PGNError(String message) {
             super(message);
         }
     };
-    private ArrayList<Game> games = null;
+
+    private ArrayList<Game> games = new ArrayList<Game>();
     private ChessBoard chessboard;
 
     private String readLine(BufferedReader in) throws IOException {
@@ -43,7 +48,7 @@ public class PGNLoader {
         return line;
     }
 
-    private boolean readTag(BufferedReader in, Game game) throws WrongPGN, IOException {
+    private boolean readTag(BufferedReader in, Game game) throws PGNError, IOException {
         boolean result = false;
 
         char[] c = new char[1];
@@ -66,15 +71,15 @@ public class PGNLoader {
                         }
                     }
                     else {
-                        throw new WrongPGN("Wrong PGN format (no space after tag name)");
+                        throw new PGNError("Wrong PGN format (no space after tag name)");
                     }
                 }
                 else {
-                    throw new WrongPGN("Unexpected end of line");
+                    throw new PGNError("Unexpected end of line");
                 }
             }
             else {
-                throw new WrongPGN("Unexpected end of file: no moves section");
+                throw new PGNError("Unexpected end of file: no moves section");
             }
         }
         else {
@@ -84,7 +89,7 @@ public class PGNLoader {
         return result;
     }
 
-    private boolean readTags(BufferedReader in, Game game) throws WrongPGN, IOException  {
+    private boolean readTags(BufferedReader in, Game game) throws PGNError, IOException  {
         boolean result = false;
 
         while (readTag(in, game)) {
@@ -120,7 +125,7 @@ public class PGNLoader {
         return Integer.parseInt(sb.toString());
     }
 
-    private String parseComment(StringBuilder moves) throws WrongPGN {
+    private String parseComment(StringBuilder moves) throws PGNError {
         String result = null;
 
         if (moves.length() > 0) {
@@ -136,7 +141,7 @@ public class PGNLoader {
                     moves.delete(0, commentEnd + 1);
                 }
                 else {
-                    throw new WrongPGN("End of comment not found");
+                    throw new PGNError("End of comment not found");
                 }
             }
         }
@@ -144,7 +149,7 @@ public class PGNLoader {
         return result;
     }
 
-    private void parseMove(Game game, StringBuilder moves) throws WrongPGN {
+    private void parseMove(Game game, StringBuilder moves) throws PGNError {
         int i;
 
         if (moves != null && moves.length() > 0) {
@@ -194,7 +199,7 @@ public class PGNLoader {
                     }
                 }
                 else {
-                    throw new WrongPGN("Incorrect move number");
+                    throw new PGNError("Incorrect move number");
                 }
             }
             else {
@@ -210,18 +215,18 @@ public class PGNLoader {
             }
 
             if (i == 0) {
-                throw new WrongPGN("Incorrect move");
+                throw new PGNError("Incorrect move");
             }
 
             moves.delete(0, i);
             skipSpace(moves);
 
             if (!chessboard.shortMove(moveOrder, sb.toString(), true))
-                throw new WrongPGN(String.format("Incorrect move '%s'", sb.toString()));
+                throw new PGNError(String.format("Incorrect move '%s'", sb.toString()));
         }
     }
 
-    private boolean parseMoves(Game game, StringBuilder moves, int variantLevel) throws WrongPGN {
+    private boolean parseMoves(Game game, StringBuilder moves, int variantLevel) throws PGNError {
         boolean result = true;
         Move variantStart = null;
         String comment = parseComment(moves);
@@ -325,7 +330,7 @@ public class PGNLoader {
         return result;
     }
 
-    private boolean readMoves(BufferedReader in, Game game) throws IOException, WrongPGN {
+    private boolean readMoves(BufferedReader in, Game game) throws IOException, PGNError {
         boolean result = false;
         String FEN = game.tagByName("FEN");
         String moves = "";
@@ -357,7 +362,7 @@ public class PGNLoader {
         return result;
     }
 
-    private boolean readGame(BufferedReader in) throws WrongPGN, IOException  {
+    private boolean readGame(BufferedReader in) throws PGNError, IOException  {
         boolean result = false;
         Game game = new Game();
 
@@ -369,10 +374,90 @@ public class PGNLoader {
         return result;
     }
 
-    public PGNLoader(String fileName, ArrayList<Game> games) {
+    public void createFileIndex(String fileName, String indexFileName) throws PGNError {
         FileReader fr = null;
+        FileWriter fw = null;
+        ArrayList<Integer> idx = new ArrayList<Integer>();
 
-        this.games = games;
+        try {
+            fr = new FileReader(fileName);
+        }
+        catch(FileNotFoundException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + " PGN file not found (%s)", fileName));
+
+            throw new PGNError(String.format("PGN file not found (%s)\n%s", fileName, E.toString()));
+        }
+
+        try {
+            File f = new File(indexFileName);
+
+            if (!f.exists()) {
+                f.createNewFile();
+                f.setWritable(true);
+            }
+
+            fw = new FileWriter(f);
+        }
+        catch(IOException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + " PGN file not found (%s)", fileName));
+
+            throw new PGNError(String.format("Can't create pgn index (%s)", fileName));
+        }
+
+        BufferedReader in = new BufferedReader(fr);
+
+        idx.add(0); // index of the first game
+        try {
+            int gameNo = 1;
+            try {
+                try {
+                    while (readGame(in)) {
+                        idx.add(lineNum);
+                        gameNo++;
+                    };
+                    idx.remove(idx.size() - 1);
+                }
+                catch (Exception E) {
+                    Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, gameNo, lineNum, E.getMessage()));
+                }
+            } finally {
+                in.close();
+            }
+        }
+        catch (IOException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + " Error reading file %s:\n%s", fileName, E.toString()));
+        }
+
+        BufferedWriter out = new BufferedWriter(fw);
+
+        try {
+            for (int i = 0; i < idx.size(); i++) {
+                int index = idx.get(i);
+                for (int j = 1; j <= 4; j++) {
+                    int c = index % 256;
+
+                    index = index >> 8;
+                    out.write(c);
+                }
+            }
+        }catch (IOException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + "Error writing index %s :\n%s", indexFileName, E.getMessage()));
+
+            throw new PGNError(String.format("Error creating pgn index (%s)", fileName));
+        }
+    }
+
+    public PGNLoader(String fileName) throws PGNError {
+        FileReader fr = null;
+        String indexFileName = fileName;
+        int pointPos = indexFileName.lastIndexOf(".");
+
+        if (pointPos > 0) {
+            indexFileName = indexFileName.substring(0, pointPos);
+        }
+        indexFileName.concat(".idx");
+
+        createFileIndex(fileName, indexFileName);
 
         try {
             fr = new FileReader(fileName);
@@ -407,4 +492,9 @@ public class PGNLoader {
     public int getGamesCount() {
         return games.size();
     }
+
+    public Game getGame(int index) {
+        return games.get(index);
+    }
+
 }

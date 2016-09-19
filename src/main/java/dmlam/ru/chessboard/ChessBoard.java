@@ -134,7 +134,7 @@ public class ChessBoard {
         return squares[x][y];
     }
 
-    public Piece getPiece(Point point) { return getPiece(point.x, point.y); };
+    public Piece getPiece(Point point) { return squares[point.x][point.y]; };
 
     public void setPieceAt(int x, int y, Piece piece) {
         squares[x][y] = piece;
@@ -171,7 +171,7 @@ public class ChessBoard {
 
             // если на новой клетке уже что-то есть, то это взятие и нужно сбросить счетчик нерезультативных ходов (для правила 50-ти ходов)
             // аналогично, если ход пешкой
-            if ( getPiece(x, y) != null || piece.getKind() == PAWN)
+            if ( squares[x][y] != null || piece.getKind() == PAWN)
             {
                 halfmoveQnt = -1;  // -1 т.к. в passMoveToOpponent счетчик будет увеличен на 1
             }
@@ -298,7 +298,8 @@ public class ChessBoard {
             transformation = fromtoMove.charAt(4);
         }
         if (fromtoMove.length() == 4 || fromtoMove.length() == 5) {
-            Piece piece = getPiece(getPointFromSquareName(fromtoMove.substring(0, 2)));
+            Point p = getPointFromSquareName(fromtoMove.substring(0, 2));
+            Piece piece = squares[p.x][p.y];
 
             if (piece != null) {
                 result = movePieceTo(piece, getPointFromSquareName(fromtoMove.substring(2, 4)), forceNewVariant);
@@ -614,7 +615,7 @@ public class ChessBoard {
         boolean result = !currentPlayerMated && !currentPlayerStalemated;
 
         if (result) {
-            Piece targetPiece = getPiece(x, y);
+            Piece targetPiece = squares[x][y];
 
             // проверим очередь хода
             result = piece.getColor() == moveOrder;
@@ -666,7 +667,7 @@ public class ChessBoard {
 
             for (int x = 0; x < 8; x++)
                 for (int y = 0; y < 8; y++) {
-                    Piece piece = getPiece(x, y);
+                    Piece piece = squares[x][y];
 
                     if (piece != null && piece.getColor() == color) {
                         int count = piece.generateAvailableMoves();
@@ -702,7 +703,7 @@ public class ChessBoard {
         for (int x = 0; King == null && x <= 7; x++)
             for (int y = 0; King == null && y <= 7; y++)
             {
-                Piece piece = getPiece(x, y);
+                Piece piece = squares[x][y];
                 if (piece != null && piece.getKind() == Kind.KING && piece.getColor() == color) {
                     King = piece;
                 }
@@ -710,12 +711,14 @@ public class ChessBoard {
 
         // если нашли (может быть это просто какая-то расстановка без короля), то проверим не угрожает ли ему какая-то фигура
         if (King != null) {
+            int KingX = King.getX(), KingY = King.getY();
+
             for (int x = 0; !result && x <= 7; x++)
                 for (int y = 0; !result && y <= 7; y++) {
-                    Piece piece = getPiece(x, y);
+                    Piece piece = squares[x][y];
 
                     if (piece != null && piece.getColor() != color) {
-                        result = piece.isSquareThreaten(King.getX(), King.getY());
+                        result = piece.isSquareThreaten(KingX, KingY);
                     }
                 }
         }
@@ -728,7 +731,7 @@ public class ChessBoard {
 
         for (int cx = 0; !result && cx <= 7; cx++)
             for (int cy = 0; !result && cy <= 7; cy++) {
-                Piece piece = getPiece(cx, cy);
+                Piece piece = squares[cx][cy];
 
                 if (piece != null && piece.getColor() == color ) {
                     result = piece.isSquareThreaten(x, y);
@@ -761,14 +764,14 @@ public class ChessBoard {
         for (int y = 7; y >= 0; y--) {
             int emptySquares = 0;
             for (int x = 0; x <= 7; x++) {
-                if (getPiece(x, y) == null) {
+                if (squares[x][y] == null) {
                     emptySquares++;
                 } else {
                     if (emptySquares != 0) {
                         builder.append(emptySquares);
                         emptySquares = 0;
                     }
-                    builder.append(getPiece(x, y).getFENPieceLetter());
+                    builder.append(squares[x][y].getFENPieceLetter());
                 }
             }
             if (emptySquares != 0) {
@@ -888,24 +891,24 @@ public class ChessBoard {
         // Проверим, что король стоит на своем месте
         switch (color) {
             case WHITE:
-                pKing = getPiece(getPointFromSquareName("e1"));
+                pKing = squares[4][0]; // getPiece(getPointFromSquareName("e1"));
                 switch (side) {
                     case KING:
-                        pRook = getPiece(getPointFromSquareName("h1"));
+                        pRook = squares[7][0]; //getPiece(getPointFromSquareName("h1"));
                         break;
                     case QUEEN:
-                        pRook = getPiece(getPointFromSquareName("a1"));
+                        pRook = squares[0][0]; // getPiece(getPointFromSquareName("a1"));
                         break;
                 }
                 break;
             case BLACK:
-                pKing = getPiece(getPointFromSquareName("e8"));
+                pKing = squares[4][7]; // getPiece(getPointFromSquareName("e8"));
                 switch (side) {
                     case KING:
-                        pRook = getPiece(getPointFromSquareName("h8"));
+                        pRook = squares[7][7]; // getPiece(getPointFromSquareName("h8"));
                         break;
                     case QUEEN:
-                        pRook = getPiece(getPointFromSquareName("a8"));
+                        pRook = squares[0][7]; // getPiece(getPointFromSquareName("a8"));
                         break;
                 }
                 break;
@@ -1316,7 +1319,7 @@ public class ChessBoard {
         for (int x = 0; x <= 7; x++)
             for (int y = 0; y <= 7; y++)
             {
-                Piece piece = getPiece(x, y);
+                Piece piece = squares[x][y];
                 if (piece != null && piece.getKind() == kind && piece.getColor() == color) {
                     pieces.add(piece);
                 }
@@ -1374,7 +1377,7 @@ public class ChessBoard {
                     }
 
                     if (p != null) {
-                        Piece targetPiece = getPiece(p);
+                        Piece targetPiece = squares[p.x][p.y];
                         boolean capturing;
 
                         move = move.substring(1, move.length() - 2);
@@ -1456,7 +1459,7 @@ public class ChessBoard {
 
                         if (move.length() == 2 && move.charAt(1) == 'x') {
                             // capturing
-                            if (getPiece(p) != null && getPiece(p).getColor() != player) {
+                            if (squares[p.x][p.y] != null && squares[p.x][p.y].getColor() != player) {
                                 int fromRow = getLetterRow(move.charAt(0));
 
                                 if (fromRow >= 0 && fromRow <= 7) {

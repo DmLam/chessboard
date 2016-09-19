@@ -901,7 +901,6 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         final float ARROW_HEAD_WIDTH = ARROW_WIDTH * 2;
         final float ARROW_HEAD_LENGTH = ARROW_WIDTH;
         final float ARROW_LENGTH = (float) sqrt((xEnd - xStart) * (xEnd - xStart) + (yEnd - yStart) * (yEnd - yStart));
-//        final float angle = (float) (-(Math.PI / 2 - Math.asin((yEnd - yStart) / ARROW_LENGTH)) / Math.PI * 180);
         float angle = (float) (Math.asin(Math.abs(xEnd - xStart) / ARROW_LENGTH) / Math.PI * 180);
 
         if (xEnd > xStart) {
