@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -32,7 +33,8 @@ public class PGNLoader {
         }
     };
 
-    private ArrayList<Game> games = new ArrayList<Game>();
+    String fileName;
+    ArrayList<Integer> gamesIndex = new ArrayList<Integer>();
     private ChessBoard chessboard;
 
     private String readLine(BufferedReader in) throws IOException {
@@ -361,23 +363,20 @@ public class PGNLoader {
         return result;
     }
 
-    private boolean readGame(BufferedReader in) throws PGNError, IOException  {
-        boolean result = false;
-        Game game = new Game();
+    private Game readGame(BufferedReader in) throws PGNError, IOException  {
+        Game result = null;
 
-        if (readTags(in, game) && readMoves(in, game)) {
-            games.add(game);
-            result = true;
-        }
+        if (!readTags(in, result) || !readMoves(in, result)) {
+            result = null;
+        };
 
         return result;
     }
 
-    public void createFileIndex(String fileName, String indexFileName) throws PGNError {
-        FileReader fr = null;
-        FileOutputStream fos = null;
 
-        ArrayList<Integer> idx = new ArrayList<Integer>();
+    private void createFileIndex(String fileName, String indexFileName) throws PGNError {
+        FileReader fr;
+        FileOutputStream fos;
 
         try {
             fr = new FileReader(fileName);
@@ -406,16 +405,16 @@ public class PGNLoader {
 
         BufferedReader in = new BufferedReader(fr);
 
-        idx.add(0); // index of the first game
+        gamesIndex.add(0); // index of the first game
         try {
             int gameNo = 1;
             try {
                 try {
-                    while (readGame(in)) {
-                        idx.add(lineNum);
+                    while (readGame(in) != null) {
+                        gamesIndex.add(lineNum);
                         gameNo++;
                     };
-                    idx.remove(idx.size() - 1);
+                    gamesIndex.remove(gamesIndex.size() - 1);
                 }
                 catch (Exception E) {
                     Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, gameNo, lineNum, E.getMessage()));
@@ -428,10 +427,10 @@ public class PGNLoader {
             Log.e(LOGTAG, String.format(LOGTAG + " Error reading file %s:\n%s", fileName, E.toString()));
         }
 
-        byte[] buf = new byte[idx.size() * 4];
+        byte[] buf = new byte[gamesIndex.size() * 4];
 
-        for (int i = 0; i < idx.size(); i++) {
-            int index = idx.get(i);
+        for (int i = 0; i < gamesIndex.size(); i++) {
+            int index = gamesIndex.get(i);
             buf[i * 4] = (byte) index; index /= 256;
             buf[i * 4 + 1] = (byte) index; index /= 256;
             buf[i * 4 + 2] = (byte) index; index /= 256;
@@ -448,6 +447,38 @@ public class PGNLoader {
         }
     }
 
+    private void loadIndexFile(String indexFileName) throws PGNError {
+        File f = new File(indexFileName);
+        int fileSize = (int) f.length();
+        byte[] buf = new byte[fileSize];
+        FileInputStream fis;
+
+        if ((fileSize >> 2) << 2 != fileSize) {
+            throw new PGNError(String.format("Error reading PGN index file [size mismatch %d] (%s)", fileSize, indexFileName));
+        }
+
+        try {
+            fis = new FileInputStream(f);
+
+            fis.read(buf);
+        }
+        catch(FileNotFoundException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + " PGN index file not found (%s)", indexFileName));
+            throw new PGNError(String.format("PGN index file not found (%s)\n%s", indexFileName, E.toString()));
+        }
+        catch(IOException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + " Error reading PGN index file (%s)", indexFileName));
+            throw new PGNError(String.format("Error reading PGN index file (%s)\n%s", indexFileName, E.toString()));
+        }
+
+        gamesIndex.clear();
+        for (int i = 0; i < fileSize >> 2; i += 4) {
+            int idx = buf[i * 4] + buf[i * 4 + 1] * 256 + buf[i * 4 + 2] * 256 * 256 + buf[i * 4 + 3] * 256 * 256 * 256;
+
+            gamesIndex.add(idx);
+        }
+    }
+
     private String removeExtension(String fileName) {
         String result = fileName;
         int pointPos = fileName.lastIndexOf('.'), slashPos = fileName.lastIndexOf('/');
@@ -461,49 +492,48 @@ public class PGNLoader {
     }
 
     public PGNLoader(String fileName) throws PGNError {
-        String indexFileName = removeExtension(fileName).concat(".idx");
+        String indexFileName = removeExtension(fileName).concat(".gamesIndex");
+        File f = new File(indexFileName);
 
-        createFileIndex(fileName, indexFileName);
-/*
-        FileReader fr = null;
-
-        try {
-            fr = new FileReader(fileName);
+        if (!f.exists()) {
+            createFileIndex(fileName, indexFileName);
         }
-        catch(IOException E) {
-            Log.e(LOGTAG, String.format(LOGTAG + " PGN file not found (%s)", fileName));
+        else {
+            loadIndexFile(indexFileName);
         }
 
-
-        BufferedReader in = new BufferedReader(fr);
-
-        try {
-            int gameNo = 1;
-            try {
-                try {
-                    while (readGame(in)) {
-                        gameNo++;
-                    };
-                }
-                catch (Exception E) {
-                    Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, gameNo, lineNum, E.getMessage()));
-                }
-            } finally {
-                in.close();
-            }
-        }
-        catch (IOException E) {
-            Log.e(LOGTAG, String.format(LOGTAG + " Error reading file %s:\n%s", fileName, E.toString()));
-        }
-*/
+        this.fileName = fileName;
     }
 
     public int getGamesCount() {
-        return games.size();
+        return gamesIndex.size();
     }
 
-    public Game getGame(int index) {
-        return games.get(index);
+    public Game getGame(int index) throws PGNError{
+        Game result;
+
+        try {
+            FileReader fr = new FileReader(fileName);
+            BufferedReader reader = new BufferedReader(fr);
+
+            for (int i = 0; i < gamesIndex.get(index); i++) {
+                reader.readLine();
+            }
+
+            result = readGame(reader);
+        }
+        catch(IOException E) {
+            Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, index, lineNum, E.toString()));
+
+            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d)", fileName, index, lineNum));
+        }
+        catch(PGNError E) {
+            Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, index, lineNum, E.toString()));
+
+            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d)", fileName, index, lineNum));
+        }
+
+        return result;
     }
 
 }
