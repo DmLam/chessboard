@@ -332,7 +332,7 @@ public class PGNLoader {
     }
 
     private boolean readMoves(BufferedReader in, Game game) throws IOException, PGNError {
-        boolean result = false;
+        boolean result;
         String FEN = game.tagByName("FEN");
         String moves = "";
         String line;
@@ -364,7 +364,7 @@ public class PGNLoader {
     }
 
     private Game readGame(BufferedReader in) throws PGNError, IOException  {
-        Game result = null;
+        Game result = new Game();
 
         if (!readTags(in, result) || !readMoves(in, result)) {
             result = null;
@@ -473,7 +473,7 @@ public class PGNLoader {
 
         gamesIndex.clear();
         for (int i = 0; i < fileSize >> 2; i += 4) {
-            int idx = buf[i * 4] + buf[i * 4 + 1] * 256 + buf[i * 4 + 2] * 256 * 256 + buf[i * 4 + 3] * 256 * 256 * 256;
+            int idx = buf[i] + buf[i + 1] * 256 + buf[i + 2] * 256 * 256 + buf[i + 3] * 256 * 256 * 256;
 
             gamesIndex.add(idx);
         }
@@ -494,6 +494,8 @@ public class PGNLoader {
     public PGNLoader(String fileName) throws PGNError {
         String indexFileName = removeExtension(fileName).concat(".gamesIndex");
         File f = new File(indexFileName);
+//        f.delete();
+
 
         if (!f.exists()) {
             createFileIndex(fileName, indexFileName);
