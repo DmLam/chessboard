@@ -138,7 +138,7 @@ public class PGNLoader {
                 int commentEnd = moves.indexOf("}");
 
                 if (commentEnd > 0) {
-                    result = moves.substring(1, commentEnd - 1);
+                    result = moves.substring(1, commentEnd);
                     moves.delete(0, commentEnd + 1);
                 }
                 else {
@@ -447,6 +447,13 @@ public class PGNLoader {
         }
     }
 
+    private int bytes2int(byte b1, byte b2, byte b3, byte b4) {
+        return (b1 >= 0 ? b1 : 256 + b1) +
+                (b2 >= 0 ? b2 : 256 + b2) * 256 +
+                (b3 >= 0 ? b3 : 256 + b3) * 256 * 256 +
+                (b4 >= 0 ? b4 : 256 + b4) * 256 * 256 * 256;
+    }
+
     private void loadIndexFile(String indexFileName) throws PGNError {
         File f = new File(indexFileName);
         int fileSize = (int) f.length();
@@ -472,8 +479,8 @@ public class PGNLoader {
         }
 
         gamesIndex.clear();
-        for (int i = 0; i < fileSize >> 2; i += 4) {
-            int idx = buf[i] + buf[i + 1] * 256 + buf[i + 2] * 256 * 256 + buf[i + 3] * 256 * 256 * 256;
+        for (int i = 0; i < fileSize; i += 4) {
+            int idx = bytes2int(buf[i], buf[i+1], buf[i+2], buf[i+3]);
 
             gamesIndex.add(idx);
         }
