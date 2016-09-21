@@ -12,6 +12,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import ru.dmlam.androidcommonlib.FileNameUtils;
+
 import static dmlam.ru.chessboard.Game.GameResult.DRAW;
 import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
 import static dmlam.ru.chessboard.Piece.Color.BLACK;
@@ -26,12 +28,6 @@ public class PGNLoader {
     private static final String LOGTAG = PGNLoader.class.getName();
 
     private int lineNum = 0;
-
-    public class PGNError extends Exception{
-        public PGNError(String message) {
-            super(message);
-        }
-    };
 
     String fileName;
     ArrayList<Integer> gamesIndex = new ArrayList<Integer>();
@@ -486,20 +482,8 @@ public class PGNLoader {
         }
     }
 
-    private String removeExtension(String fileName) {
-        String result = fileName;
-        int pointPos = fileName.lastIndexOf('.'), slashPos = fileName.lastIndexOf('/');
-        int pos = pointPos > slashPos ? pointPos : -1;
-
-        if (pos > 0) {
-            result = result.substring(pos);
-        }
-
-        return result;
-    }
-
     public PGNLoader(String fileName) throws PGNError {
-        String indexFileName = removeExtension(fileName).concat(".gamesIndex");
+        String indexFileName = FileNameUtils.removeExtension(fileName).concat(".gamesIndex");
         File f = new File(indexFileName);
 //        f.delete();
 
