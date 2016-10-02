@@ -12,6 +12,10 @@ public class ColorSchemeList {
     Context context;
     private ArrayList<ColorScheme> list = new ArrayList<ColorScheme>();
 
+    public ColorSchemeList(Context context) {
+        this.context = context;
+    }
+
     public ColorSchemeList (Context context, String[] schemes){
         this.context = context;
 

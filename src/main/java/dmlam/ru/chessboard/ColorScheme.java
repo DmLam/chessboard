@@ -1,5 +1,7 @@
 package dmlam.ru.chessboard;
 
+import android.graphics.Canvas;
+
 /**
  * Created by LamdanDY on 02.02.2016.
  */
@@ -53,4 +55,8 @@ public class ColorScheme {
     public int getBorder() { return border; }
 
     public int getCoordinates() { return coordinates; }
+
+    public void drawBoard(ChessBoard board, Canvas canvas) {
+
+    }
 }

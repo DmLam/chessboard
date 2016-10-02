@@ -75,8 +75,8 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private Timer animationTimer = null;
     private Move animatingMove = null;
 
-    private ColorSchemeList colorSchemes = new ColorSchemeList(getContext(), getResources().getStringArray(R.array.color_schemes));
-    private PieceSetList pieceSets = new PieceSetList(getResources().getStringArray(R.array.piecesets));
+    private ColorSchemeList colorSchemes;
+    private PieceSetList pieceSets;
     private String colorSchemeName;
     private boolean soundEnabled = true;
 
@@ -135,9 +135,12 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     private void initialize(Context context, AttributeSet attrs, int defStyle) {
-        colorSchemeName = colorSchemes.get(0).getName();  // цветовая схема по умолчанию - первая в списке
 
         if (!isInEditMode()) {
+            colorSchemes = new ColorSchemeList(getContext(), getResources().getStringArray(R.array.color_schemes));
+            pieceSets = new PieceSetList(getResources().getStringArray(R.array.piecesets));
+
+            colorSchemeName = colorSchemes.get(0).getName();  // цветовая схема по умолчанию - первая в списке
             antialiasPaint.setAntiAlias(true);
             antialiasPaint.setFilterBitmap(true);
             antialiasPaint.setDither(true);
@@ -148,6 +151,18 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             loadPieceSet();
             chessBoard.SetupInitialPosition();
         }
+        else {
+            colorSchemeName = "Cadet grey";
+            colorSchemes = new ColorSchemeList(context);
+            colorSchemes.add(
+                    new ColorScheme( "Cadet grey",
+                            0xfffdfdfd, 0xfffdfdfd,
+                            0xff7795a3, 0xff9aabaf,
+                            0xff444444, 0xff888888,
+                            0xff9f9fff, 0xf557fff,
+                            0xff363a3d, 0xffcccccc));
+        }
+
     }
 
     public String[] getColorSchemeNames() {

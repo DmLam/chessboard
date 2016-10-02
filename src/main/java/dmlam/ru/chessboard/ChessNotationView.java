@@ -31,9 +31,9 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     final private static boolean SECONDARY_LINE = false;
 
     private ChessBoard chessBoard = null;
-    private String textColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_text));
-    private String lastMoveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_lastmove));
-    private String commentColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_comment));
+    private String textColor;
+    private String lastMoveColor;
+    private String commentColor;
     private Move lastMove;
     private int fontSize = 0;
 
@@ -86,6 +86,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         if (!isInEditMode()) {
             textColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_text));
             lastMoveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_lastmove));
+            commentColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_comment));
             WebSettings settings = getSettings();
 
             // настройки для более быстрой отрисовки
