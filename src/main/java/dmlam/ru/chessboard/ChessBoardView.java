@@ -77,7 +77,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
     private ColorSchemeList colorSchemes;
     private PieceSetList pieceSets;
-    private String colorSchemeName;
+    private ColorScheme colorScheme;
     private boolean soundEnabled = true;
 
     // признак того, что мы находимся в процессе выбора фигура для превращения пешки (показан диалог).
@@ -140,7 +140,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             colorSchemes = new ColorSchemeList(getContext(), getResources().getStringArray(R.array.color_schemes));
             pieceSets = new PieceSetList(getResources().getStringArray(R.array.piecesets));
 
-            colorSchemeName = colorSchemes.get(0).getName();  // цветовая схема по умолчанию - первая в списке
+            colorScheme = colorSchemes.get(0);  // цветовая схема по умолчанию - первая в списке
             antialiasPaint.setAntiAlias(true);
             antialiasPaint.setFilterBitmap(true);
             antialiasPaint.setDither(true);
@@ -152,15 +152,15 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             chessBoard.SetupInitialPosition();
         }
         else {
-            colorSchemeName = "Cadet grey";
             colorSchemes = new ColorSchemeList(context);
             colorSchemes.add(
-                    new ColorScheme( "Cadet grey",
+                    new ColorSetColorScheme( "Cadet grey",
                             0xfffdfdfd, 0xfffdfdfd,
                             0xff7795a3, 0xff9aabaf,
                             0xff444444, 0xff888888,
                             0xff9f9fff, 0xf557fff,
                             0xff363a3d, 0xffcccccc));
+            colorScheme = colorSchemes.get(0);
         }
 
     }
@@ -169,13 +169,37 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         return colorSchemes.getNames();
     }
 
-    public String getColorScheme() {
-        return colorSchemeName;
+    public String getColorSchemeName() {
+        if (colorScheme == null) {
+            return null;
+        }
+        else {
+            return colorScheme.getName();
+        }
+    }
+
+    private void setColorScheme(ColorScheme colorScheme) {
+        if (this.colorScheme != null) {
+            this.colorScheme.donePainting();
+        }
+
+        this.colorScheme = colorScheme;
+
+        if (this.colorScheme != null) {
+            this.colorScheme.initPainting();
+        }
     }
 
     public void setColorScheme(String colorSchemeName) {
-        if (colorSchemes.find(colorSchemeName) != null) {
-            this.colorSchemeName = colorSchemeName;
+        ColorScheme cs = colorSchemes.find(colorSchemeName);
+
+        if (cs == null) {
+            throw new RuntimeException(String.format("Color scheme %s not found", colorSchemeName));
+        }
+        else {
+            colorScheme = cs;
+        }
+        if (colorScheme != null) {
 
             updateBoardPainters();
             invalidate();
@@ -519,7 +543,8 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     private void updateBoardPainters() {
-        ColorScheme colors = colorSchemes.find(colorSchemeName);
+        ColorSetColorScheme colors = (ColorSetColorScheme) colorScheme;
+
         int whiteColorStart = colors.getWhiteSquareStart();
         int whiteColorFinish = colors.getWhiteSquareFinish();
         int blackColorStart = colors.getBlackSquareStart();

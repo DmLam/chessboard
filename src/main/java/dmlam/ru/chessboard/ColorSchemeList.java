@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class ColorSchemeList {
     Context context;
-    private ArrayList<ColorScheme> list = new ArrayList<ColorScheme>();
+    private ArrayList<ColorSetColorScheme> list = new ArrayList<ColorSetColorScheme>();
 
     public ColorSchemeList(Context context) {
         this.context = context;
@@ -24,7 +24,7 @@ public class ColorSchemeList {
         }
     }
 
-    public void add(ColorScheme scheme) {
+    public void add(ColorSetColorScheme scheme) {
         list.add(scheme);
     }
 
@@ -32,7 +32,7 @@ public class ColorSchemeList {
         Resources r = context.getResources();
         String name = r.getString(r.getIdentifier(resourceNamePrefix + "_name", "string", context.getPackageName()));
 
-        add(new ColorScheme(name,
+        add(new ColorSetColorScheme(name,
                 r.getColor(r.getIdentifier(resourceNamePrefix + "_white_square_start", "color", context.getPackageName())),
                 r.getColor(r.getIdentifier(resourceNamePrefix + "_white_square_finish", "color", context.getPackageName())),
                 r.getColor(r.getIdentifier(resourceNamePrefix + "_black_square_start", "color", context.getPackageName())),
@@ -48,7 +48,7 @@ public class ColorSchemeList {
         return name;
     }
 
-    public ColorScheme find(String name) {
+    public ColorSetColorScheme find(String name) {
         for (int i = 0; i < list.size(); i++) {
             if (list.get(i).getName().equals(name)) {
                 return list.get(i);
@@ -59,7 +59,7 @@ public class ColorSchemeList {
 
     public int size() { return list.size(); }
 
-    public ColorScheme get(int i) { return list.get(i); }
+    public ColorSetColorScheme get(int i) { return list.get(i); }
 
     public String[] getNames() {
         String[] result = new String[size()];
