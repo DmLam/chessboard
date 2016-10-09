@@ -54,17 +54,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private boolean drawCoordinates = true;
 
     private ArrayList<IOnMoveListener> mOnMoveListeners = new ArrayList<>();
-    private Paint whiteSquarePaint = new Paint();  // paint-ы для отрисовки полей, чтобы не создавать каждый раз в OnDraw
-    private Paint blackSquarePaint = new Paint();
-    private Paint currentMoveSourceSquarePaint = new Paint(); // paint для отрисовки клетки с которой взяли фигуру для хода
-    private Paint currentMoveTargetSquarePaint = new Paint(); // paint для отрисовки клетки, куда будет поставлена фигура
-    private Paint lastMoveSourceSquarePaint = new Paint();    // paint для отрисовки клетки откуда был сделан последний ход
-    private Paint lastMoveTargetSquarePaint = new Paint();    // paint для отрисовки клетки куда был сделан последний ход
-    private Paint borderPaint = new Paint();                  // paint для отрисовки границы доски
-    private Paint coordinatesPaint = new Paint();             // paint для отрисовки координат
     private Paint antialiasPaint = new Paint();               // paint для гладкого масштабирования фигур
     private Paint arrowPaint = new Paint();                   // paint для рисования стрелки
-    private float[] hLines = new float[9], vLines = new float[9];
+    protected float[] hLines = new float[9], vLines = new float[9];
 
     private float cellSize;
     private float size, borderSize, gapLeft, gapTop;
@@ -137,7 +129,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private void initialize(Context context, AttributeSet attrs, int defStyle) {
 
         if (!isInEditMode()) {
-            colorSchemes = new ColorSchemeList(getContext(), getResources().getStringArray(R.array.color_schemes));
+            colorSchemes = new ColorSchemeList(this, getResources().getStringArray(R.array.color_schemes));
             pieceSets = new PieceSetList(getResources().getStringArray(R.array.piecesets));
 
             colorScheme = colorSchemes.get(0);  // цветовая схема по умолчанию - первая в списке
@@ -152,9 +144,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             chessBoard.SetupInitialPosition();
         }
         else {
-            colorSchemes = new ColorSchemeList(context);
+            colorSchemes = new ColorSchemeList(this);
             colorSchemes.add(
-                    new ColorSetColorScheme( "Cadet grey",
+                    new ColorSetColorScheme("Cadet grey", this,
                             0xfffdfdfd, 0xfffdfdfd,
                             0xff7795a3, 0xff9aabaf,
                             0xff444444, 0xff888888,
@@ -169,7 +161,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         return colorSchemes.getNames();
     }
 
-    public String getColorSchemeName() {
+    public String getColorScheme() {
         if (colorScheme == null) {
             return null;
         }
@@ -226,6 +218,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         return pieceSets.getValues();
     }
 
+    protected DraggingData getDraggingData() {
+        return draggingData;
+    }
 
     public boolean isSoundEnabled() {
         return soundEnabled;
@@ -304,15 +299,15 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         return new Point(reverseBoard ? 7 - p.x : p.x, reverseBoard ? p.y : 7 - p.y);
     }
 
-    public boolean isShowLastMoveSquares() {
-        return showLastMoveSquares;
-    }
-
     public void setShowLastMoveSquares(boolean showLastMoveSourceSquare) {
         this.showLastMoveSquares = showLastMoveSourceSquare;
     }
 
-    public boolean isDrawCoordinates() {
+    public boolean getShowLastMoveSquares() {
+        return showLastMoveSquares;
+    }
+
+    public boolean getDrawCoordinates() {
         return drawCoordinates;
     }
 
@@ -329,6 +324,10 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         return size;
     }
 
+    public float getBorderSize() {
+        return borderSize;
+    }
+
     // отсуп доски слева (для координат)
     public float getGapLeft() {
         return gapLeft;
@@ -343,14 +342,14 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         return cellSize;
     }
 
-    public boolean isReverseBoard() {
-        return reverseBoard;
-    }
-
     public void setReverseBoard(boolean reverseBoard) {
         this.reverseBoard = reverseBoard;
 
         invalidate();
+    }
+
+    public boolean getReverseBoard() {
+        return reverseBoard;
     }
 
     // рассчитываем высоту и ширину так, чтобы View был квадратным, сторона квадрата - минимум из высоты и ширины
@@ -543,50 +542,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     private void updateBoardPainters() {
-        ColorSetColorScheme colors = (ColorSetColorScheme) colorScheme;
-
-        int whiteColorStart = colors.getWhiteSquareStart();
-        int whiteColorFinish = colors.getWhiteSquareFinish();
-        int blackColorStart = colors.getBlackSquareStart();
-        int blackColorFinish = colors.getBlackSquareFinish();
-        int currentMoveSource = colors.getCurrentMoveSourceSquare();
-        int currentMoveTarget = colors.getCurrentMoveTargetSquare();
-        int lastMoveSource = colors.getLastMoveSourceSquare();
-        int lastMoveTarget = colors.getLastMoveTargetSquare();
-        int border = colors.getBorder();
-        int coordinates = colors.getCoordinates();
-
-        whiteSquarePaint = new Paint();
-        if (whiteColorStart == whiteColorFinish) {
-            whiteSquarePaint.setColor(whiteColorStart);
-        }
-        else {
-            whiteSquarePaint.setShader(new LinearGradient(0, 0, cellSize - 1, cellSize - 1,
-                    whiteColorStart,
-                    whiteColorFinish,
-                    Shader.TileMode.MIRROR));
-        }
-        blackSquarePaint = new Paint();
-        if (blackColorStart == blackColorFinish) {
-            blackSquarePaint.setColor(blackColorStart);
-
-        }
-        else {
-            blackSquarePaint.setShader(new LinearGradient(0, 0, cellSize - 1, cellSize - 1,
-                    blackColorStart,
-                    blackColorFinish,
-                    Shader.TileMode.MIRROR));
-        }
-
-        currentMoveSourceSquarePaint.setColor(currentMoveSource);
-        currentMoveTargetSquarePaint.setColor(currentMoveTarget);
-        lastMoveSourceSquarePaint.setColor(lastMoveSource);
-        lastMoveTargetSquarePaint.setColor(lastMoveTarget);
-        borderPaint.setColor(border);
-        coordinatesPaint.setColor(coordinates);
-
-        coordinatesPaint.setTextAlign(Paint.Align.CENTER);
-        coordinatesPaint.setTextSize(min(hLines[0], vLines[0]) * 7 / 10);
+        colorScheme.updatePainters(cellSize, min(hLines[0], vLines[0]) * 7 / 10);
 
         arrowPaint.setColor(0xa0ffaa00);
         arrowPaint.setAntiAlias(true);
@@ -812,103 +768,6 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         return true;
     }
 
-    private void drawCoordinates(Canvas canvas) {
-        float viewWidth = getWidth(), viewHeight = getHeight();
-
-        if (drawCoordinates) {
-            float char_width = coordinatesPaint.measureText("8", 0, 1);
-            Rect boardRect = new Rect();
-            Rect clipRect = canvas.getClipBounds();
-
-            if (clipRect.left < vLines[0] || clipRect.right > vLines[8] || clipRect.top < hLines[0] || clipRect.bottom > hLines[8]) {
-                // бордюр (где будут написаны координаты)
-
-                boardRect.left = (int) gapLeft;
-                boardRect.top = (int) gapTop;
-                boardRect.right = (int) (viewWidth - gapLeft);
-                boardRect.bottom = (int) (viewHeight - gapTop);
-                canvas.drawRect(boardRect, borderPaint);
-
-                // номера горизонталей
-                for (int i = 1; i <= 8; i++) {
-                    String Num = Integer.toString(reverseBoard ? i : 9 - i);
-                    canvas.drawText(Num, vLines[0] - char_width, hLines[0] + (hLines[i - 1] + hLines[i]) / 2 - coordinatesPaint.getTextSize(), coordinatesPaint);
-                    canvas.drawText(Num, vLines[8] + char_width, hLines[0] + (hLines[i - 1] + hLines[i]) / 2 - coordinatesPaint.getTextSize(), coordinatesPaint);
-                }
-
-                // буквы вертикалей
-                for (int i = 0; i < 8; i++) {
-                    String letter = Character.toString(chessBoard.getLetter(reverseBoard ? 7 - i : i));
-                    canvas.drawText(letter, (vLines[i + 1] + vLines[i]) / 2, (hLines[0] + coordinatesPaint.getTextSize()) / 2, coordinatesPaint);
-                    canvas.drawText(letter, (vLines[i + 1] + vLines[i]) / 2, hLines[8] + coordinatesPaint.getTextSize(), coordinatesPaint);
-                }
-            }
-        }
-        else {
-            Rect borderLine = new Rect();
-
-            borderLine.left = (int) gapLeft;
-            borderLine.top = (int) gapTop;
-            borderLine.right = (int) (viewWidth - gapLeft);
-            borderLine.bottom = (int) (viewHeight - gapTop);
-
-            canvas.drawRect(borderLine, borderPaint);
-        }
-    }
-
-    private void drawSquare(Canvas canvas, int x, int y) {
-        Piece piece = reverseBoard ? chessBoard.getPiece(7 - x, y) : chessBoard.getPiece(x, 7 - y);
-        Paint paint = null;
-
-        if (showLastMoveSquares) {
-            Move lastMove = chessBoard.getLastMove();
-
-            if (lastMove != null) {
-                if (lastMove.From().equals(reverseBoard ? 7 - x : x, reverseBoard ? y : 7 - y)) {
-                    paint = lastMoveSourceSquarePaint;
-                }
-                else
-                if (lastMove.To().equals(reverseBoard ? 7 - x : x, reverseBoard ? y :  7 - y)) {
-                    paint = lastMoveTargetSquarePaint;
-                }
-            }
-        }
-
-        if (draggingData != null) {
-            if (reverseBoard) {
-                if (7 - x == draggingData.startSquare.x && y == draggingData.startSquare.y) {
-                    paint = currentMoveSourceSquarePaint;
-                }
-                else
-                if (7 - x == draggingData.currentSquare.x && y == draggingData.currentSquare.y) {
-                    paint = currentMoveTargetSquarePaint;
-                }
-            }
-            else {
-                if (x == draggingData.startSquare.x && 7 - y == draggingData.startSquare.y) {
-                    paint = currentMoveSourceSquarePaint;
-                }
-                else
-                if (x == draggingData.currentSquare.x && 7 - y == draggingData.currentSquare.y) {
-                    paint = currentMoveTargetSquarePaint;
-                }
-            }
-        }
-
-        if (paint == null) {
-            paint = (x + y) %  2 == 0 ? whiteSquarePaint : blackSquarePaint;
-        }
-
-        canvas.drawRect(vLines[x], hLines[y], vLines[x + 1], hLines[y + 1], paint);
-
-        if (piece != null) {
-            Bitmap bitmap = bitmaps[piece.getID()];
-            RectF dstRect = new RectF(vLines[x], hLines[y], vLines[x + 1], hLines[y + 1]);
-
-            canvas.drawBitmap(bitmap, null, dstRect, antialiasPaint);
-        }
-    }
-
     // отрисовка перетаскиваемой фигуры
     private void drawDragging(Canvas canvas) {
         Bitmap bitmap = bitmaps[draggingData.piece.getID()];
@@ -985,11 +844,22 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        drawCoordinates(canvas);
-        // рисуем клетки и фигуры
+        // рисуем доску
+        colorScheme.drawBoard(canvas);
+
+        // .. и фигуры
         for (int x = 0; x <= 7; x++)
-            for (int y = 0; y <= 7; y++)
-                    drawSquare(canvas, x, y);
+            for (int y = 0; y <= 7; y++) {
+                Piece piece = reverseBoard ? chessBoard.getPiece(7 - x, y) : chessBoard.getPiece(x, 7 - y);
+
+                if (piece != null) {
+                    Bitmap bitmap = bitmaps[piece.getID()];
+                    RectF dstRect = new RectF(vLines[x], hLines[y], vLines[x + 1], hLines[y + 1]);
+
+                    canvas.drawBitmap(bitmap, null, dstRect, antialiasPaint);
+                }
+            }
+
 
         if (arrowCoordinates != null) {
             float xStart, yStart, xEnd, yEnd;

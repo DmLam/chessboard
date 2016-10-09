@@ -6,10 +6,12 @@ import android.graphics.Canvas;
  * Created by LamdanDY on 07.10.2016.
  */
 
-abstract public class ColorScheme {
+abstract class ColorScheme {
     private String name;
+    protected ChessBoardView chessBoardView;
 
-    public ColorScheme(String name) {
+    public ColorScheme(String name, ChessBoardView chessBoardView) {
+        this.chessBoardView = chessBoardView;
         this.name = name;
     }
 
@@ -17,9 +19,11 @@ abstract public class ColorScheme {
         return name;
     }
 
-    abstract public void drawBoard(ChessBoard board, Canvas canvas);
+    abstract protected void drawBoard(Canvas canvas);
 
-    abstract public void initPainting();
+    abstract protected void initPainting();
 
-    abstract public void donePainting();
+    abstract protected void donePainting();
+
+    abstract protected  void updatePainters(float cellSize, float textSize);
 }

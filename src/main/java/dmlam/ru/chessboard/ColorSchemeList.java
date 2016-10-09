@@ -9,18 +9,18 @@ import java.util.ArrayList;
  * Created by LamdanDY on 02.02.2016.
  */
 public class ColorSchemeList {
-    Context context;
+    ChessBoardView chessBoardView;
     private ArrayList<ColorSetColorScheme> list = new ArrayList<ColorSetColorScheme>();
 
-    public ColorSchemeList(Context context) {
-        this.context = context;
+    public ColorSchemeList (ChessBoardView chessBoardView) {
+        this.chessBoardView = chessBoardView;
     }
 
-    public ColorSchemeList (Context context, String[] schemes){
-        this.context = context;
+    public ColorSchemeList (ChessBoardView chessBoardView, String[] schemes){
+        this.chessBoardView = chessBoardView;
 
         for (int i = 0; i < schemes.length; i++ ) {
-            addFromResource(schemes[i]);
+            addFromResource(schemes[i], chessBoardView);
         }
     }
 
@@ -28,11 +28,12 @@ public class ColorSchemeList {
         list.add(scheme);
     }
 
-    public String addFromResource(String resourceNamePrefix) {
+    public String addFromResource(String resourceNamePrefix, ChessBoardView chessBoardView) {
+        Context context = chessBoardView.getContext();
         Resources r = context.getResources();
         String name = r.getString(r.getIdentifier(resourceNamePrefix + "_name", "string", context.getPackageName()));
 
-        add(new ColorSetColorScheme(name,
+        add(new ColorSetColorScheme(name, chessBoardView,
                 r.getColor(r.getIdentifier(resourceNamePrefix + "_white_square_start", "color", context.getPackageName())),
                 r.getColor(r.getIdentifier(resourceNamePrefix + "_white_square_finish", "color", context.getPackageName())),
                 r.getColor(r.getIdentifier(resourceNamePrefix + "_black_square_start", "color", context.getPackageName())),
