@@ -12,6 +12,9 @@
         <item>gradient_blue</item>
         <item>brown</item>
         <item>green</item>
+        <item>metalboard</item>
+        <item>blueboard</item>
+        <item>woodboard</item>
     </string-array>
 
     <!--список существующих наборов фигур в формате prefix=name, где prefix - префикс для имени ресурсов соответствующего набора, name - отображаемое имя-->

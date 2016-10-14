@@ -5,6 +5,7 @@
     <color name="chessnotationview_comment">#ffa0a0a0</color>
 
     <string name="cadet_grey_name">Cadet grey</string>
+    <string name="cadet_grey_type">colorset</string>
     <color name="cadet_grey_border">#ff363a3d</color>
     <color name="cadet_grey_coordinates">#ffcccccc</color>
     <color name="cadet_grey_white_square_start">#fffdfdfd</color>
@@ -17,6 +18,7 @@
     <color name="cadet_grey_last_move_target_square">#ff557fff</color>
 
     <string name="blue_name">Blue</string>
+    <string name="blue_type">colorset</string>
     <color name="blue_border">#ff363a3d</color>
     <color name="blue_coordinates">#ffcccccc</color>
     <color name="blue_white_square_start">#ffeae9d2</color>
@@ -29,6 +31,7 @@
     <color name="blue_last_move_target_square">#ff557fff</color>
 
     <string name="gradient_blue_name">Gradient blue</string>
+    <string name="gradient_blue_type">colorset</string>
     <color name="gradient_blue_border">#ff363a3d</color>
     <color name="gradient_blue_coordinates">#ffcccccc</color>
     <color name="gradient_blue_white_square_start">#ffdfdfdf</color>
@@ -41,6 +44,7 @@
     <color name="gradient_blue_last_move_target_square">#ff557fff</color>
 
     <string name="light_blue_name">Light blue</string>
+    <string name="light_blue_type">colorset</string>
     <color name="light_blue_border">#6faede</color>
     <color name="light_blue_coordinates">#ffcccccc</color>
     <color name="light_blue_white_square_start">#ffefefef</color>
@@ -53,6 +57,7 @@
     <color name="light_blue_last_move_target_square">#ff557fff</color>
 
     <string name="brown_name">Brown</string>
+    <string name="brown_type">colorset</string>
     <color name="brown_border">#ff9c6c3c</color>
     <color name="brown_coordinates">#ffcccccc</color>
     <color name="brown_white_square_start">#ffd9c4a3</color>
@@ -65,6 +70,7 @@
     <color name="brown_last_move_target_square">#ff557fff</color>
 
     <string name="light_grey_name">Light grey</string>
+    <string name="light_grey_type">colorset</string>
     <color name="light_grey_border">#ff777777</color>
     <color name="light_grey_coordinates">#ffcccccc</color>
     <color name="light_grey_white_square_start">#ffcdcdcd</color>
@@ -77,6 +83,7 @@
     <color name="light_grey_last_move_target_square">#ff557fff</color>
 
     <string name="grey_name">Grey</string>
+    <string name="grey_type">colorset</string>
     <color name="grey_border">#ff555555</color>
     <color name="grey_coordinates">#ffcccccc</color>
     <color name="grey_white_square_start">#ff8d8d8d</color>
@@ -89,6 +96,7 @@
     <color name="grey_last_move_target_square">#ff557fff</color>
 
     <string name="gradient_grey_name">Gradient grey</string>
+    <string name="gradient_grey_type">colorset</string>
     <color name="gradient_grey_border">#ff111111</color>
     <color name="gradient_grey_coordinates">#ffcccccc</color>
     <color name="gradient_grey_white_square_start">#fffdfdfd</color>
@@ -101,6 +109,7 @@
     <color name="gradient_grey_last_move_target_square">#ff557fff</color>
 
     <string name="green_name">Green</string>
+    <string name="green_type">colorset</string>
     <color name="green_border">#366b3a</color>
     <color name="green_coordinates">#ffcccccc</color>
     <color name="green_white_square_start">#ffeeeed2</color>
@@ -111,5 +120,36 @@
     <color name="green_current_move_target_square">#ffaaee88</color>
     <color name="green_last_move_source_square">#ff9f9fff</color>
     <color name="green_last_move_target_square">#ff557fff</color>
+
+    <string name="metalboard_name">MetalBoard</string>
+    <string name="metalboard_type">image</string>
+    <color name="metalboard_border">#ff363a3d</color>
+    <color name="metalboard_coordinates">#ffcccccc</color>
+    <string name="metalboard_image">board_metal</string>
+    <color name="metalboard_current_move_source_square">#fad667</color>
+    <color name="metalboard_current_move_target_square">#fffffae3</color>
+    <color name="metalboard_last_move_source_square">#ff9f9fff</color>
+    <color name="metalboard_last_move_target_square">#ff557fff</color>
+
+    <string name="blueboard_name">BlueBoard</string>
+    <string name="blueboard_type">image</string>
+    <color name="blueboard_border">#ff363a3d</color>
+    <color name="blueboard_coordinates">#ffcccccc</color>
+    <string name="blueboard_image">board_blue</string>
+    <color name="blueboard_current_move_source_square">#fad667</color>
+    <color name="blueboard_current_move_target_square">#fffffae3</color>
+    <color name="blueboard_last_move_source_square">#ff9f9fff</color>
+    <color name="blueboard_last_move_target_square">#ff557fff</color>
+
+    <string name="woodboard_name">WoodBoard</string>
+    <string name="woodboard_type">image</string>
+    <color name="woodboard_border">#ff363a3d</color>
+    <color name="woodboard_coordinates">#ffcccccc</color>
+    <string name="woodboard_image">board_wood</string>
+    <color name="woodboard_current_move_source_square">#fad667</color>
+    <color name="woodboard_current_move_target_square">#fffffae3</color>
+    <color name="woodboard_last_move_source_square">#ff9f9fff</color>
+    <color name="woodboard_last_move_target_square">#ff557fff</color>
+
 
 </resources>

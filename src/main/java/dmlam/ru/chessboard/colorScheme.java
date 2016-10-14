@@ -25,5 +25,5 @@ abstract class ColorScheme {
 
     abstract protected void donePainting();
 
-    abstract protected  void updatePainters(float cellSize, float textSize);
+    abstract protected void updatePainters(float cellSize, float textSize);
 }

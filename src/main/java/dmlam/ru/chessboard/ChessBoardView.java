@@ -6,15 +6,12 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Shader;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -188,14 +185,10 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         if (cs == null) {
             throw new RuntimeException(String.format("Color scheme %s not found", colorSchemeName));
         }
-        else {
-            colorScheme = cs;
-        }
-        if (colorScheme != null) {
 
-            updateBoardPainters();
-            invalidate();
-        }
+        setColorScheme(cs);
+        updateBoardPainters();
+        invalidate();
     }
 
     public String getPieceSet() {
@@ -435,7 +428,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     private Bitmap loadPiece(Resources resources, String prefix, String piece) {
-        Bitmap result = BitmapFactory.decodeResource(resources, resources.getIdentifier(prefix + piece, "drawable", getContext().getPackageName()));
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
+        Bitmap result = BitmapFactory.decodeResource(resources, resources.getIdentifier(prefix + piece, "drawable", getContext().getPackageName()), options);
 
         if (result == null) {
             throw new RuntimeException(String.format("Can't load piece %s from piece set %s", piece, pieceSetName));
