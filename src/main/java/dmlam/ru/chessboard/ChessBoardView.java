@@ -129,7 +129,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             colorSchemes = new ColorSchemeList(this, getResources().getStringArray(R.array.color_schemes));
             pieceSets = new PieceSetList(getResources().getStringArray(R.array.piecesets));
 
-            colorScheme = colorSchemes.get(0);  // цветовая схема по умолчанию - первая в списке
+            setColorScheme(colorSchemes.get(0));  // цветовая схема по умолчанию - первая в списке
             antialiasPaint.setAntiAlias(true);
             antialiasPaint.setFilterBitmap(true);
             antialiasPaint.setDither(true);
