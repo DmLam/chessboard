@@ -14,6 +14,8 @@ import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
 
 final public class Move {
 
+    private static int moveIdGenerator = 0;
+
     private int id = 0;  // id хода по которому его можно будет найти, например, при клике пользователя по записи партии
     private Piece piece = null; // сходившая фигура
     private Piece.Kind piece1Kind, piece2Kind;
@@ -41,6 +43,7 @@ final public class Move {
 
     public Move(Piece piece) {
         this.piece = piece;
+        id = ++moveIdGenerator;
     }
 
     @Override
@@ -188,7 +191,6 @@ final public class Move {
         this.opponentCheckmated = board.isCurrentPlayerCheckmated();
         this.opponentStalemated = board.isCurrentPlayerStalemated();
         this.prevVariants = board.getLastMoveVariants();
-        this.id = board.generateId();
         this.FEN = board.saveToFEN();
 
         if (numericAnnotationGlyph > 0) {

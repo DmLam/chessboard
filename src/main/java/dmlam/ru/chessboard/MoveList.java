@@ -29,7 +29,6 @@ public class MoveList extends ArrayList<Move> {
         Move result = locateMove(id);
 
         while(result == null && i < size())
-
         {
             result = get(i).getVariants().findMove(id);
             i++;

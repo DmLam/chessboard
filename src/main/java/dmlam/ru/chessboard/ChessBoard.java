@@ -72,8 +72,6 @@ public class ChessBoard {
     private int lastMoveIndex = -1;       // индекс последнего хода в вариантах последнего хода (lastMoveVariants)
     private Piece lastMovedPiece = null; // последняя сходившая фигура. Используется для сохранения хода в записи партии после окончания хода
     private MoveList lastMoveVariants = null;  // список вариантов последнего хода (если был rollback, если нет, то в в lastMoveVariants[0] последний ход)
-    private int moveIdGenerator = 0; // id последнего хода. используется для генерации уникальных id-ов
-
 
     private boolean currentPlayerChecked;     // игрок, чья очередь хода находится под шахом
     private boolean currentPlayerMated;       // игрок, чья очередь хода получил мат
@@ -485,7 +483,7 @@ public class ChessBoard {
         Move move = findMove(Id);
 
         if (move == null) {
-            throw new RuntimeException("Invalid move id");
+            throw new RuntimeException(String.format("Invalid move id (%d)", Id));
         }
 
         gotoMove(move);
@@ -1299,11 +1297,6 @@ public class ChessBoard {
             removeMove(lastMove);
         }
     }
-
-    public int generateId() {
-        return ++moveIdGenerator;
-    }
-
 
     public Move findMove(int id) {
         Move result = null;
