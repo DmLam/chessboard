@@ -129,7 +129,6 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             colorSchemes = new ColorSchemeList(this, getResources().getStringArray(R.array.color_schemes));
             pieceSets = new PieceSetList(getResources().getStringArray(R.array.piecesets));
 
-            setColorScheme(colorSchemes.get(0));  // цветовая схема по умолчанию - первая в списке
             antialiasPaint.setAntiAlias(true);
             antialiasPaint.setFilterBitmap(true);
             antialiasPaint.setDither(true);
@@ -152,6 +151,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             colorScheme = colorSchemes.get(0);
         }
 
+        setColorScheme(colorSchemes.get(0));  // цветовая схема по умолчанию - первая в списке
     }
 
     public String[] getColorSchemeNames() {
