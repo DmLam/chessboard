@@ -22,12 +22,6 @@ public class CoordinatesColorScheme extends ColorScheme {
 
         this.border = border;
         this.coordinates = coordinates;
-
-        borderPaint = new Paint();
-        coordinatesPaint = new Paint();
-
-        borderPaint.setColor(Color.BLACK);
-        coordinatesPaint.setColor(Color.BLACK);
     }
 
     public int getBorder() { return border; }
@@ -45,6 +39,9 @@ public class CoordinatesColorScheme extends ColorScheme {
     }
 
     protected void initPainting() {
+        borderPaint = new Paint();
+        coordinatesPaint = new Paint();
+
         borderPaint.setColor(border);
         coordinatesPaint.setColor(coordinates);
 

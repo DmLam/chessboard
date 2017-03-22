@@ -36,17 +36,8 @@ public class ColorSetColorScheme extends CoordinatesColorScheme {
         this.currentMoveTargetSquare = currentMoveTargetSquare;
         this.lastMoveSourceSquare = lastMoveSourceSquare;
         this.lastMoveTargetSquare = lastMoveTargetSquare;
-
-        whiteSquarePaint = new Paint();
-        blackSquarePaint = new Paint();
-        currentMoveSourceSquarePaint = new Paint();
-        currentMoveTargetSquarePaint = new Paint();
-        lastMoveSourceSquarePaint = new Paint();
-        lastMoveTargetSquarePaint = new Paint();
-
-        whiteSquarePaint.setColor(Color.WHITE);
-        blackSquarePaint.setColor(Color.BLACK);
     }
+
 
     private int getAverageColor(int c1, int c2) {
         int red, green, blue;
@@ -89,6 +80,13 @@ public class ColorSetColorScheme extends CoordinatesColorScheme {
     @Override
     protected void initPainting() {
         super.initPainting();
+
+        whiteSquarePaint = new Paint();
+        blackSquarePaint = new Paint();
+        currentMoveSourceSquarePaint = new Paint();
+        currentMoveTargetSquarePaint = new Paint();
+        lastMoveSourceSquarePaint = new Paint();
+        lastMoveTargetSquarePaint = new Paint();
 
         currentMoveSourceSquarePaint.setColor(currentMoveSourceSquare);
         currentMoveTargetSquarePaint.setColor(currentMoveTargetSquare);
