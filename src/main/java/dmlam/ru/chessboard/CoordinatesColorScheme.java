@@ -1,6 +1,7 @@
 package dmlam.ru.chessboard;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
@@ -16,22 +17,34 @@ public class CoordinatesColorScheme extends ColorScheme {
     private Paint borderPaint;                  // paint для отрисовки границы доски
     private Paint coordinatesPaint;             // paint для отрисовки координат
 
-    public CoordinatesColorScheme(String name, ChessBoardView chessBoardView,
-                                  int border, int coordinates) {
+    public CoordinatesColorScheme(String name, ChessBoardView chessBoardView, int border, int coordinates) {
         super(name, chessBoardView);
 
         this.border = border;
         this.coordinates = coordinates;
+
+        borderPaint = new Paint();
+        coordinatesPaint = new Paint();
+
+        borderPaint.setColor(Color.BLACK);
+        coordinatesPaint.setColor(Color.BLACK);
     }
 
     public int getBorder() { return border; }
 
     public int getCoordinates() { return coordinates; }
 
-    protected void initPainting() {
-        borderPaint = new Paint();
-        coordinatesPaint = new Paint();
+    @Override
+    public int getWhiteColor() {
+        return Color.rgb(255, 255, 255);
+    }
 
+    @Override
+    public int getBlackColor() {
+        return Color.rgb(102, 160, 163);
+    }
+
+    protected void initPainting() {
         borderPaint.setColor(border);
         coordinatesPaint.setColor(coordinates);
 
@@ -50,7 +63,7 @@ public class CoordinatesColorScheme extends ColorScheme {
     private void drawCoordinates(Canvas canvas, boolean doDraw, boolean reverseBoard) {
         float viewWidth = chessBoardView.getWidth(), viewHeight = chessBoardView.getHeight();
 
-        if ( doDraw) {
+        if (doDraw) {
             float char_width = coordinatesPaint.measureText("8", 0, 1);
             Rect boardRect = new Rect();
             Rect clipRect = canvas.getClipBounds();

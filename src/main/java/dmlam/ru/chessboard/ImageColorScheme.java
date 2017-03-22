@@ -3,6 +3,7 @@ package dmlam.ru.chessboard;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
@@ -57,6 +58,38 @@ public class ImageColorScheme extends CoordinatesColorScheme {
     public int getLastMoveSourceSquare() { return lastMoveSourceSquare; }
 
     public int getLastMoveTargetSquare() { return lastMoveTargetSquare; }
+
+    private int getAverageColor(Rect r) {
+        int redBucket = 0;
+        int greenBucket = 0;
+        int blueBucket = 0;
+        int pixelCount = 0;
+
+        for (int y = r.top; y < r.bottom; y++)
+        {
+            for (int x = r.left; x < r.right; x++)
+            {
+                int c = image.getPixel(x, y);
+
+                pixelCount++;
+                redBucket += Color.red(c);
+                greenBucket += Color.green(c);
+                blueBucket += Color.blue(c);
+            }
+        }
+
+        return Color.rgb(redBucket / pixelCount, greenBucket / pixelCount, blueBucket / pixelCount);
+    }
+
+    @Override
+    public int getWhiteColor() {
+        return getAverageColor(new Rect(0, 0, image.getWidth() / 8, image.getWidth() / 8));
+    }
+
+    @Override
+    public int getBlackColor() {
+        return getAverageColor(new Rect(image.getWidth() / 8, 0, image.getWidth() / 4, image.getWidth() / 8));
+    }
 
     @Override
     protected void drawBoard(Canvas canvas) {
