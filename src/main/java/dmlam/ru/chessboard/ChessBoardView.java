@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import dmlam.ru.chessboard.Piece.Color;
+
+import static dmlam.ru.chessboard.Piece.Color.*;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
@@ -73,7 +76,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     // используется для правильного восстановления диалога при повороте экрана
     private boolean selectingPawnTransformation = false, selectPawnTransformationOnStart = false;
     private Point pawnTransformationSourceSquare = null;
-    private Piece.Color transformingPawnColor;
+    private Color transformingPawnColor;
 
     // стрелка для анализа
     private String arrowCoordinates = null;
@@ -398,7 +401,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         setMeasuredDimension(size, size);
     }
 
-    public Bitmap getBitmap(Piece.Kind kind, Piece.Color color) {
+    public Bitmap getBitmap(Piece.Kind kind, Color color) {
         int index;
 
         switch (kind) {
@@ -424,7 +427,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                 index = -100;
         }
 
-        if (color == Piece.Color.BLACK) {
+        if (color == BLACK) {
             index += 6;
         }
 
@@ -583,7 +586,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
 
-    private void selectPromotedPawnTransformation(Point sourceSquare, Piece.Color color) {
+    private void selectPromotedPawnTransformation(Point sourceSquare, Color color) {
         if (!selectingPawnTransformation) {
             SelectPawnTransformationDialogFragment selectPromotiondialog = new SelectPawnTransformationDialogFragment();
             Bundle args = new Bundle();
@@ -593,10 +596,10 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             transformingPawnColor = color;
 
             args.putInt(SelectPawnTransformationDialogFragment.SPT_IMAGESIZE, (int) (vLines[1] - vLines[0]) * 2);
-            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_QUEEN, bitmaps[color == Piece.Color.WHITE ? WQ : BQ]);
-            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_ROOK, bitmaps[color == Piece.Color.WHITE ? WR : BR]);
-            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_BISHOP, bitmaps[color == Piece.Color.WHITE ? WB : BB]);
-            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_KNIGHT, bitmaps[color == Piece.Color.WHITE ? WN : BN]);
+            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_QUEEN, bitmaps[color == WHITE ? WQ : BQ]);
+            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_ROOK, bitmaps[color == WHITE ? WR : BR]);
+            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_BISHOP, bitmaps[color == WHITE ? WB : BB]);
+            args.putParcelable(SelectPawnTransformationDialogFragment.SPT_KNIGHT, bitmaps[color == WHITE ? WN : BN]);
 
             selectPromotiondialog.setSelectPawnTransformationDialogListener(this);
             selectPromotiondialog.setArguments(args);
@@ -606,9 +609,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     static class SavedState extends BaseSavedState {
-        boolean selectingPawnTransformation;
-        Point sourceSquare;
-        Piece.Color color;
+        private boolean selectingPawnTransformation;
+        private Point sourceSquare;
+        private Color color;
 
         SavedState(Parcelable superState) {
             super(superState);
@@ -631,7 +634,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             this.selectingPawnTransformation = in.readByte() != 0;
             if (this.selectingPawnTransformation) {
                 sourceSquare = in.readParcelable(Point.class.getClassLoader());
-                color = Piece.Color.valueOf(in.readString());
+                color = valueOf(in.readString());
             }
         }
 
