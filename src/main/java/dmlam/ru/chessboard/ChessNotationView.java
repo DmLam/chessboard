@@ -322,17 +322,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             if (!FirstPass || mainLine) {
                 if (prevMove != null && prevMove.getVariantCount() > 1) {
 
-                    result.append(variantsNotation(prevMove.getVariants(), SECONDARY_LINE));
-/*
-                    for (int i = 1; i < prevMove.getVariantCount(); i++) {
-                        if (prevMove.getVariants(i) != null) {
-                            result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(").
-                                    append(branchNotation(prevMove.getVariants(i), SECONDARY_LINE)).
-                                    append(")</span>");
-                        }
-                    }
-*/
-                    result.append("<br>");
+                    result.append(variantsNotation(prevMove.getVariants(), SECONDARY_LINE))
+                          .append("<br>");
                     wasBranch = true;
                 }
             }
