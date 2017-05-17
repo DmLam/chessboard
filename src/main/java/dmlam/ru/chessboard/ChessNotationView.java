@@ -111,6 +111,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
     }
 
+    public void clear() {
+        loadDataWithBaseURL(null, "", "text/html", "utf-8", null);
+    }
+
     public ChessNotationView(Context context) {
         super(context);
     }
