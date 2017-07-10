@@ -17,7 +17,11 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ListPopupWindow;
+import android.support.v7.widget.PopupMenu;
 import android.util.AttributeSet;
+import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -26,8 +30,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import dmlam.ru.chessboard.Piece.Color;
+import ru.dmlam.androidcommonlib.ClipboardUtils;
 
-import static dmlam.ru.chessboard.Piece.Color.*;
+import static dmlam.ru.chessboard.Piece.Color.BLACK;
+import static dmlam.ru.chessboard.Piece.Color.WHITE;
+import static dmlam.ru.chessboard.Piece.Color.valueOf;
 import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
@@ -44,6 +51,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         IOnMoveListener{
     private static final String LOGTAG = ChessBoardView.class.getName();
 
+    private final int LONG_PRESS_DELAY = 500; // длительность длинного нажатия для вызова меню
     private final int MOVE_ANIMATION_TICK_COUNT = 50;
     private ChessBoard chessBoard = new ChessBoard();
     private String pieceSetName = "Classic";
@@ -77,6 +85,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private boolean selectingPawnTransformation = false, selectPawnTransformationOnStart = false;
     private Point pawnTransformationSourceSquare = null;
     private Color transformingPawnColor;
+    private PointF pressDownXY = new PointF(-1, -1);  // точка, где было нажатие. Нужна чтобы определять при длинном нажатии совпадение координат нажатия и отпускания
 
     // стрелка для анализа
     private String arrowCoordinates = null;
@@ -687,6 +696,45 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         }
     }
 
+    private void copyFENtoClipboard() {
+        int sdk = android.os.Build.VERSION.SDK_INT;
+        String FEN = getChessBoard().saveToFEN();
+
+        ClipboardUtils.copyTextToClipboard(getContext(), "FEN", FEN);
+    }
+
+    private void showPopupMenu() {
+        PopupMenu popupMenu = new PopupMenu(getContext(), this, Gravity.NO_GRAVITY);
+
+        popupMenu.inflate(R.menu.board_local_menu);
+
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                int itemId = item.getItemId();
+
+                if (itemId == R.id.action_copy_fen) {
+                    copyFENtoClipboard();
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        });
+
+        popupMenu.show();
+        if (popupMenu.getDragToOpenListener() instanceof ListPopupWindow.ForwardingListener)
+        {
+            ListPopupWindow.ForwardingListener listener = (ListPopupWindow.ForwardingListener) popupMenu.getDragToOpenListener();
+            ListPopupWindow popup = listener.getPopup();
+
+            popup.setVerticalOffset(-(getHeight() + popup.getHeight()) / 2);
+            popup.setHorizontalOffset((getWidth() - popup.getWidth()) / 2);
+            popup.show();
+        }
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event){
         Point p;
@@ -694,6 +742,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         if (enabled) {
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                    pressDownXY.x = event.getX();
+                    pressDownXY.y = event.getY();
+
                     p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
                     if (p != null) {
                         Piece piece;
@@ -731,6 +782,19 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                     }
                     break;
                 case MotionEvent.ACTION_UP:
+                    long eventDuration = event.getEventTime() - event.getDownTime();
+                    double dx = event.getX() - pressDownXY.x, dy = event.getY() - pressDownXY.y;
+                    int moveDistance = (int) sqrt(dx * dx + dy * dy);
+
+                    if (eventDuration >= LONG_PRESS_DELAY && moveDistance < 20) {
+                        if (draggingData != null) {
+                            chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
+                            draggingData = null;
+                            invalidate();
+                        }
+                        showPopupMenu();
+                    }
+                    else
                     if (draggingData != null) {
                         p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
 
