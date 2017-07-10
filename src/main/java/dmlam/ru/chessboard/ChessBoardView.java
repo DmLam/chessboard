@@ -729,8 +729,11 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             ListPopupWindow.ForwardingListener listener = (ListPopupWindow.ForwardingListener) popupMenu.getDragToOpenListener();
             ListPopupWindow popup = listener.getPopup();
 
-            popup.setVerticalOffset(-(getHeight() + popup.getHeight()) / 2);
-            popup.setHorizontalOffset((getWidth() - popup.getWidth()) / 2);
+            int popupHeight = popup.getHeight(), popupWidth = popup.getWidth();
+
+            popup.setVerticalOffset(-(getHeight() + popupHeight > 0 ? popupHeight : 0) / 2);
+            popup.setHorizontalOffset((getWidth() - popupWidth > 0 ? popupWidth : 0) / 2);
+
             popup.show();
         }
     }
