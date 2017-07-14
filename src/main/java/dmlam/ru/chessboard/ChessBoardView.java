@@ -20,7 +20,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ListPopupWindow;
 import android.support.v7.widget.PopupMenu;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -49,7 +48,7 @@ import static java.lang.Math.sqrt;
 
 public class ChessBoardView extends View implements SelectPawnTransformationDialogFragment.SelectPawnTransformationDialogListener, ChessBoard.OnNeedPieceForTransformation,
         IOnMoveListener{
-    private static final String LOGTAG = ChessBoardView.class.getName();
+    private static final String LOGTAG = ChessBoardView.class.getName();    
 
     private final int LONG_PRESS_DELAY = 500; // длительность длинного нажатия для вызова меню
     private final int MOVE_ANIMATION_TICK_COUNT = 50;
@@ -703,8 +702,8 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         ClipboardUtils.copyTextToClipboard(getContext(), "FEN", FEN);
     }
 
-    private void showPopupMenu() {
-        PopupMenu popupMenu = new PopupMenu(getContext(), this, Gravity.NO_GRAVITY);
+    private void showPopupMenu(int x, int y) {
+        PopupMenu popupMenu = new PopupMenu(getContext(), this);
 
         popupMenu.inflate(R.menu.board_local_menu);
 
@@ -724,15 +723,16 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         });
 
         popupMenu.show();
-        if (popupMenu.getDragToOpenListener() instanceof ListPopupWindow.ForwardingListener)
+
+        View.OnTouchListener dragToOpenListener = popupMenu.getDragToOpenListener();
+
+        // сдвинем меню в центр доски
+        if (dragToOpenListener instanceof ListPopupWindow.ForwardingListener)
         {
-            ListPopupWindow.ForwardingListener listener = (ListPopupWindow.ForwardingListener) popupMenu.getDragToOpenListener();
-            ListPopupWindow popup = listener.getPopup();
+            ListPopupWindow popup = ((ListPopupWindow.ForwardingListener) dragToOpenListener).getPopup();
 
-            int popupHeight = popup.getHeight(), popupWidth = popup.getWidth();
-
-            popup.setVerticalOffset(-(getHeight() + popupHeight > 0 ? popupHeight : 0) / 2);
-            popup.setHorizontalOffset((getWidth() - popupWidth > 0 ? popupWidth : 0) / 2);
+            popup.setHorizontalOffset(x);
+            popup.setVerticalOffset(-(getHeight() - y));
 
             popup.show();
         }
@@ -795,7 +795,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                             draggingData = null;
                             invalidate();
                         }
-                        showPopupMenu();
+                        showPopupMenu((int) pressDownXY.x, (int) pressDownXY.y);
                     }
                     else
                     if (draggingData != null) {
