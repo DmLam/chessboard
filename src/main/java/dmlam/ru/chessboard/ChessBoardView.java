@@ -48,7 +48,7 @@ import static java.lang.Math.sqrt;
 
 public class ChessBoardView extends View implements SelectPawnTransformationDialogFragment.SelectPawnTransformationDialogListener, ChessBoard.OnNeedPieceForTransformation,
         IOnMoveListener{
-    private static final String LOGTAG = ChessBoardView.class.getName();    
+    private static final String LOGTAG = ChessBoardView.class.getName();
 
     private final int LONG_PRESS_DELAY = 500; // длительность длинного нажатия для вызова меню
     private final int MOVE_ANIMATION_TICK_COUNT = 50;

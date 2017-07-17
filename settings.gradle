@@ -1,0 +1,2 @@
+include ':androidCommonLib'
+project(':androidCommonLib').projectDir = new File('../androidCommonLib')
