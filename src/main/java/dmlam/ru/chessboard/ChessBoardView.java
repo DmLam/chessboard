@@ -29,7 +29,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import dmlam.ru.chessboard.Piece.Color;
-import ru.dmlam.androidcommonlib.ClipboardUtils;
+import dmlam.ru.androidcommonlib.ClipboardUtils;
 
 import static dmlam.ru.chessboard.Piece.Color.BLACK;
 import static dmlam.ru.chessboard.Piece.Color.WHITE;
