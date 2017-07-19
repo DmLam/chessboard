@@ -12,6 +12,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import dmlam.ru.androidcommonlib.ACRAUtils;
+
 import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
 
 /**
@@ -154,6 +156,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     private void NotationMoveSelected(String url) {
+        ACRAUtils.putCustomData("NotationMoveSelected", url);
+
         chessBoard.gotoMove(Integer.valueOf(url));
     }
 

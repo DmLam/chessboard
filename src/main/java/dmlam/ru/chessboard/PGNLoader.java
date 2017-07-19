@@ -12,7 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import ru.dmlam.androidcommonlib.FileNameUtils;
+import dmlam.ru.androidcommonlib.FileNameUtils;
 
 import static dmlam.ru.chessboard.Game.GameResult.DRAW;
 import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;

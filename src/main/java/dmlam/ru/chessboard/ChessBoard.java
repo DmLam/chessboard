@@ -5,10 +5,12 @@ import android.graphics.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import dmlam.ru.androidcommonlib.ACRAUtils;
 import dmlam.ru.chessboard.Piece.Color;
 import dmlam.ru.chessboard.Piece.Kind;
 
-import static dmlam.ru.chessboard.Piece.Color.*;
+import static dmlam.ru.chessboard.Piece.Color.BLACK;
+import static dmlam.ru.chessboard.Piece.Color.WHITE;
 import static dmlam.ru.chessboard.Piece.Kind.PAWN;
 import static java.lang.Math.min;
 
@@ -148,6 +150,8 @@ public class ChessBoard {
     // forceNewVariant = true - если необходимо создать новый вариант, даже если в вариантах продолжения текущего хода уже есть такой ход
     boolean movePieceTo(Piece piece, int x, int y, boolean forceNewVariant) {
         Point sourceSquare = piece.getXY();
+
+        ACRAUtils.putCustomData("lastmove", piece.getKind().toString() + ' ' + squareName(sourceSquare) + " -> " + squareName(x, y));
 
         if (isInPawnPromotion())
         {
