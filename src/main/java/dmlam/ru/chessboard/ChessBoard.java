@@ -151,8 +151,6 @@ public class ChessBoard {
     boolean movePieceTo(Piece piece, int x, int y, boolean forceNewVariant) {
         Point sourceSquare = piece.getXY();
 
-        ACRAUtils.putCustomData("lastmove", piece.getKind().toString() + ' ' + squareName(sourceSquare) + " -> " + squareName(x, y));
-
         if (isInPawnPromotion())
         {
             // возбудим здесь исключение, т.к. есть пешка, проведенная до последней горизонтали и нам нужна реакция на это событие -
@@ -180,6 +178,16 @@ public class ChessBoard {
             // ставим на новую клетку
             piece.moveTo(x, y);
             setPieceAt(x, y, piece);
+
+            if (ACRAUtils.getCustomData("start loading problem") == null) {
+                // если задача уже загружена, то делаем лог ходов.
+                // В процессе загрузки и разбора задачи ходы не логгируем
+                String m = piece.lastMove.toString();
+                if (ACRAUtils.getCustomData("moves") != null) {
+                    m = ACRAUtils.getCustomData("moves") + " " + m;
+                }
+                ACRAUtils.putCustomData("moves", m);
+            }
 
             if (piece.getKind() == Kind.ROOK) {
                 // если был ход ладьей, то установим невозможность соответствующих рокировок
