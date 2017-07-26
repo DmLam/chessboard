@@ -370,6 +370,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
 
             String html = notation.toString();
+            ACRAUtils.putCustomData("Notation", html);
             loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
         }
     }
