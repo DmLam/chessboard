@@ -1122,8 +1122,6 @@ public class ChessBoard {
         } finally {
             endUpdate();
         }
-
-//        doOnBoardChange();  // будет сделано в endUpdate()
     }
 
     private void doOnBoardChange() {
@@ -1302,12 +1300,12 @@ public class ChessBoard {
             }
 
             doAfterMove(lastMove);
-            doOnBoardChange();
         }
         else {
             rollback();
             removeMove(lastMove);
         }
+        doOnBoardChange();
     }
 
     public Move findMove(int id) {
