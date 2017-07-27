@@ -397,7 +397,7 @@ public class ChessBoard {
                     lastMoveVariants = null;
                 }
                 finally {
-                    endUpdate();
+                    endUpdate(false);
                 }
 
             }
@@ -1120,7 +1120,7 @@ public class ChessBoard {
 
             checkForCheckCheckmateStalemate();
         } finally {
-            endUpdate();
+            endUpdate(!restoring);
         }
     }
 
@@ -1300,12 +1300,12 @@ public class ChessBoard {
             }
 
             doAfterMove(lastMove);
+            doOnBoardChange();
         }
         else {
             rollback();
             removeMove(lastMove);
         }
-        doOnBoardChange();
     }
 
     public Move findMove(int id) {
