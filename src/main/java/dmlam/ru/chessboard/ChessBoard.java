@@ -389,6 +389,7 @@ public class ChessBoard {
                 lastMove = lastMoveVariants.get(lastMoveIndex);
 
                 restoreBoardState(lastMove);
+                doOnBoardChange();
             }
             else {
                 beginUpdate();
@@ -397,7 +398,7 @@ public class ChessBoard {
                     lastMoveVariants = null;
                 }
                 finally {
-                    endUpdate(false);
+                    endUpdate(true);
                 }
 
             }
@@ -426,6 +427,7 @@ public class ChessBoard {
         if (nextMove != null) {
 
             restoreBoardState(nextMove);
+            doOnBoardChange();
 
             doOnRollup(nextMove);
         }
@@ -762,7 +764,7 @@ public class ChessBoard {
     public void endUpdate(boolean doOnChange) {
         updateCount--;
 
-        if (doOnChange) {
+        if (doOnChange && updateCount == 0) {
             doOnBoardChange();
         }
     }
@@ -1303,7 +1305,13 @@ public class ChessBoard {
             doOnBoardChange();
         }
         else {
-            rollback();
+            beginUpdate();
+            try {
+                rollback();
+            }
+            finally {
+                endUpdate(false);
+            }
             removeMove(lastMove);
         }
     }
