@@ -161,6 +161,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                             0xff9f9fff, 0xf557fff,
                             0xff363a3d, 0xffcccccc));
             colorScheme = colorSchemes.get(0);
+            colorScheme.initPainting();
         }
 
     }
