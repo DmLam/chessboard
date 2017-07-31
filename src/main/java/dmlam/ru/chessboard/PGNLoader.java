@@ -369,7 +369,6 @@ public class PGNLoader {
         return result;
     }
 
-
     private void createFileIndex(String fileName, String indexFileName) throws PGNError {
         FileReader fr;
         FileOutputStream fos;
@@ -485,8 +484,6 @@ public class PGNLoader {
     public PGNLoader(String fileName) throws PGNError {
         String indexFileName = FileNameUtils.removeExtension(fileName).concat(".gamesIndex");
         File f = new File(indexFileName);
-//        f.delete();
-
 
         if (!f.exists()) {
             createFileIndex(fileName, indexFileName);
