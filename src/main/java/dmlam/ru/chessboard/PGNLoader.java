@@ -293,8 +293,6 @@ public class PGNLoader {
                     if (moves.charAt(0) == '(') {
                         // variant
                         int lastMoveId = chessboard.getLastMove().getMoveId();
-                        MoveList prevVariants = chessboard.getLastMove().getPrevVariants();
-                        int prevMoveIndex = prevVariants == null ? 0 : prevVariants.size() - 1;
 
                         moves.delete(0, 1);
 
@@ -334,10 +332,11 @@ public class PGNLoader {
         String line;
 
         chessboard = new ChessBoard();
-        if (FEN != null) {
-            game.setStartPosition(FEN);
-            chessboard.loadFromFEN(FEN);
+        if (FEN == null) {
+            FEN = chessboard.STARTING_POSITION_FEN;
         }
+        game.setStartPosition(FEN);
+        chessboard.loadFromFEN(FEN);
 
         readLine(in);  // skip empty line between tags and moves
 
@@ -482,7 +481,7 @@ public class PGNLoader {
     }
 
     public PGNLoader(String fileName) throws PGNError {
-        String indexFileName = FileNameUtils.removeExtension(fileName).concat(".gamesIndex");
+        String indexFileName = FileNameUtils.changeExtension(fileName, "gamesIndex");
         File f = new File(indexFileName);
 
         if (!f.exists()) {
@@ -515,7 +514,7 @@ public class PGNLoader {
         catch(IOException E) {
             Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, index, lineNum, E.toString()));
 
-            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d)", fileName, index, lineNum));
+            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d, message '%s')", fileName, index, lineNum, E.getMessage()));
         }
         catch(PGNError E) {
             Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN file %s (game %d, line %d):\n%s", fileName, index, lineNum, E.toString()));

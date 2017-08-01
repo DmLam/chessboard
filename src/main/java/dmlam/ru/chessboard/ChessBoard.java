@@ -35,6 +35,8 @@ class ErrorWaitingForPawnPromotion extends  Error {
 public class ChessBoard {
     private static final String LOGTAG = ChessBoard.class.getName();
 
+    public final static String STARTING_POSITION_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
     public enum Castling {QUEEN, KING};
     public enum PromoteTo {QUEEN, ROOK, BISHOP, KNIGHT;
 
@@ -111,7 +113,7 @@ public class ChessBoard {
     }
 
     public static int getLetterRow(char c) {
-        return (int) c - (int) 'a';
+        return (int) Character.toLowerCase(c) - (int) 'a';
     }
 
     public static int getLetterColumn(char c) {
@@ -937,6 +939,10 @@ public class ChessBoard {
         return result;
     }
 
+    public void setupStartingPosition() {
+        loadFromFEN(STARTING_POSITION_FEN);
+    }
+
     public void loadFromFEN(String FEN) {
         loadFromFEN(FEN, false);
     }
@@ -944,7 +950,7 @@ public class ChessBoard {
     // загрузка позиции из FEN.
     // Параметр restoring - признак загрузки начальной исследуемой позиции непосредственно из FEN (restoring = false)
     // или восстановления сохраненной позиции после одного из ходов (по rollback(), rollup(), gotoMove()) (restoring = true)
-    public void loadFromFEN(String FEN, boolean restoring) {
+    private void loadFromFEN(String FEN, boolean restoring) {
         int line = 0, charIndex = 0;
 
         FEN = FEN.trim();
@@ -1345,6 +1351,8 @@ public class ChessBoard {
         boolean result = false;
 
         if (move != null && !move.isEmpty()) {
+            move = move.toLowerCase();
+
             if (move.charAt(move.length() - 1) == '+' || move.charAt(move.length() - 1) == '#') {
                 move = move.substring(0, move.length() - 1);
             }
@@ -1353,30 +1361,28 @@ public class ChessBoard {
                 char pieceLetter = move.charAt(0);
                 ArrayList<Piece> pieces = new ArrayList<Piece>();
 
-                move = move.toLowerCase();
-
                 if (pieceLetter == 'o') {
                     // castling
                     if (move.equals("o-o")) {
                         if (player == WHITE) {
-                            result = fromtomove("a5a7", forceNewVariant);
+                            result = fromtomove("e1g1", forceNewVariant);
                         }
                         else {
-                            result = fromtomove("h5h7", forceNewVariant);
+                            result = fromtomove("e8g8", forceNewVariant);
                         }
                     }
                     else
                     if (move.equals("o-o-o")) {
                         if (player == WHITE) {
-                            result = fromtomove("a5a3", forceNewVariant);
+                            result = fromtomove("e1c1", forceNewVariant);
                         }
                         else {
-                            result = fromtomove("h5h3", forceNewVariant);
+                            result = fromtomove("e8c8", forceNewVariant);
                         }
                     }
                 }
                 else
-                if ("KQRBN".indexOf(pieceLetter) >= 0) {
+                if (move.length() > 2 && "kqrbn".indexOf(pieceLetter) >= 0) {
                     String to = move.substring(move.length() - 2);
                     Point p;
 
@@ -1400,7 +1406,7 @@ public class ChessBoard {
                         if ((capturing && targetPiece != null && targetPiece.getColor() != player) ||
                                 (targetPiece == null)) {
 
-                            listPieces(Piece.Kind.kindByLetter(pieceLetter), player, pieces);
+                            listPieces(Piece.Kind.kindByLetter(Character.toUpperCase(pieceLetter)), player, pieces);
                             for (int i = pieces.size() - 1; i >= 0; i--) {
                                 if (!isMovePossible(pieces.get(i), p.x, p.y)) {
                                     pieces.remove(i);
