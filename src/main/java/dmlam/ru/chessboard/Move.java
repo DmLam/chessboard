@@ -13,13 +13,14 @@ import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
  */
 
 final public class Move {
+    private final String NULL_MOVE_NOTATION = "--";
 
     private static int moveIdGenerator = 0;
 
     private int id = 0;  // id хода по которому его можно будет найти, например, при клике пользователя по записи партии
-    private Piece piece = null; // сходившая фигура
-    private Piece.Kind piece1Kind, piece2Kind;
-    private Point piece1From, piece1To, piece2From, piece2To;
+    private Piece piece = null; // сходившая фигура. Если null, то это null-ход
+    private Piece.Kind piece1Kind = null, piece2Kind = null;
+    private Point piece1From = null, piece1To = null, piece2From = null, piece2To = null;
     private ChessBoard.PromoteTo promotePawnTo = null;
 
     private Piece.Color moveOrder;              // кто сходил - белые или черные
@@ -44,6 +45,10 @@ final public class Move {
     public Move(Piece piece) {
         this.piece = piece;
         id = ++moveIdGenerator;
+    }
+
+    public boolean isNullMove() {
+        return piece == null;
     }
 
     @Override
@@ -335,85 +340,84 @@ final public class Move {
     private String getShortNotation(ChessBoard board) {
         String result;
 
-        if (piece1Kind == Piece.Kind.KING && Math.abs(piece1To.x - piece1From.x) > 1) {  // была рокировка?
-            if (piece1To.x == 2) {
-                result = "0-0-0";
-            }
-            else {
-                result = "0-0";
-            }
+        if (isNullMove()) {
+            result = NULL_MOVE_NOTATION
         }
         else {
-            StringBuilder sb = new StringBuilder();
-
-            if (piece1Kind == Piece.Kind.PAWN) {
-                sb.append(ChessBoard.getLetter(piece1From.x));
-
-                if (piece2Kind != null && piece2To == null) {
-                    // взятие фигуры или пешки
-                    sb.append("x").append(ChessBoard.squareName(piece1To));
-                    if (piece1To != null && piece1To.y != piece2From.y) {
-                        sb.append(" e.p.");
-                    }
+            if (piece1Kind == Piece.Kind.KING && Math.abs(piece1To.x - piece1From.x) > 1) {  // была рокировка?
+                if (piece1To.x == 2) {
+                    result = "0-0-0";
+                } else {
+                    result = "0-0";
                 }
-                else {
-                    if (piece1To != null) {
-                        // не было превращения в фигуру
-                        sb.append(Integer.toString(piece1To.y + 1));
+            } else {
+                StringBuilder sb = new StringBuilder();
+
+                if (piece1Kind == Piece.Kind.PAWN) {
+                    sb.append(ChessBoard.getLetter(piece1From.x));
+
+                    if (piece2Kind != null && piece2To == null) {
+                        // взятие фигуры или пешки
+                        sb.append("x").append(ChessBoard.squareName(piece1To));
+                        if (piece1To != null && piece1To.y != piece2From.y) {
+                            sb.append(" e.p.");
+                        }
+                    } else {
+                        if (piece1To != null) {
+                            // не было превращения в фигуру
+                            sb.append(Integer.toString(piece1To.y + 1));
+                        } else {
+                            sb.append(Integer.toString(piece2To.y + 1));
+                        }
                     }
-                    else {
-                        sb.append(Integer.toString(piece2To.y + 1));
+                    // если пешка превращается на последней для нее горизонтали - добавим в кого
+                    if (promotePawnTo != null) {
+                        sb.append('=').append(promotePawnTo.getNotationLetter());
                     }
-                }
-                // если пешка превращается на последней для нее горизонтали - добавим в кого
-                if (promotePawnTo != null) {
-                    sb.append('=').append(promotePawnTo.getNotationLetter());
-                }
-            }
-            else {
-                // все остальные фигуры (кроме пешки)
-                sb.append(piece1Kind.getNotationLetter());
+                } else {
+                    // все остальные фигуры (кроме пешки)
+                    sb.append(piece1Kind.getNotationLetter());
 
-                // Проверим, не существует ли неопределенности с фигурой, совершающей ход (т.е., две одинаковые фигуры, могущие сходить на одну клетку)
-                ArrayList<Piece> ambiguity = new ArrayList<Piece>();
+                    // Проверим, не существует ли неопределенности с фигурой, совершающей ход (т.е., две одинаковые фигуры, могущие сходить на одну клетку)
+                    ArrayList<Piece> ambiguity = new ArrayList<Piece>();
 
-                for (int i = 0; i < board.getMoveablePiecesCount(); i++) {
-                    Piece piece = board.getMoveablePiece(i);
-                    if ((piece.getKind() == piece1Kind) && (piece != this.piece)) {
+                    for (int i = 0; i < board.getMoveablePiecesCount(); i++) {
+                        Piece piece = board.getMoveablePiece(i);
+                        if ((piece.getKind() == piece1Kind) && (piece != this.piece)) {
 
-                        for (int j = 0; j < piece.getAvailableMoveCount(); j ++) {
-                            if (piece.getAvailableMove(j).equals(piece1To)) {
-                                // есть неопределенность - добавим фигуру в список вносящих неопределенность
-                                ambiguity.add(piece);
+                            for (int j = 0; j < piece.getAvailableMoveCount(); j++) {
+                                if (piece.getAvailableMove(j).equals(piece1To)) {
+                                    // есть неопределенность - добавим фигуру в список вносящих неопределенность
+                                    ambiguity.add(piece);
+                                }
                             }
                         }
                     }
-                }
 
-                if (ambiguity.size() > 0) {
-                    if (ambiguity.size() == 1) {
-                        // только еще одна фигура может сходить на ту же клетку
-                        if (ambiguity.get(0).getX() == piece1From.x) {
-                            // совпадают горизонтали фигур - добавляем в ход номер вертикали
-                            sb.append(piece1From.y + 1);
+                    if (ambiguity.size() > 0) {
+                        if (ambiguity.size() == 1) {
+                            // только еще одна фигура может сходить на ту же клетку
+                            if (ambiguity.get(0).getX() == piece1From.x) {
+                                // совпадают горизонтали фигур - добавляем в ход номер вертикали
+                                sb.append(piece1From.y + 1);
+                            } else {
+                                // совпадают вертикали - добавляем в ход наименование горизонтали
+                                sb.append(ChessBoard.getLetter(piece1From.x));
+                            }
                         } else {
-                            // совпадают вертикали - добавляем в ход наименование горизонтали
-                            sb.append(ChessBoard.getLetter(piece1From.x));
+                            // еще две или более фигур могут сходить на ту же клетку, то обозначим фигуру, которая ходила полным названием клетки
+                            sb.append(ChessBoard.squareName(piece1From));
                         }
                     }
-                    else {
-                        // еще две или более фигур могут сходить на ту же клетку, то обозначим фигуру, которая ходила полным названием клетки
-                        sb.append(ChessBoard.squareName(piece1From));
+
+                    if (piece2Kind != null && piece2To == null) {
+                        sb.append('x');
                     }
+                    sb.append(ChessBoard.squareName(piece1To));
                 }
 
-                if (piece2Kind != null && piece2To == null) {
-                    sb.append('x');
-                }
-                sb.append(ChessBoard.squareName(piece1To));
+                result = sb.toString();
             }
-
-            result = sb.toString();
         }
 
         return result;
@@ -423,35 +427,36 @@ final public class Move {
     private String getFullNotation() {
         String result;
 
-        if (piece1Kind == Piece.Kind.KING && Math.abs(piece1To.x - piece1From.x) > 1) {  // была рокировка?
-            if (piece1To.x == 2) {
-                result = "0-0-0";
-            }
-            else {
-                result = "0-0";
-            }
+        if (isNullMove()) {
+            result = NULL_MOVE_NOTATION;
         }
         else {
-            StringBuilder sb = new StringBuilder();
+            if (piece1Kind == Piece.Kind.KING && Math.abs(piece1To.x - piece1From.x) > 1) {  // была рокировка?
+                if (piece1To.x == 2) {
+                    result = "0-0-0";
+                } else {
+                    result = "0-0";
+                }
+            } else {
+                StringBuilder sb = new StringBuilder();
 
-            sb.append(piece1Kind.getNotationLetter()).append(ChessBoard.squareName(piece1From));
-            if (piece2Kind != null && piece2To == null) {
-                sb.append('x');
-            }
-            else {
-                sb.append('-');
-            }
+                sb.append(piece1Kind.getNotationLetter()).append(ChessBoard.squareName(piece1From));
+                if (piece2Kind != null && piece2To == null) {
+                    sb.append('x');
+                } else {
+                    sb.append('-');
+                }
 
-            if (piece1To == null) {
-                // превращение пешки в фигуру
-                sb.append(ChessBoard.squareName(piece2To));
-                sb.append(piece2Kind.getNotationLetter());
-            }
-            else {
-                sb.append(ChessBoard.squareName(piece1To));
-            }
+                if (piece1To == null) {
+                    // превращение пешки в фигуру
+                    sb.append(ChessBoard.squareName(piece2To));
+                    sb.append(piece2Kind.getNotationLetter());
+                } else {
+                    sb.append(ChessBoard.squareName(piece1To));
+                }
 
-            result = sb.toString();
+                result = sb.toString();
+            }
         }
 
         return result;

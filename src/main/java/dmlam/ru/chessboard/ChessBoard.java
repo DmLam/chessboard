@@ -74,7 +74,7 @@ public class ChessBoard {
 
     Game game = new Game();
     private int lastMoveIndex = -1;       // индекс последнего хода в вариантах последнего хода (lastMoveVariants)
-    private Piece lastMovedPiece = null; // последняя сходившая фигура. Используется для сохранения хода в записи партии после окончания хода
+    private Move lastMove = null; // последняя сходившая фигура. Используется для сохранения хода в записи партии после окончания хода
     private MoveList lastMoveVariants = null;  // список вариантов последнего хода (если был rollback, если нет, то в в lastMoveVariants[0] последний ход)
 
     private boolean currentPlayerChecked;     // игрок, чья очередь хода находится под шахом
@@ -163,8 +163,6 @@ public class ChessBoard {
         boolean result = isMovePossible(piece, x, y);
 
         if (result) {
-            lastMovedPiece = piece;
-
             // очищаем признак возможности взятия на проходе
             enPassantSquare = null;
 
@@ -179,6 +177,7 @@ public class ChessBoard {
             }
             // ставим на новую клетку
             piece.moveTo(x, y);
+            lastMove = piece.lastMove;
             setPieceAt(x, y, piece);
 
             if (ACRAUtils.getCustomData("start loading problem") == null) {
@@ -1243,18 +1242,17 @@ public class ChessBoard {
 
     // передаем ход противнику
     void passMoveToOpponent(boolean forceNewVariant) {
-        Move lastMove = lastMovedPiece.lastMove;
-
         lastMove.saveMoveNotation(this);
         transformation = ' ';
-        moveOrder = moveOrder.opposite();
-        halfmoveQnt++; // счетчик незначащих полуходов
+        if (!lastMove.isNullMove()) {
+            moveOrder = moveOrder.opposite();
+            halfmoveQnt++; // счетчик незначащих полуходов
+        }
 /*
         if (halfmoveQnt >= 50) {
             gameDrawn = true;
         }
 */
-
         checkForCheckCheckmateStalemate();
         lastMove.saveMoveState(this);
 
@@ -1357,6 +1355,13 @@ public class ChessBoard {
                 move = move.substring(0, move.length() - 1);
             }
 
+            if (move.equals("--") || move.equals("<>")) {
+                // null-move
+                lastMove = new Move(null);
+                passMoveToOpponent(false);
+                result = true;
+            }
+            else
             if (!move.isEmpty()) {
                 char pieceLetter = move.charAt(0);
                 ArrayList<Piece> pieces = new ArrayList<Piece>();
