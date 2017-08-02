@@ -1244,10 +1244,8 @@ public class ChessBoard {
     void passMoveToOpponent(boolean forceNewVariant) {
         lastMove.saveMoveNotation(this);
         transformation = ' ';
-        if (!lastMove.isNullMove()) {
-            moveOrder = moveOrder.opposite();
-            halfmoveQnt++; // счетчик незначащих полуходов
-        }
+        moveOrder = moveOrder.opposite();
+        halfmoveQnt++; // счетчик незначащих полуходов
 /*
         if (halfmoveQnt >= 50) {
             gameDrawn = true;

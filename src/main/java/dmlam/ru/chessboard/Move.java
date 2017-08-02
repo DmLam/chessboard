@@ -341,7 +341,7 @@ final public class Move {
         String result;
 
         if (isNullMove()) {
-            result = NULL_MOVE_NOTATION
+            result = NULL_MOVE_NOTATION;
         }
         else {
             if (piece1Kind == Piece.Kind.KING && Math.abs(piece1To.x - piece1From.x) > 1) {  // была рокировка?

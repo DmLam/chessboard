@@ -146,6 +146,10 @@ public class ColorSetColorScheme extends CoordinatesColorScheme {
                 if (chessBoardView.getShowLastMoveSquares()) {
                     Move lastMove = chessBoard.getLastMove();
 
+                    while (lastMove != null && lastMove.isNullMove()) {
+                        lastMove = lastMove.getPrevMove();
+                    }
+
                     if (lastMove != null) {
                         if (lastMove.From().equals(reverseBoard ? 7 - x : x, reverseBoard ? y : 7 - y)) {
                             paint = lastMoveSourceSquarePaint;

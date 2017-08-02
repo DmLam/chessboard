@@ -98,6 +98,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             settings.setGeolocationEnabled(false);
             settings.setNeedInitialFocus(false);
             settings.setSupportZoom(false);
+            settings.setJavaScriptEnabled(true);
             setTextSize(settings);
             configureLayerType();
             // установим обработчик ссылок для просмотра записи партии
@@ -108,6 +109,18 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                         NotationMoveSelected(url.substring(5, url.length()));
                     }
                     return true;
+                }
+
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
+
+                    Move lastMove = chessBoard.getLastMove();
+
+                    // прокрутим до текущего последнего хода
+                    if (lastMove != null) {
+                        loadUrl("javascript:scrollAnchor(" + Integer.toString(lastMove.getMoveId()) + ");");
+                    }
                 }
             });
         }
@@ -164,9 +177,9 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     private StringBuilder moveNotation(Move move) {
         StringBuilder result = new StringBuilder();
 
-        result.append("<a href=\"move:")
-                .append(move.getMoveId())
-                .append("\">");
+        // ссылка с name = id хода и отправляющая на move:id
+
+        result.append(String.format("<a name=\"%d\"href=\"move:%d\">", move.getMoveId(), move.getMoveId()));
 
         if (move == lastMove) {
             result.append("<span style=\"color:").append(lastMoveColor).append("\">");
@@ -343,9 +356,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     public void updateNotation() {
-        StringBuilder notation = new StringBuilder(), m = new StringBuilder(), sb = new StringBuilder();
-
-        lastMove = chessBoard.getLastMove();
+        StringBuilder notation = new StringBuilder();
 
         if (chessBoard.getFirstMoveVariants().size() > 0) {
 
@@ -362,6 +373,9 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append(String.format(".secbranch a:link{color:%s;font-weight:normal;}", textColor)).
                     append(String.format(".comment {color:%s;font-weight:normal;font-style:italic}", commentColor)).
                     append("</style>").
+                    append("<script>").
+                    append("function scrollAnchor(id) {window.location.hash = id;}").
+                    append("</script>").
                     append("</head>").
                     append("<body>").
                     append(variantsNotation(chessBoard.getFirstMoveVariants(), MAIN_LINE)).
