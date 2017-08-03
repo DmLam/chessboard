@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <color name="chessnotationview_text">#ff5446ff</color>
+    <color name="chessnotationview_move">#ff5446ff</color>
     <color name="chessnotationview_lastmove">#ffffbc45</color>
     <color name="chessnotationview_comment">#ffa0a0a0</color>
 

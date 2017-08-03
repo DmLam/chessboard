@@ -33,10 +33,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     final private static boolean SECONDARY_LINE = false;
 
     private ChessBoard chessBoard = null;
-    private String textColor;
+    private String moveColor;
     private String lastMoveColor;
     private String commentColor;
-    private Move lastMove;
+
     private int fontSize = 0;
 
     // используем функцию для установки размера шрифта в WebView, т.к. на API до 14 для этого была функция setTextSize, которая ныне deprecated
@@ -86,7 +86,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     private void initialize(Context context, AttributeSet attrs, int defStyle) {
 
         if (!isInEditMode()) {
-            textColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_text));
+            moveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_move));
             lastMoveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_lastmove));
             commentColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_comment));
             WebSettings settings = getSettings();
@@ -99,8 +99,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             settings.setNeedInitialFocus(false);
             settings.setSupportZoom(false);
             settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
             setTextSize(settings);
             configureLayerType();
+//            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
             // установим обработчик ссылок для просмотра записи партии
             setWebViewClient(new WebViewClient() {
                 @Override
@@ -169,23 +171,36 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     private void NotationMoveSelected(String url) {
-        ACRAUtils.putCustomData("NotationMoveSelected", url);
+        Move lastMove;
 
-        chessBoard.gotoMove(Integer.valueOf(url));
+        chessBoard.deleteOnMoveListener(this);
+        try {
+            lastMove = chessBoard.getLastMove();
+            if (lastMove != null) {
+                loadUrl("javascript: hideLastMove(" + Integer.toString(lastMove.getMoveId()) + ")");
+            }
+
+            chessBoard.gotoMove(Integer.valueOf(url));
+
+            lastMove = chessBoard.getLastMove();
+            if (lastMove != null) {
+                loadUrl("javascript: showLastMove(" + Integer.toString(lastMove.getMoveId()) + ")");
+            }
+        }
+        finally {
+            chessBoard.addOnMoveListener(this);
+        }
     }
 
     private StringBuilder moveNotation(Move move) {
         StringBuilder result = new StringBuilder();
 
-        // ссылка с name = id хода и отправляющая на move:id
+        result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">",
+                        move.getMoveId(),
+                        move == chessBoard.getLastMove() ? "lastmove" : "move",
+                        move.getMoveId())).
+                append(move.getNotation());
 
-        result.append(String.format("<a name=\"%d\"href=\"move:%d\">", move.getMoveId(), move.getMoveId()));
-
-        if (move == lastMove) {
-            result.append("<span style=\"color:").append(lastMoveColor).append("\">");
-        }
-
-        result.append(move.getNotation());
 
         switch (move.getNumericAnnotationGlyph()) {
             case 1:
@@ -251,9 +266,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             }
         }
 
-        if (move == lastMove) {
-            result.append("</span>");
-        }
         result.append("</a>");
         if (move.getComment() != null) {
             result.append("<span class=\"").append("comment").append("\">")
@@ -363,18 +375,21 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             notation.append("<html>").
                     append("<head>").
                     append("<style type=\"text/css\">").
-                    append(String.format("body{color;color:%s;font-weight:bold;}", textColor)).
-                    append(String.format("a:link{text-decoration:none;color:%s;}", textColor)).
-                    append(String.format("a:visited{text-decoration:none;color:%s;}", textColor)).
-                    append(String.format(".lastmove a:link{color:%s;}", lastMoveColor)).
-                    append(String.format(".lastmove a:visited{color:%s;}", lastMoveColor)).
-                    append(String.format(".secbranch {color:%s;font-weight:normal}", textColor)).
-                    append(String.format(".secbranch a:visited{color:%s;font-weight:normal}", textColor)).
-                    append(String.format(".secbranch a:link{color:%s;font-weight:normal;}", textColor)).
+                    append("a:link{text-decoration:none;font-weight:bold;}").
+                    append("a:visited{text-decoration:none;font-weight:bold;}").
+                    append(String.format("a:link.move{color:%s;}", moveColor)).
+                    append(String.format("a:visited.move{color:%s;}", moveColor)).
+                    append(String.format("a:link.lastmove{color:%s;}", lastMoveColor)).
+                    append(String.format("a:visited.lastmove{color:%s;}", lastMoveColor)).
+                    append(String.format(".secbranch {color:%s;font-weight:normal}", moveColor)).
+                    append(String.format(".secbranch a:visited{color:%s;font-weight:normal}", moveColor)).
+                    append(String.format(".secbranch a:link{color:%s;font-weight:normal;}", moveColor)).
                     append(String.format(".comment {color:%s;font-weight:normal;font-style:italic}", commentColor)).
                     append("</style>").
                     append("<script>").
-                    append("function scrollAnchor(id) {window.location.hash = id;}").
+                    append("function scrollAnchor(id){window.location.hash = id;}").
+                    append("function hideLastMove(id){document.getElementById(id).className = 'move';}").
+                    append("function showLastMove(id){document.getElementById(id).className = 'lastmove';}").
                     append("</script>").
                     append("</head>").
                     append("<body>").
