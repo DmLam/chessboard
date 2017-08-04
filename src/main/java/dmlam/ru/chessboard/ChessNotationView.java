@@ -32,12 +32,20 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     final private static boolean MAIN_LINE = true;
     final private static boolean SECONDARY_LINE = false;
 
+    final private static String MOVE_CSS_CLASS = "move";
+    final private static String LASTMOVE_CSS_CLASS = "lastmove";
+    final private static String SECONDARY_MOVE_CSS_CLASS = "secmove";
+    final private static String SECONDARY_LASTMOVE_CSS_CLASS = "seclastmove";
+    final private static String COMMENT_CSS_CLASS = "comment";
+
     private ChessBoard chessBoard = null;
     private String moveColor;
     private String lastMoveColor;
     private String commentColor;
 
     private int fontSize = 0;
+    private String currentNotation = null;  // текст, находящийся в текущий момент в WebView. Нужен, чтобы сравнить с новым текстом в updateNotation и в случае совпадения не обновлять компонент
+    private Move currentLastMove = null;
 
     // используем функцию для установки размера шрифта в WebView, т.к. на API до 14 для этого была функция setTextSize, которая ныне deprecated
     // сейчас же используется setTextZoom, которой нет в API ранее 14-го
@@ -102,7 +110,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             settings.setDomStorageEnabled(true);
             setTextSize(settings);
             configureLayerType();
-//            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
+///            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
             // установим обработчик ссылок для просмотра записи партии
             setWebViewClient(new WebViewClient() {
                 @Override
@@ -117,12 +125,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
 
-                    Move lastMove = chessBoard.getLastMove();
-
-                    // прокрутим до текущего последнего хода
-                    if (lastMove != null) {
-                        loadUrl("javascript:scrollAnchor(" + Integer.toString(lastMove.getMoveId()) + ");");
-                    }
+                    scrollToLastMove();
                 }
             });
         }
@@ -170,35 +173,51 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return fontSize;
     }
 
+    private void hideLastMove(Move lastMove) {
+        if (lastMove != null) {
+            loadUrl("javascript: hideLastMove(" + Integer.toString(lastMove.getMoveId()) + ")");
+        }
+    }
+
+    private void showLastMove(Move lastMove) {
+        currentLastMove = lastMove;
+
+        if (currentLastMove != null) {
+            loadUrl("javascript: showLastMove(" + Integer.toString(currentLastMove.getMoveId()) + ")");
+        }
+    }
+
+    private void scrollToLastMove() {
+        Move lastMove = chessBoard.getLastMove();
+
+        if (lastMove != null) {
+            loadUrl("javascript:scrollAnchor(" + Integer.toString(lastMove.getMoveId()) + ");");
+        }
+    }
+
     private void NotationMoveSelected(String url) {
         Move lastMove;
 
         chessBoard.deleteOnMoveListener(this);
         try {
-            lastMove = chessBoard.getLastMove();
-            if (lastMove != null) {
-                loadUrl("javascript: hideLastMove(" + Integer.toString(lastMove.getMoveId()) + ")");
-            }
+            hideLastMove(currentLastMove);
 
             chessBoard.gotoMove(Integer.valueOf(url));
 
-            lastMove = chessBoard.getLastMove();
-            if (lastMove != null) {
-                loadUrl("javascript: showLastMove(" + Integer.toString(lastMove.getMoveId()) + ")");
-            }
+            showLastMove(chessBoard.getLastMove());
         }
         finally {
             chessBoard.addOnMoveListener(this);
         }
     }
 
-    private StringBuilder moveNotation(Move move) {
+    private StringBuilder moveNotation(Move move, boolean mainLine) {
         StringBuilder result = new StringBuilder();
+        String htmlElementClass;
 
-        result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">",
-                        move.getMoveId(),
-                        move == chessBoard.getLastMove() ? "lastmove" : "move",
-                        move.getMoveId())).
+        htmlElementClass = mainLine ? MOVE_CSS_CLASS : SECONDARY_MOVE_CSS_CLASS;
+
+        result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">", move.getMoveId(), htmlElementClass, move.getMoveId())).
                 append(move.getNotation());
 
 
@@ -268,7 +287,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
         result.append("</a>");
         if (move.getComment() != null) {
-            result.append("<span class=\"").append("comment").append("\">")
+            result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">")
                     .append(' ')
                     .append(move.getComment())
                     .append("</span>");
@@ -286,7 +305,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
         if (mainLine) {
             if (variants.getComment() != null) {
-                result.append("<span class=\"").append("comment").append("\">&nbsp;")
+                result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
                         .append(' ')
                         .append(variants.getComment())
                         .append("</span>&nbsp;");
@@ -296,9 +315,9 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
 
         if (variants.size() > 1) {
-            result.append("<br>&nbsp;&nbsp;<span class=\"secbranch\">(&nbsp;");
+            result.append("<br>&nbsp;&nbsp;(&nbsp;");
             if (variants.getComment() != null) {
-                result.append("<span class=\"").append("comment").append("\">&nbsp;")
+                result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
                         .append(' ')
                         .append(variants.getComment())
                         .append("</span>&nbsp;");
@@ -309,7 +328,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     result.append(";<br>");
                 }
             }
-            result.append(")</span>");
+            result.append(")");
         }
 
         return result;
@@ -347,7 +366,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                             .append("&nbsp");  // не переводим строку после номера хода
                 }
             }
-            result.append(moveNotation(move));
+            result.append(moveNotation(move, mainLine));
 
             prevMove = move.getPrevMove();
             move = move.getMainVariant();
@@ -369,6 +388,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
     public void updateNotation() {
         StringBuilder notation = new StringBuilder();
+        String newNotation = null;
 
         if (chessBoard.getFirstMoveVariants().size() > 0) {
 
@@ -377,30 +397,39 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("<style type=\"text/css\">").
                     append("a:link{text-decoration:none;font-weight:bold;}").
                     append("a:visited{text-decoration:none;font-weight:bold;}").
-                    append(String.format("a:link.move{color:%s;}", moveColor)).
-                    append(String.format("a:visited.move{color:%s;}", moveColor)).
-                    append(String.format("a:link.lastmove{color:%s;}", lastMoveColor)).
-                    append(String.format("a:visited.lastmove{color:%s;}", lastMoveColor)).
-                    append(String.format(".secbranch {color:%s;font-weight:normal}", moveColor)).
-                    append(String.format(".secbranch a:visited{color:%s;font-weight:normal}", moveColor)).
-                    append(String.format(".secbranch a:link{color:%s;font-weight:normal;}", moveColor)).
+                    append(String.format("a:link.%s{color:%s;}", MOVE_CSS_CLASS, moveColor)).
+                    append(String.format("a:visited.%s{color:%s;}", MOVE_CSS_CLASS, moveColor)).
+                    append(String.format("a:link.%s{color:%s;}", LASTMOVE_CSS_CLASS, lastMoveColor)).
+                    append(String.format("a:visited.%s{color:%s;}", LASTMOVE_CSS_CLASS, lastMoveColor)).
+                    append(String.format("a:visited.%s{color:%s;font-weight:normal}", SECONDARY_MOVE_CSS_CLASS, moveColor)).
+                    append(String.format("a:link.%s{color:%s;font-weight:normal;}", SECONDARY_MOVE_CSS_CLASS, moveColor)).
+                    append(String.format("a:visited.%s{color:%s;font-weight:normal}", SECONDARY_LASTMOVE_CSS_CLASS, lastMoveColor)).
+                    append(String.format("a:link.%s{color:%s;font-weight:normal;}", SECONDARY_LASTMOVE_CSS_CLASS, lastMoveColor)).
                     append(String.format(".comment {color:%s;font-weight:normal;font-style:italic}", commentColor)).
                     append("</style>").
                     append("<script>").
                     append("function scrollAnchor(id){window.location.hash = id;}").
-                    append("function hideLastMove(id){document.getElementById(id).className = 'move';}").
-                    append("function showLastMove(id){document.getElementById(id).className = 'lastmove';}").
+                    append(String.format("function hideLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s');}", LASTMOVE_CSS_CLASS, MOVE_CSS_CLASS, SECONDARY_MOVE_CSS_CLASS)).
+                    append(String.format("function showLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s');}", MOVE_CSS_CLASS, LASTMOVE_CSS_CLASS, SECONDARY_LASTMOVE_CSS_CLASS)).
                     append("</script>").
                     append("</head>").
                     append("<body>").
                     append(variantsNotation(chessBoard.getFirstMoveVariants(), MAIN_LINE)).
-                            append("</body>").
+                    append("</body>").
                     append("</html>");
 
 
-            String html = notation.toString();
-            ACRAUtils.putCustomData("Notation", html);
-            loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+            newNotation = notation.toString();
+
+            hideLastMove(currentLastMove);
+            if (!newNotation.equals(currentNotation)) {
+                ACRAUtils.putCustomData("Notation", newNotation);
+                loadDataWithBaseURL(null, newNotation, "text/html", "utf-8", null);
+                currentNotation = newNotation;
+            }
+            // выделяем в нотации последний сделанный ход. Не делаем это сразу при формировании html, т.к. тогда нельзя будет сравнивать сформированный html с предыдущим вариантом
+            // (там могли быть те же самые ходы, но последний другой)
+            showLastMove(chessBoard.getLastMove());
         }
     }
 
