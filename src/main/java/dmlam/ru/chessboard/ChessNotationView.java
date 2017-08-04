@@ -410,7 +410,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("<script>").
                     append("function scrollAnchor(id){window.location.hash = id;}").
                     append(String.format("function hideLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s');}", LASTMOVE_CSS_CLASS, MOVE_CSS_CLASS, SECONDARY_MOVE_CSS_CLASS)).
-                    append(String.format("function showLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s');}", MOVE_CSS_CLASS, LASTMOVE_CSS_CLASS, SECONDARY_LASTMOVE_CSS_CLASS)).
+                    append(String.format("function showLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s'); d.scrollIntoView(); }", MOVE_CSS_CLASS, LASTMOVE_CSS_CLASS, SECONDARY_LASTMOVE_CSS_CLASS)).
                     append("</script>").
                     append("</head>").
                     append("<body>").

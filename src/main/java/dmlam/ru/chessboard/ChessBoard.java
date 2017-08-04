@@ -467,7 +467,7 @@ public class ChessBoard {
         }
     }
 
-    private void gotoMove(Move move) {
+    public void gotoMove(Move move) {
         if (move != null) {
             beginUpdate();
             try {
