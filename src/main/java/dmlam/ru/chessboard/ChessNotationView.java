@@ -43,9 +43,12 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     private String lastMoveColor;
     private String commentColor;
 
-    private int fontSize = 0;
     private String currentNotation = null;  // текст, находящийся в текущий момент в WebView. Нужен, чтобы сравнить с новым текстом в updateNotation и в случае совпадения не обновлять компонент
     private Move currentLastMove = null;
+
+    // options
+    private int fontSize = 0;
+    private boolean newLineOnEachVariant = true;
 
     // используем функцию для установки размера шрифта в WebView, т.к. на API до 14 для этого была функция setTextSize, которая ныне deprecated
     // сейчас же используется setTextZoom, которой нет в API ранее 14-го
@@ -173,6 +176,14 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return fontSize;
     }
 
+    public void setNewLineOnEachVariant(boolean newLineOnEachVariant) {
+        this.newLineOnEachVariant = newLineOnEachVariant;
+    }
+
+    public boolean getNewLineOnEachVariant() {
+        return newLineOnEachVariant;
+    }
+
     private void hideLastMove(Move lastMove) {
         if (lastMove != null) {
             loadUrl("javascript: hideLastMove(" + Integer.toString(lastMove.getMoveId()) + ")");
@@ -196,8 +207,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     private void NotationMoveSelected(String url) {
-        Move lastMove;
-
         chessBoard.deleteOnMoveListener(this);
         try {
             hideLastMove(currentLastMove);
@@ -408,9 +417,21 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append(String.format(".comment {color:%s;font-weight:normal;font-style:italic}", commentColor)).
                     append("</style>").
                     append("<script>").
+                    // function isVisible from https://stackoverflow.com/questions/487073/check-if-element-is-visible-after-scrolling by Ally
+                    append("function isVisible(el) {" +
+                                "var rect = el.getBoundingClientRect(), top = rect.top, height = rect.height, el = el.parentNode;" +
+                                "do" +
+                                "{" +
+                                    "rect = el.getBoundingClientRect();" +
+                                    "if (top <= rect.bottom === false) return false;" +
+                                    "if ((top + height) <= rect.top) return false;" +
+                                    "el = el.parentNode;" +
+                                "}while (el != document.body);" +
+                                "return top <= document.documentElement.clientHeight;" +
+                            "}").
                     append("function scrollAnchor(id){window.location.hash = id;}").
                     append(String.format("function hideLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s');}", LASTMOVE_CSS_CLASS, MOVE_CSS_CLASS, SECONDARY_MOVE_CSS_CLASS)).
-                    append(String.format("function showLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s'); d.scrollIntoView(); }", MOVE_CSS_CLASS, LASTMOVE_CSS_CLASS, SECONDARY_LASTMOVE_CSS_CLASS)).
+                    append(String.format("function showLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s'); if (!isVisible(d)) d.scrollIntoView(); }", MOVE_CSS_CLASS, LASTMOVE_CSS_CLASS, SECONDARY_LASTMOVE_CSS_CLASS)).
                     append("</script>").
                     append("</head>").
                     append("<body>").
