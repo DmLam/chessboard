@@ -14,12 +14,12 @@
  </style>
   <script>
     // from https://stackoverflow.com/questions/487073/check-if-element-is-visible-after-scrolling by Ally
-    function isVisible(el, view_height)
+    function isVisible(el)
     {
       var rect = el.getBoundingClientRect(), top = rect.top, height = rect.height;
-      if (top <= 0) return false;
-      if ((top + height) > view_height) return false;
 
+      if (top <= 0) return false;
+      if ((top + height) > document.body.clientHeight) return false;
       return true;
     }
 
@@ -32,12 +32,11 @@
       d = document.getElementById(id);
       d.className = (d.className == '%LASTMOVE_CSS_CLASS%' ? '%MOVE_CSS_CLASS%' : '%SECONDARY_MOVE_CSS_CLASS%');
     }
-    function showLastMove(id, view_height)
+    function showLastMove(id)
     {
       d = document.getElementById(id);
       d.className = (d.className == '%MOVE_CSS_CLASS%' ? '%LASTMOVE_CSS_CLASS%' : '%SECONDARY_LASTMOVE_CSS_CLASS%');
-      if (!isVisible(d, view_height)) d.scrollIntoView();
-//      d.scrollIntoView();
+      if (!isVisible(d)) d.scrollIntoView();
     }
   </script>
 </head>

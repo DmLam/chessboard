@@ -1284,7 +1284,6 @@ public class ChessBoard {
 
             if (moveIndex == -1 || forceNewVariant) {
                 lastMoveVariants.add(0, lastMove);
-                lastMoveIndex = 0;
             } else {
                 // переместим вариант в начало
                 lastMoveVariants.add(0, lastMoveVariants.remove(moveIndex));

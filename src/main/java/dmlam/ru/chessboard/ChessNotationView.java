@@ -127,7 +127,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
     }
 
-    private void initialize(Context context, AttributeSet attrs, int defStyle) {
+    private void initialize(final Context context, AttributeSet attrs, int defStyle) {
 
         if (!isInEditMode()) {
             moveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_move));
@@ -230,7 +230,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         currentLastMove = lastMove;
 
         if (currentLastMove != null) {
-            loadUrl(String.format("javascript: showLastMove(%d, %d)", currentLastMove.getMoveId(), getHeight()));
+            loadUrl("javascript: showLastMove(" + Integer.toString(lastMove.getMoveId()) + ")");
         }
     }
 
@@ -245,10 +245,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     private void NotationMoveSelected(String url) {
         chessBoard.deleteOnMoveListener(this);
         try {
+            int id = Integer.valueOf(url);
+
             hideLastMove(currentLastMove);
-
-            chessBoard.gotoMove(Integer.valueOf(url));
-
+            chessBoard.gotoMove(id);
             showLastMove(chessBoard.getLastMove());
         }
         finally {
