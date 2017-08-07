@@ -8,11 +8,17 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import dmlam.ru.androidcommonlib.ACRAUtils;
+import dmlam.ru.androidcommonlib.StringUtils;
 
 import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
 
@@ -42,6 +48,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     private String moveColor;
     private String lastMoveColor;
     private String commentColor;
+    private String notationHead;
 
     private String currentNotation = null;  // текст, находящийся в текущий момент в WebView. Нужен, чтобы сравнить с новым текстом в updateNotation и в случае совпадения не обновлять компонент
     private Move currentLastMove = null;
@@ -49,6 +56,32 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     // options
     private int fontSize = 0;
     private boolean newLineOnEachVariant = true;
+
+    private String loadNotationHead(Context context) {
+        StringBuilder result = new StringBuilder();
+        BufferedReader buffreader = new BufferedReader(new InputStreamReader(context.getResources().openRawResource(R.raw.chessnotationviewhead)));
+        String line;
+
+        try {
+            while (( line = buffreader.readLine()) != null) {
+                result.append(line);
+                result.append('\n');
+            }
+        } catch (IOException e) {
+            return null;
+        }
+
+        StringUtils.replaceAll(result, "%MOVE_CSS_CLASS%", MOVE_CSS_CLASS);
+        StringUtils.replaceAll(result, "%LASTMOVE_CSS_CLASS%", LASTMOVE_CSS_CLASS);
+        StringUtils.replaceAll(result, "%SECONDARY_MOVE_CSS_CLASS%", SECONDARY_MOVE_CSS_CLASS);
+        StringUtils.replaceAll(result, "%SECONDARY_LASTMOVE_CSS_CLASS%", SECONDARY_LASTMOVE_CSS_CLASS);
+        StringUtils.replaceAll(result, "%COMMENT_CSS_CLASS%", COMMENT_CSS_CLASS);
+        StringUtils.replaceAll(result, "%MOVECOLOR%", moveColor);
+        StringUtils.replaceAll(result, "%LASTMOVECOLOR%", lastMoveColor);
+        StringUtils.replaceAll(result, "%COMMENTCOLOR%", commentColor);
+
+        return result.toString();
+    }
 
     // используем функцию для установки размера шрифта в WebView, т.к. на API до 14 для этого была функция setTextSize, которая ныне deprecated
     // сейчас же используется setTextZoom, которой нет в API ранее 14-го
@@ -100,8 +133,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             moveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_move));
             lastMoveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_lastmove));
             commentColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_comment));
-            WebSettings settings = getSettings();
 
+            notationHead = loadNotationHead(context);
+
+            WebSettings settings = getSettings();
             // настройки для более быстрой отрисовки
             settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
             settings.setAppCacheEnabled(false);
@@ -113,8 +148,9 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             settings.setDomStorageEnabled(true);
             setTextSize(settings);
             configureLayerType();
-///            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
+            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
             // установим обработчик ссылок для просмотра записи партии
+
             setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -194,7 +230,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         currentLastMove = lastMove;
 
         if (currentLastMove != null) {
-            loadUrl("javascript: showLastMove(" + Integer.toString(currentLastMove.getMoveId()) + ")");
+            loadUrl(String.format("javascript: showLastMove(%d, %d)", currentLastMove.getMoveId(), getHeight()));
         }
     }
 
@@ -397,55 +433,25 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
     public void updateNotation() {
         StringBuilder notation = new StringBuilder();
-        String newNotation = null;
+        String newNotation;
 
         if (chessBoard.getFirstMoveVariants().size() > 0) {
 
+            newNotation = variantsNotation(chessBoard.getFirstMoveVariants(), MAIN_LINE).toString();
+
             notation.append("<html>").
-                    append("<head>").
-                    append("<style type=\"text/css\">").
-                    append("a:link{text-decoration:none;font-weight:bold;}").
-                    append("a:visited{text-decoration:none;font-weight:bold;}").
-                    append(String.format("a:link.%s{color:%s;}", MOVE_CSS_CLASS, moveColor)).
-                    append(String.format("a:visited.%s{color:%s;}", MOVE_CSS_CLASS, moveColor)).
-                    append(String.format("a:link.%s{color:%s;}", LASTMOVE_CSS_CLASS, lastMoveColor)).
-                    append(String.format("a:visited.%s{color:%s;}", LASTMOVE_CSS_CLASS, lastMoveColor)).
-                    append(String.format("a:visited.%s{color:%s;font-weight:normal}", SECONDARY_MOVE_CSS_CLASS, moveColor)).
-                    append(String.format("a:link.%s{color:%s;font-weight:normal;}", SECONDARY_MOVE_CSS_CLASS, moveColor)).
-                    append(String.format("a:visited.%s{color:%s;font-weight:normal}", SECONDARY_LASTMOVE_CSS_CLASS, lastMoveColor)).
-                    append(String.format("a:link.%s{color:%s;font-weight:normal;}", SECONDARY_LASTMOVE_CSS_CLASS, lastMoveColor)).
-                    append(String.format(".comment {color:%s;font-weight:normal;font-style:italic}", commentColor)).
-                    append("</style>").
-                    append("<script>").
-                    // function isVisible from https://stackoverflow.com/questions/487073/check-if-element-is-visible-after-scrolling by Ally
-                    append("function isVisible(el) {" +
-                                "var rect = el.getBoundingClientRect(), top = rect.top, height = rect.height, el = el.parentNode;" +
-                                "do" +
-                                "{" +
-                                    "rect = el.getBoundingClientRect();" +
-                                    "if (top <= rect.bottom === false) return false;" +
-                                    "if ((top + height) <= rect.top) return false;" +
-                                    "el = el.parentNode;" +
-                                "}while (el != document.body);" +
-                                "return top <= document.documentElement.clientHeight;" +
-                            "}").
-                    append("function scrollAnchor(id){window.location.hash = id;}").
-                    append(String.format("function hideLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s');}", LASTMOVE_CSS_CLASS, MOVE_CSS_CLASS, SECONDARY_MOVE_CSS_CLASS)).
-                    append(String.format("function showLastMove(id){d = document.getElementById(id); d.className = (d.className == '%s' ? '%s' : '%s'); if (!isVisible(d)) d.scrollIntoView(); }", MOVE_CSS_CLASS, LASTMOVE_CSS_CLASS, SECONDARY_LASTMOVE_CSS_CLASS)).
-                    append("</script>").
-                    append("</head>").
+                    append(notationHead).
                     append("<body>").
-                    append(variantsNotation(chessBoard.getFirstMoveVariants(), MAIN_LINE)).
+                    append(newNotation).
                     append("</body>").
                     append("</html>");
 
-
-            newNotation = notation.toString();
-
             hideLastMove(currentLastMove);
             if (!newNotation.equals(currentNotation)) {
-                ACRAUtils.putCustomData("Notation", newNotation);
-                loadDataWithBaseURL(null, newNotation, "text/html", "utf-8", null);
+                String sNotation = notation.toString();
+
+                ACRAUtils.putCustomData("Notation", sNotation);
+                loadDataWithBaseURL(null, sNotation, "text/html", "utf-8", null);
                 currentNotation = newNotation;
             }
             // выделяем в нотации последний сделанный ход. Не делаем это сразу при формировании html, т.к. тогда нельзя будет сравнивать сформированный html с предыдущим вариантом
