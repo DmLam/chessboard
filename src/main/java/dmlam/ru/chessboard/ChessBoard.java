@@ -1291,6 +1291,12 @@ public class ChessBoard {
             lastMoveIndex = 0;
         }
 
+        if (lastMoveVariants != null) {
+            if (lastMoveVariants.indexOf(lastMove) == -1) {
+                throw new RuntimeException("eee");
+            }
+        }
+
         if (doOnMove(lastMove)) {
             if (moveOrder == WHITE) {
                 Move last = getLastMove();
