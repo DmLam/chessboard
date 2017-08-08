@@ -20,7 +20,7 @@ import java.io.InputStreamReader;
 import dmlam.ru.androidcommonlib.ACRAUtils;
 import dmlam.ru.androidcommonlib.StringUtils;
 
-import static dmlam.ru.chessboard.Game.GameResult.UNKNOWN;
+import static dmlam.ru.chessboard.Game.GameResult;
 
 /**
  * Created by LamdanDY on 03.07.2015.
@@ -35,14 +35,13 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     final public static int FONT_SIZE_MIDDLE = 1;
     final public static int FONT_SIZE_BIG = 2;
 
-    final private static boolean MAIN_LINE = true;
-    final private static boolean SECONDARY_LINE = false;
-
     final private static String MOVE_CSS_CLASS = "move";
     final private static String LASTMOVE_CSS_CLASS = "lastmove";
     final private static String SECONDARY_MOVE_CSS_CLASS = "secmove";
     final private static String SECONDARY_LASTMOVE_CSS_CLASS = "seclastmove";
     final private static String COMMENT_CSS_CLASS = "comment";
+
+    final private static int MAIN_LINE = 0;
 
     private ChessBoard chessBoard = null;
     private String moveColor;
@@ -256,99 +255,86 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
     }
 
-    private StringBuilder moveNotation(Move move, boolean mainLine) {
+    private String annotationString(int annotationGlyph) {
+        switch (annotationGlyph) {
+            case 1:
+                return "!";
+            case 2:
+                return "?";
+            case 3:
+                return "&#x203C";
+            case 4:
+                return "&#x2047";
+            case 5:
+                return "&#x2049";
+            case 6:
+                return "&#x2048";
+            case 7:
+                return "&#x25A1";  // white square - forced move
+            case 10:
+                return "=";
+            case 13:
+                return "&infin;";  // ∞
+            case 14:
+                return "&#x2A72";  // ⩲
+            case 15:
+                return "&#x2A71";  // ⩱
+            case 16:
+                return "&plusmn";  // ±
+            case 17:
+                return "&#x2213";  // ∓
+            case 18:
+                return "+-";
+            case 19:
+                return "-+";
+            default:
+                return "";
+        }
+    }
+
+    private String gameResultString(GameResult result) {
+        switch(result) {
+            case WHITE:
+                return "&nbsp;1-0";
+            case DRAW:
+                return"&nbsp;1/2-1/2";
+            case BLACK:
+                return "&nbsp;0-1";
+            default:
+                return "";
+        }
+    }
+
+    private String commentString(String comment) {
+        if (comment != null) {
+            return String.format("<span class=\"%s\"> %s</span>", COMMENT_CSS_CLASS, comment);
+        }
+        else
+            return "";
+    }
+
+    private StringBuilder moveNotation(Move move, int level) {
         StringBuilder result = new StringBuilder();
         String htmlElementClass;
 
-        htmlElementClass = mainLine ? MOVE_CSS_CLASS : SECONDARY_MOVE_CSS_CLASS;
+        htmlElementClass = level == MAIN_LINE ? MOVE_CSS_CLASS : SECONDARY_MOVE_CSS_CLASS;
 
         result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">", move.getMoveId(), htmlElementClass, move.getMoveId())).
-                append(move.getNotation());
-
-
-        switch (move.getNumericAnnotationGlyph()) {
-            case 1:
-                result.append('!');
-                break;
-            case 2:
-                result.append('?');
-                break;
-            case 3:
-                result.append("&#x203C");
-                break;
-            case 4:
-                result.append("&#x2047");
-                break;
-            case 5:
-                result.append("&#x2049");
-                break;
-            case 6:
-                result.append("&#x2048");
-                break;
-            case 7:
-                result.append("&#x25A1");  // white square - forced move
-                break;
-            case 10:
-                result.append("=");
-                break;
-            case 13:
-                result.append("&infin;");  // ∞
-                break;
-            case 14:
-                result.append("&#x2A72");  // ⩲
-                break;
-            case 15:
-                result.append("&#x2A71");  // ⩱
-                break;
-            case 16:
-                result.append("&plusmn");  // ±
-                break;
-            case 17:
-                result.append("&#x2213");  // ∓
-                break;
-            case 18:
-                result.append("+-");
-                break;
-            case 19:
-                result.append("-+");
-                break;
-            default:
-                break;
-        }
-
-        if (move.getGameResult() != UNKNOWN) {
-            switch(move.getGameResult()) {
-                case WHITE:
-                    result.append("&nbsp;1-0");
-                    break;
-                case DRAW:
-                    result.append("&nbsp;1/2-1/2");
-                    break;
-                case BLACK:
-                    result.append("&nbsp;0-1");
-                    break;
-            }
-        }
-
-        result.append("</a>");
-        if (move.getComment() != null) {
-            result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">")
-                    .append(' ')
-                    .append(move.getComment())
-                    .append("</span>");
-        }
-        if (move.getMoveOrder() == Piece.Color.WHITE) {
-            // после хода черных добавим еще один пробел для визуальной приятности
-            result.append(" ");
-        }
+                append(move.getNotation()).
+                append(annotationString(move.getNumericAnnotationGlyph())).
+                append(gameResultString(move.getGameResult())).
+                append("</a>").
+                append(commentString(move.getComment())).
+                // после хода черных добавим еще один пробел для визуальной приятности
+                append(move.getMoveOrder() == Piece.Color.WHITE ? " " : "");
 
         return result;
     }
 
-    private StringBuilder variantsNotation(MoveList variants, boolean mainLine) {
+    private StringBuilder variantsNotation(MoveList variants, int level) {
         StringBuilder result = new StringBuilder();;
 
-        if (mainLine) {
+        if (level == MAIN_LINE) {
             if (variants.getComment() != null) {
                 result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
                         .append(' ')
@@ -356,7 +342,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                         .append("</span>&nbsp;");
             }
 
-            result.append(branchNotation(variants.get(0), mainLine));
+            result.append(branchNotation(variants.get(0), level));
         }
 
         if (variants.size() > 1) {
@@ -368,7 +354,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                         .append("</span>&nbsp;");
             }
             for (int i = 1; i < variants.size(); i++) {
-                result.append(branchNotation(variants.get(i), SECONDARY_LINE));
+                result.append(branchNotation(variants.get(i), level));
                 if (i < variants.size() - 1) {
                     result.append(";<br>");
                 }
@@ -380,7 +366,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     // todo Функция должна принимать в качестве параметра не Move, а MoveList чтобы можно было отображать ветки первого хода
-    private StringBuilder branchNotation(Move move, boolean mainLine) {
+    private StringBuilder branchNotation(Move move, int level) {
         StringBuilder result = new StringBuilder();
         Move prevMove;
         boolean FirstPass = true, wasBranch = false;
@@ -411,15 +397,15 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                             .append("&nbsp");  // не переводим строку после номера хода
                 }
             }
-            result.append(moveNotation(move, mainLine));
+            result.append(moveNotation(move, level));
 
             prevMove = move.getPrevMove();
             move = move.getMainVariant();
             wasBranch = false;
-            if (!FirstPass || mainLine) {
+            if (!FirstPass || level == MAIN_LINE) {
                 if (prevMove != null && prevMove.getVariantCount() > 1) {
 
-                    result.append(variantsNotation(prevMove.getVariants(), SECONDARY_LINE))
+                    result.append(variantsNotation(prevMove.getVariants(), level + 1))
                           .append("<br>");
                     wasBranch = true;
                 }
