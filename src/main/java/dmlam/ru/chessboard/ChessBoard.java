@@ -479,11 +479,10 @@ public class ChessBoard {
                 game.setMoves(saveFirstMoveVariants);
                 if (prevMove != null) {
                     lastMoveVariants = prevMove.getVariants();
-                    lastMoveIndex = prevMove.getVariants().indexOf(move);
                 } else {
                     lastMoveVariants = game.getMoves();
-                    lastMoveIndex = game.getMoves().indexOf(move);
                 }
+                lastMoveIndex = lastMoveVariants.indexOf(move);
 
                 doOnGoto(move);
             }
@@ -1291,11 +1290,13 @@ public class ChessBoard {
             lastMoveIndex = 0;
         }
 
+/*
         if (lastMoveVariants != null) {
             if (lastMoveVariants.indexOf(lastMove) == -1) {
                 throw new RuntimeException("eee");
             }
         }
+*/
 
         if (doOnMove(lastMove)) {
             if (moveOrder == WHITE) {
