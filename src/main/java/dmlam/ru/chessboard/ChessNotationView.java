@@ -372,7 +372,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 result.append(branchNotation(variants.get(i), level));
                 if (i < variants.size() - 1) {
                     if (level == 1) {
-                        result.append("]<br>[");
+                        result.append("&nbsp;]<br>[&nbsp;");
                     }
                     else if (level > 1) {
                         result.append(';');
@@ -381,11 +381,11 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             }
 
             if (level == 1) {
-                result.append("]</div>");
+                result.append("&nbsp;]</div>");
             }
             else
             if (level > 1) {
-                result.append(")</span>");
+                result.append("&nbsp;)&nbsp;</span>");
             }
         }
 

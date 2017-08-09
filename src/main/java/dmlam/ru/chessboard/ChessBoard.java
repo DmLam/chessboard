@@ -945,7 +945,8 @@ public class ChessBoard {
         loadFromFEN(FEN, false);
 
         lastMoveVariants = null;
-        game.clearMoves();
+        lastMoveIndex = -1;
+//        game.clearMoves();
         initialPositionFEN = FEN;
     }
 
@@ -1218,8 +1219,6 @@ public class ChessBoard {
     public void setGame(Game game) {
         if (game != this.game) {
             this.game = game;
-            lastMoveVariants = null;
-            lastMoveIndex = -1;
             loadFromFEN(game.getStartPosition());
         }
     }
@@ -1288,22 +1287,19 @@ public class ChessBoard {
         if (lastMoveIndex == -1 || forceNewVariant) {
             int moveIndex = lastMoveVariants.locateMove(lastMove);
 
-            if (moveIndex == -1 || forceNewVariant) {
+            if (moveIndex == -1) {
                 lastMoveVariants.add(0, lastMove);
-            } else {
+            }
+            else
+            if (forceNewVariant) {
+                lastMoveVariants.add(lastMove);
+            }
+            else {
                 // переместим вариант в начало
                 lastMoveVariants.add(0, lastMoveVariants.remove(moveIndex));
             }
             lastMoveIndex = 0;
         }
-
-/*
-        if (lastMoveVariants != null) {
-            if (lastMoveVariants.indexOf(lastMove) == -1) {
-                throw new RuntimeException("eee");
-            }
-        }
-*/
 
         if (doOnMove(lastMove)) {
             if (moveOrder == WHITE) {
