@@ -943,6 +943,10 @@ public class ChessBoard {
 
     public void loadFromFEN(String FEN) {
         loadFromFEN(FEN, false);
+
+        lastMoveVariants = null;
+        game.clearMoves();
+        initialPositionFEN = FEN;
     }
 
     // загрузка позиции из FEN.
@@ -968,13 +972,6 @@ public class ChessBoard {
             castling[WHITE.ordinal()][Castling.QUEEN.ordinal()] = false;
             castling[BLACK.ordinal()][Castling.KING.ordinal()] = false;
             castling[BLACK.ordinal()][Castling.QUEEN.ordinal()] = false;
-
-            if (!restoring) {
-                initialPositionFEN = FEN;
-
-                lastMoveVariants = null;
-                game.clearMoves();
-            }
 
             // строки доски
             while (line < 8) {
@@ -1214,6 +1211,16 @@ public class ChessBoard {
             lastMoveIndex = -1;
 
             doOnBoardChange();
+        }
+    }
+
+
+    public void setGame(Game game) {
+        if (game != this.game) {
+            this.game = game;
+            lastMoveVariants = null;
+            lastMoveIndex = -1;
+            loadFromFEN(game.getStartPosition());
         }
     }
 

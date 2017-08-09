@@ -262,12 +262,10 @@ public class PGNLoader {
                     if (r != null) {
                         if (chessboard.getLastMove() != null) {
                             chessboard.getLastMove().setGameResult(r);
-                            return true;
                         }
-                        else {
-                            game.setResult(r);
-                            return true;
-                        }
+                        game.setResult(r);
+
+                        return true;
                     }
                 }
 

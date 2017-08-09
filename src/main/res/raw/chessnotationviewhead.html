@@ -1,15 +1,21 @@
 <head>
   <style type="text/css">
-    a:link{text-decoration:none;font-weight:bold;}
-    a:visited{text-decoration:none;font-weight:bold;}
-    a:link.%MOVE_CSS_CLASS%{color:%MOVECOLOR%;}
-    a:visited.%MOVE_CSS_CLASS%{color:%MOVECOLOR%;}
-    a:link.%LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%;}
-    a:visited.%LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%;}
+    body{line-height: 130%}
+    a:link{text-decoration:none;font-weight:bold}
+    a:visited{text-decoration:none;font-weight:bold}
+    a:link.%MOVE_CSS_CLASS%{color:%MOVECOLOR%}
+    a:visited.%MOVE_CSS_CLASS%{color:%MOVECOLOR%}
+    a:link.%LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%}
+    a:visited.%LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%}
+    div.%SECONDARY_MOVE_CSS_CLASS%{margin-left:10px}
     a:visited.%SECONDARY_MOVE_CSS_CLASS%{color:%MOVECOLOR%;font-weight:normal}
     a:link.%SECONDARY_MOVE_CSS_CLASS%{color:%MOVECOLOR%;font-weight:normal;}
     a:visited.%SECONDARY_LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%;font-weight:normal}
-    a:link.%SECONDARY_LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%;font-weight:normal;}
+    a:link.%SECONDARY_LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%;font-weight:normal}
+    a:visited.%TERTIARY_MOVE_CSS_CLASS%{color:%MOVECOLOR%;font-weight:normal;font-style:italic}
+    a:link.%TERTIARY_MOVE_CSS_CLASS%{color:%MOVECOLOR%;font-weight:normal;font-style:italic}
+    a:visited.%TERTIARY_LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%;font-weight:normal;font-style:italic}
+    a:link.%TERTIARY_LASTMOVE_CSS_CLASS%{color:%LASTMOVECOLOR%;font-weight:normal;font-style:italic}
     .comment {color:%COMMENTCOLOR%;font-weight:normal;font-style:italic}
  </style>
   <script>
@@ -30,12 +36,12 @@
     function hideLastMove(id)
     {
       d = document.getElementById(id);
-      d.className = (d.className == '%LASTMOVE_CSS_CLASS%' ? '%MOVE_CSS_CLASS%' : '%SECONDARY_MOVE_CSS_CLASS%');
+      d.className = (d.className == '%LASTMOVE_CSS_CLASS%' ? '%MOVE_CSS_CLASS%' : (d.className == '%SECONDARY_LASTMOVE_CSS_CLASS%' ? '%SECONDARY_MOVE_CSS_CLASS%' : '%TERTIARY_MOVE_CSS_CLASS%'));
     }
     function showLastMove(id)
     {
       d = document.getElementById(id);
-      d.className = (d.className == '%MOVE_CSS_CLASS%' ? '%LASTMOVE_CSS_CLASS%' : '%SECONDARY_LASTMOVE_CSS_CLASS%');
+      d.className = (d.className == '%MOVE_CSS_CLASS%' ? '%LASTMOVE_CSS_CLASS%' : (d.className == '%SECONDARY_MOVE_CSS_CLASS%' ? '%SECONDARY_LASTMOVE_CSS_CLASS%' : '%TERTIARY_LASTMOVE_CSS_CLASS%'));
       if (!isVisible(d)) d.scrollIntoView();
     }
   </script>

@@ -39,6 +39,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     final private static String LASTMOVE_CSS_CLASS = "lastmove";
     final private static String SECONDARY_MOVE_CSS_CLASS = "secmove";
     final private static String SECONDARY_LASTMOVE_CSS_CLASS = "seclastmove";
+    final private static String TERTIARY_MOVE_CSS_CLASS = "termove";
+    final private static String TERTIARY_LASTMOVE_CSS_CLASS = "terlastmove";
     final private static String COMMENT_CSS_CLASS = "comment";
 
     final private static int MAIN_LINE = 0;
@@ -74,6 +76,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         StringUtils.replaceAll(result, "%LASTMOVE_CSS_CLASS%", LASTMOVE_CSS_CLASS);
         StringUtils.replaceAll(result, "%SECONDARY_MOVE_CSS_CLASS%", SECONDARY_MOVE_CSS_CLASS);
         StringUtils.replaceAll(result, "%SECONDARY_LASTMOVE_CSS_CLASS%", SECONDARY_LASTMOVE_CSS_CLASS);
+        StringUtils.replaceAll(result, "%TERTIARY_MOVE_CSS_CLASS%", TERTIARY_MOVE_CSS_CLASS);
+        StringUtils.replaceAll(result, "%TERTIARY_LASTMOVE_CSS_CLASS%", TERTIARY_LASTMOVE_CSS_CLASS);
         StringUtils.replaceAll(result, "%COMMENT_CSS_CLASS%", COMMENT_CSS_CLASS);
         StringUtils.replaceAll(result, "%MOVECOLOR%", moveColor);
         StringUtils.replaceAll(result, "%LASTMOVECOLOR%", lastMoveColor);
@@ -293,6 +297,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     private String gameResultString(GameResult result) {
+        if (result == null) {
+            return "";
+        }
+
         switch(result) {
             case WHITE:
                 return "&nbsp;1-0";
@@ -317,12 +325,12 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         StringBuilder result = new StringBuilder();
         String htmlElementClass;
 
-        htmlElementClass = level == MAIN_LINE ? MOVE_CSS_CLASS : SECONDARY_MOVE_CSS_CLASS;
+        htmlElementClass = level == MAIN_LINE ? MOVE_CSS_CLASS : (level == 1 ? SECONDARY_MOVE_CSS_CLASS : TERTIARY_MOVE_CSS_CLASS);
 
         result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">", move.getMoveId(), htmlElementClass, move.getMoveId())).
                 append(move.getNotation()).
                 append(annotationString(move.getNumericAnnotationGlyph())).
-                append(gameResultString(move.getGameResult())).
+//                append(gameResultString(move.getGameResult())).
                 append("</a>").
                 append(commentString(move.getComment())).
                 // после хода черных добавим еще один пробел для визуальной приятности
@@ -346,7 +354,14 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
 
         if (variants.size() > 1) {
-            result.append("<br>&nbsp;&nbsp;(&nbsp;");
+            if (level == 1) {
+                result.append(String.format("<br><div class = '%s'>[&nbsp;", SECONDARY_MOVE_CSS_CLASS));
+            }
+            else
+            if (level > 1) {
+                result.append(String.format("&nbsp;<span class = '%s'>(&nbsp;", TERTIARY_MOVE_CSS_CLASS));
+            }
+
             if (variants.getComment() != null) {
                 result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
                         .append(' ')
@@ -356,10 +371,26 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             for (int i = 1; i < variants.size(); i++) {
                 result.append(branchNotation(variants.get(i), level));
                 if (i < variants.size() - 1) {
-                    result.append(";<br>");
+                    if (level == 1) {
+                        result.append("]<br>[");
+                    }
+                    else if (level > 1) {
+                        result.append(';');
+                    }
                 }
             }
-            result.append(")");
+
+            if (level == 1) {
+                result.append("]</div>");
+            }
+            else
+            if (level > 1) {
+                result.append(")</span>");
+            }
+        }
+
+        if (level == MAIN_LINE && chessBoard.game.getResult() != GameResult.UNKNOWN) {
+            result.append("<br>").append(gameResultString(chessBoard.game.getResult()));
         }
 
         return result;
@@ -393,7 +424,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     result.append(" ");  // между ходами белых и черных переводить можно переводить строку
                 } else {
                     result.append(move.getMoveNumber())
-                            .append(".")
+                            .append('.')
                             .append("&nbsp");  // не переводим строку после номера хода
                 }
             }
@@ -405,8 +436,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             if (!FirstPass || level == MAIN_LINE) {
                 if (prevMove != null && prevMove.getVariantCount() > 1) {
 
-                    result.append(variantsNotation(prevMove.getVariants(), level + 1))
-                          .append("<br>");
+                    result.append(variantsNotation(prevMove.getVariants(), level + 1));
                     wasBranch = true;
                 }
             }
