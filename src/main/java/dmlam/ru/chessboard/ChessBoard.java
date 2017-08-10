@@ -1285,20 +1285,23 @@ public class ChessBoard {
 
         // Если только что был сделан первый ход или не было такого варианта - добавим
         if (lastMoveIndex == -1 || forceNewVariant) {
-            int moveIndex = lastMoveVariants.locateMove(lastMove);
 
-            if (moveIndex == -1) {
-                lastMoveVariants.add(0, lastMove);
-            }
-            else
             if (forceNewVariant) {
+                lastMoveIndex = lastMoveVariants.size();
                 lastMoveVariants.add(lastMove);
             }
             else {
-                // переместим вариант в начало
-                lastMoveVariants.add(0, lastMoveVariants.remove(moveIndex));
+                int moveIndex = lastMoveVariants.locateMove(lastMove);
+
+                if (moveIndex == -1) {
+                    lastMoveVariants.add(0, lastMove);
+                }
+                else {
+                    // переместим вариант в начало
+                    lastMoveVariants.add(0, lastMoveVariants.remove(moveIndex));
+                }
+                lastMoveIndex = 0;
             }
-            lastMoveIndex = 0;
         }
 
         if (doOnMove(lastMove)) {
