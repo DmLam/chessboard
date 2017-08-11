@@ -380,8 +380,9 @@ public class ChessBoard {
             lastMoveIndex = -1;
             if (lastMoveVariants != null) {
                 for (int i = 0; i < lastMoveVariants.size(); i++) {
-                    if (lastMoveVariants.get(i).getMainVariant() == lastMove) {
+                    if (lastMoveVariants.get(i).getVariants().indexOf(lastMove) >= 0) {
                         lastMoveIndex = i;
+                        break;
                     }
                 }
                 if (lastMoveIndex == -1) {
@@ -1269,7 +1270,7 @@ public class ChessBoard {
             }
         }
         else {
-            lastMoveVariants = lastMoveVariants.get(0).getVariants();
+            lastMoveVariants = lastMoveVariants.get(lastMoveIndex).getVariants();
         }
 
         lastMoveIndex = -1;
