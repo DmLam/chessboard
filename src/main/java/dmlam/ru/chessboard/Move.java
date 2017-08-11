@@ -141,7 +141,7 @@ final public class Move {
             return null;
         else {
             for (int i = 0; i < prevVariants.size(); i++) {
-                if (prevVariants.get(i).getVariants().locateMove(this) >= 0)
+                if (prevVariants.get(i).getVariants().indexOf(this) >= 0)
                     return prevVariants.get(i);
             }
 
