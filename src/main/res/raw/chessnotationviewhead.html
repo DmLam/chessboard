@@ -1,6 +1,6 @@
 <head>
   <style type="text/css">
-    body{line-height: 130%}
+    body{color: %TEXTCOLOR%; background-color: %BACKGROUNDCOLOR%; line-height: 130%}
     a:link{text-decoration:none;font-weight:bold}
     a:visited{text-decoration:none;font-weight:bold}
     a:link.%MOVE_CSS_CLASS%{color:%MOVECOLOR%}
@@ -19,28 +19,27 @@
     .comment {color:%COMMENTCOLOR%;font-weight:normal;font-style:italic}
  </style>
   <script>
-    // from https://stackoverflow.com/questions/487073/check-if-element-is-visible-after-scrolling by Ally
     function isVisible(el)
     {
       var rect = el.getBoundingClientRect(), top = rect.top, height = rect.height;
 
-      if (top <= 0) return false;
-      if ((top + height) > document.body.clientHeight) return false;
-      return true;
+      if (top <= 0 || top + height > document.body.clientHeight)
+        return false
+      else
+        return true;
     }
-
     function scrollAnchor(id)
     {
       window.location.hash = id;
     }
     function hideLastMove(id)
     {
-      d = document.getElementById(id);
+      var d = document.getElementById(id);
       d.className = (d.className == '%LASTMOVE_CSS_CLASS%' ? '%MOVE_CSS_CLASS%' : (d.className == '%SECONDARY_LASTMOVE_CSS_CLASS%' ? '%SECONDARY_MOVE_CSS_CLASS%' : '%TERTIARY_MOVE_CSS_CLASS%'));
     }
     function showLastMove(id)
     {
-      d = document.getElementById(id);
+      var d = document.getElementById(id);
       d.className = (d.className == '%MOVE_CSS_CLASS%' ? '%LASTMOVE_CSS_CLASS%' : (d.className == '%SECONDARY_MOVE_CSS_CLASS%' ? '%SECONDARY_LASTMOVE_CSS_CLASS%' : '%TERTIARY_LASTMOVE_CSS_CLASS%'));
       if (!isVisible(d)) d.scrollIntoView();
     }

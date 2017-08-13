@@ -16,9 +16,9 @@ import android.webkit.WebViewClient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.CountDownLatch;
 
 import dmlam.ru.androidcommonlib.ACRAUtils;
-import dmlam.ru.androidcommonlib.StringUtils;
 
 import static dmlam.ru.chessboard.Game.GameResult;
 
@@ -46,16 +46,19 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     final private static int MAIN_LINE = 0;
 
     private ChessBoard chessBoard = null;
-    private String moveColor;
-    private String lastMoveColor;
-    private String commentColor;
-    private String notationHead;
+    private String notationHeadTemplate, notationHead;
+    private CountDownLatch pageLoadedLatch = null;
 
     private String currentNotation = null;  // текст, находящийся в текущий момент в WebView. Нужен, чтобы сравнить с новым текстом в updateNotation и в случае совпадения не обновлять компонент
     private Move currentLastMove = null;
 
     // options
     private int fontSize = 0;
+    private int backgroundColor;
+    private int textColor;
+    private int moveColor;
+    private int lastMoveColor;
+    private int commentColor;
     private boolean newLineOnEachVariant = true;
 
     private String loadNotationHead(Context context) {
@@ -72,18 +75,25 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             return null;
         }
 
-        StringUtils.replaceAll(result, "%MOVE_CSS_CLASS%", MOVE_CSS_CLASS);
-        StringUtils.replaceAll(result, "%LASTMOVE_CSS_CLASS%", LASTMOVE_CSS_CLASS);
-        StringUtils.replaceAll(result, "%SECONDARY_MOVE_CSS_CLASS%", SECONDARY_MOVE_CSS_CLASS);
-        StringUtils.replaceAll(result, "%SECONDARY_LASTMOVE_CSS_CLASS%", SECONDARY_LASTMOVE_CSS_CLASS);
-        StringUtils.replaceAll(result, "%TERTIARY_MOVE_CSS_CLASS%", TERTIARY_MOVE_CSS_CLASS);
-        StringUtils.replaceAll(result, "%TERTIARY_LASTMOVE_CSS_CLASS%", TERTIARY_LASTMOVE_CSS_CLASS);
-        StringUtils.replaceAll(result, "%COMMENT_CSS_CLASS%", COMMENT_CSS_CLASS);
-        StringUtils.replaceAll(result, "%MOVECOLOR%", moveColor);
-        StringUtils.replaceAll(result, "%LASTMOVECOLOR%", lastMoveColor);
-        StringUtils.replaceAll(result, "%COMMENTCOLOR%", commentColor);
-
         return result.toString();
+    }
+
+    public void updateNotationHead() {
+        notationHead = notationHeadTemplate;
+
+        notationHead = notationHead.replace("%BACKGROUNDCOLOR%", String.format("#%06X", backgroundColor & 0xFFFFFF));
+        notationHead = notationHead.replace("%TEXTCOLOR%", String.format("#%06X", textColor & 0xFFFFFF));
+        notationHead = notationHead.replace("%MOVE_CSS_CLASS%", MOVE_CSS_CLASS);
+        notationHead = notationHead.replace("%MOVE_CSS_CLASS%", MOVE_CSS_CLASS);
+        notationHead = notationHead.replace("%LASTMOVE_CSS_CLASS%", LASTMOVE_CSS_CLASS);
+        notationHead = notationHead.replace("%SECONDARY_MOVE_CSS_CLASS%", SECONDARY_MOVE_CSS_CLASS);
+        notationHead = notationHead.replace("%SECONDARY_LASTMOVE_CSS_CLASS%", SECONDARY_LASTMOVE_CSS_CLASS);
+        notationHead = notationHead.replace("%TERTIARY_MOVE_CSS_CLASS%", TERTIARY_MOVE_CSS_CLASS);
+        notationHead = notationHead.replace("%TERTIARY_LASTMOVE_CSS_CLASS%", TERTIARY_LASTMOVE_CSS_CLASS);
+        notationHead = notationHead.replace("%COMMENT_CSS_CLASS%", COMMENT_CSS_CLASS);
+        notationHead = notationHead.replace("%MOVECOLOR%", String.format("#%06X", moveColor & 0xFFFFFF));
+        notationHead = notationHead.replace("%LASTMOVECOLOR%", String.format("#%06X", lastMoveColor & 0xFFFFFF));
+        notationHead = notationHead.replace("%COMMENTCOLOR%", String.format("#%06X", commentColor & 0xFFFFFF));
     }
 
     // используем функцию для установки размера шрифта в WebView, т.к. на API до 14 для этого была функция setTextSize, которая ныне deprecated
@@ -133,11 +143,13 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     private void initialize(final Context context, AttributeSet attrs, int defStyle) {
 
         if (!isInEditMode()) {
-            moveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_move));
-            lastMoveColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_lastmove));
-            commentColor = String.format("#%06X", 0xFFFFFF & getResources().getColor(R.color.chessnotationview_comment));
+            notationHeadTemplate = loadNotationHead(context);
 
-            notationHead = loadNotationHead(context);
+            setBackgroundColor(getResources().getColor(R.color.chessnotationview_background));
+            setTextColor(getResources().getColor(R.color.chessnotationview_text));
+            setMoveColor(getResources().getColor(R.color.chessnotationview_move));
+            setLastMoveColor(getResources().getColor(R.color.chessnotationview_lastmove));
+            setCommentColor(getResources().getColor(R.color.chessnotationview_comment));
 
             WebSettings settings = getSettings();
             // настройки для более быстрой отрисовки
@@ -167,7 +179,9 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
 
-                    scrollToLastMove();
+                    // send signal that page loaded
+                    pageLoadedLatch.countDown();
+//                    scrollToLastMove();
                 }
             });
         }
@@ -213,6 +227,52 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
     public int getFontSize() {
         return fontSize;
+    }
+
+    public void setBackgroundColor(int color) {
+        super.setBackgroundColor(color);
+        backgroundColor = color;
+        updateNotationHead();
+    }
+
+    public int getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setTextColor(int color) {
+        textColor = color;
+        updateNotationHead();
+    }
+
+    public int getTextColor() {
+        return textColor;
+    }
+
+    public void setMoveColor(int color) {
+        moveColor = color;
+        updateNotationHead();
+    }
+
+    public int getMoveColor() {
+        return moveColor ;
+    }
+
+    public void setLastMoveColor(int color) {
+        lastMoveColor = color;
+        updateNotationHead();
+    }
+
+    public int getLastMoveColor() {
+        return lastMoveColor;
+    }
+
+    public void setCommentColor(int color) {
+        commentColor = color;
+        updateNotationHead();
+    }
+
+    public int getCommentColor() {
+        return commentColor;
     }
 
     public void setNewLineOnEachVariant(boolean newLineOnEachVariant) {
@@ -330,7 +390,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">", move.getMoveId(), htmlElementClass, move.getMoveId())).
                 append(move.getNotation()).
                 append(annotationString(move.getNumericAnnotationGlyph())).
-//                append(gameResultString(move.getGameResult())).
                 append("</a>").
                 append(commentString(move.getComment())).
                 // после хода черных добавим еще один пробел для визуальной приятности
@@ -475,17 +534,27 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("</body>").
                     append("</html>");
 
-            hideLastMove(currentLastMove);
+            if (currentLastMove != chessBoard.getLastMove()) {
+                hideLastMove(currentLastMove);
+            }
             if (!newNotation.equals(currentNotation)) {
-                String sNotation = notation.toString();
+                final String sNotation = notation.toString();
 
                 ACRAUtils.putCustomData("Notation", sNotation);
+                pageLoadedLatch = new CountDownLatch(1);
                 loadDataWithBaseURL(null, sNotation, "text/html", "utf-8", null);
+                try {
+                    // wait until page fully loaded
+                    pageLoadedLatch.await();
+                }
+                catch(InterruptedException e) {
+                    // do nothing is interrupted
+                }
                 currentNotation = newNotation;
             }
-            // выделяем в нотации последний сделанный ход. Не делаем это сразу при формировании html, т.к. тогда нельзя будет сравнивать сформированный html с предыдущим вариантом
-            // (там могли быть те же самые ходы, но последний другой)
-            showLastMove(chessBoard.getLastMove());
+            if (currentLastMove != chessBoard.getLastMove()) {
+                showLastMove(chessBoard.getLastMove());
+            }
         }
     }
 
