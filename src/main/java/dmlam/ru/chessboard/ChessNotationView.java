@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -16,7 +15,6 @@ import android.webkit.WebViewClient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.concurrent.CountDownLatch;
 
 import dmlam.ru.androidcommonlib.ACRAUtils;
 
@@ -47,7 +45,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
     private ChessBoard chessBoard = null;
     private String notationHeadTemplate, notationHead;
-    private CountDownLatch pageLoadedLatch = null;
 
     private String currentNotation = null;  // текст, находящийся в текущий момент в WebView. Нужен, чтобы сравнить с новым текстом в updateNotation и в случае совпадения не обновлять компонент
     private Move currentLastMove = null;
@@ -163,7 +160,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             settings.setDomStorageEnabled(true);
             setTextSize(settings);
             configureLayerType();
-            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
+//            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
             // установим обработчик ссылок для просмотра записи партии
 
             setWebViewClient(new WebViewClient() {
@@ -175,15 +172,18 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     return true;
                 }
 
+ /*
+                // необходимо перекрывать onPageStarted если перекрывается onPageFinished. Иначе будут глюки с отрисовкой последнего хода
+                @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon)  {
+                    super.onPageStarted(view, url, favicon);
+                }
+
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
-
-                    // send signal that page loaded
-                    pageLoadedLatch.countDown();
-//                    scrollToLastMove();
                 }
-            });
+ */           });
         }
     }
 
@@ -534,27 +534,15 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("</body>").
                     append("</html>");
 
-            if (currentLastMove != chessBoard.getLastMove()) {
-                hideLastMove(currentLastMove);
-            }
+            hideLastMove(currentLastMove);
             if (!newNotation.equals(currentNotation)) {
                 final String sNotation = notation.toString();
 
                 ACRAUtils.putCustomData("Notation", sNotation);
-                pageLoadedLatch = new CountDownLatch(1);
                 loadDataWithBaseURL(null, sNotation, "text/html", "utf-8", null);
-                try {
-                    // wait until page fully loaded
-                    pageLoadedLatch.await();
-                }
-                catch(InterruptedException e) {
-                    // do nothing is interrupted
-                }
                 currentNotation = newNotation;
             }
-            if (currentLastMove != chessBoard.getLastMove()) {
-                showLastMove(chessBoard.getLastMove());
-            }
+            showLastMove(chessBoard.getLastMove());
         }
     }
 
