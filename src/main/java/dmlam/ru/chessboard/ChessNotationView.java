@@ -3,6 +3,7 @@ package dmlam.ru.chessboard;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -172,7 +173,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     return true;
                 }
 
- /*
                 // необходимо перекрывать onPageStarted если перекрывается onPageFinished. Иначе будут глюки с отрисовкой последнего хода
                 @Override
                 public void onPageStarted(WebView view, String url, Bitmap favicon)  {
@@ -182,8 +182,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
+
+                    showLastMove(chessBoard.getLastMove());
                 }
- */           });
+            });
         }
     }
 
@@ -520,12 +522,19 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     public void updateNotation() {
-        StringBuilder notation = new StringBuilder();
         String newNotation;
 
-        if (chessBoard.getFirstMoveVariants().size() > 0) {
-
+        if (chessBoard.getFirstMoveVariants() == null || chessBoard.getFirstMoveVariants().size() == 0) {
+            newNotation = "";
+        }
+        else {
             newNotation = variantsNotation(chessBoard.getFirstMoveVariants(), MAIN_LINE).toString();
+        }
+
+        hideLastMove(currentLastMove);
+        if (!newNotation.equals(currentNotation)) {
+            StringBuilder notation = new StringBuilder();
+            final String sNotation;
 
             notation.append("<html>").
                     append(notationHead).
@@ -534,14 +543,13 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("</body>").
                     append("</html>");
 
-            hideLastMove(currentLastMove);
-            if (!newNotation.equals(currentNotation)) {
-                final String sNotation = notation.toString();
+            sNotation = notation.toString();
 
-                ACRAUtils.putCustomData("Notation", sNotation);
-                loadDataWithBaseURL(null, sNotation, "text/html", "utf-8", null);
-                currentNotation = newNotation;
-            }
+            ACRAUtils.putCustomData("Notation", sNotation);
+            loadDataWithBaseURL(null, sNotation, "text/html", "utf-8", null);
+            currentNotation = newNotation;
+        }
+        else {
             showLastMove(chessBoard.getLastMove());
         }
     }
