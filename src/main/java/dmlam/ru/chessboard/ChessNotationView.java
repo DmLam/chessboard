@@ -92,6 +92,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         notationHead = notationHead.replace("%MOVECOLOR%", String.format("#%06X", moveColor & 0xFFFFFF));
         notationHead = notationHead.replace("%LASTMOVECOLOR%", String.format("#%06X", lastMoveColor & 0xFFFFFF));
         notationHead = notationHead.replace("%COMMENTCOLOR%", String.format("#%06X", commentColor & 0xFFFFFF));
+
+        updateNotation(true);  // force notation update to redraw it
     }
 
     // используем функцию для установки размера шрифта в WebView, т.к. на API до 14 для этого была функция setTextSize, которая ныне deprecated
@@ -210,6 +212,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     public void setChessBoard(ChessBoard board) {
         if (board == null) {
             chessBoard.deleteOnMoveListener(this);
+            currentLastMove = null;
+            updateNotation();
             chessBoard = null;
         }
         else {
@@ -522,9 +526,13 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     }
 
     public void updateNotation() {
+        updateNotation(false);
+    }
+
+    public void updateNotation(boolean forceUpdate) {
         String newNotation;
 
-        if (chessBoard.getFirstMoveVariants() == null || chessBoard.getFirstMoveVariants().size() == 0) {
+        if (chessBoard == null || chessBoard.getFirstMoveVariants() == null || chessBoard.getFirstMoveVariants().size() == 0) {
             newNotation = "";
         }
         else {
@@ -532,9 +540,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
 
         hideLastMove(currentLastMove);
-        if (!newNotation.equals(currentNotation)) {
+        if (!newNotation.equals(currentNotation) || forceUpdate) {
             StringBuilder notation = new StringBuilder();
-            final String sNotation;
 
             notation.append("<html>").
                     append(notationHead).
@@ -543,14 +550,14 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     append("</body>").
                     append("</html>");
 
-            sNotation = notation.toString();
-
-            ACRAUtils.putCustomData("Notation", sNotation);
-            loadDataWithBaseURL(null, sNotation, "text/html", "utf-8", null);
+            ACRAUtils.putCustomData("Notation", newNotation);
+            loadDataWithBaseURL(null, notation.toString(), "text/html", "utf-8", null);
             currentNotation = newNotation;
         }
         else {
-            showLastMove(chessBoard.getLastMove());
+            if (chessBoard != null) {
+                showLastMove(chessBoard.getLastMove());
+            }
         }
     }
 
