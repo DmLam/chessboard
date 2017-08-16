@@ -50,7 +50,8 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         IOnMoveListener{
     private static final String LOGTAG = ChessBoardView.class.getName();
 
-    private final int LONG_PRESS_DELAY = 500; // длительность длинного нажатия для вызова меню
+    private final int LONG_PRESS_DELAY = 800; // минимальная длительность длинного нажатия для вызова меню (мс.)
+    private final int LONG_PRESS_MAX_SHIFT = 20; // максимальное расстояние точки отпускания от точки нажатия для срабатывания длительного нажатия
     private final int MOVE_ANIMATION_TICK_COUNT = 50;
     private ChessBoard chessBoard = new ChessBoard();
     private String pieceSetName = "Classic";
@@ -85,6 +86,8 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private Point pawnTransformationSourceSquare = null;
     private Color transformingPawnColor;
     private PointF pressDownXY = new PointF(-1, -1);  // точка, где было нажатие. Нужна чтобы определять при длинном нажатии совпадение координат нажатия и отпускания
+                                                      // нельзя использовать draggingData.startPoint, т.к. лонгтап может быть и не на фигуре, а на пустой клетке
+    private int longPressMaxShift = 0;                // Максимальное смещение после нажатия до отпускания. Нужно для определения long press
 
     // стрелка для анализа
     private String arrowCoordinates = null;
@@ -99,6 +102,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         public PointF animateToPoint = null;  // если View находится в режиме анимации хода, то в animateTo хранится координаты куда фигура должна прибыть
         public Point animateToSquare = null;
         public int animateIndex = 0;     // в режиме анимации индекс текущего положения анимации
+        public int maxShift = 0; // максимальное смещение в процессе движения от точки начала движения (необходимо для детекции длительного нажатия для вызова контекстного меню)
 
         public DraggingData(Piece piece, Point startSquare) {
             this.piece = piece;
@@ -748,6 +752,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                 case MotionEvent.ACTION_DOWN:
                     pressDownXY.x = event.getX();
                     pressDownXY.y = event.getY();
+                    longPressMaxShift = 0;
 
                     p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
                     if (p != null) {
@@ -779,8 +784,14 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                     if (draggingData != null && draggingData.dragging) {
                         p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
                         if (p != null) {
+                            double dx = event.getX() - pressDownXY.x, dy = event.getY() - pressDownXY.y;
+                            int shift = (int) sqrt(dx * dx + dy * dy);  // расстояние от точки нажатия
+
                             draggingData.currentSquare.set(p.x, p.y);
                             draggingData.currentPoint.set(event.getX(), event.getY());
+                            if (longPressMaxShift < shift) {
+                                longPressMaxShift = shift;
+                            }
                             invalidate();
                         }
                     }
@@ -790,7 +801,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                     double dx = event.getX() - pressDownXY.x, dy = event.getY() - pressDownXY.y;
                     int moveDistance = (int) sqrt(dx * dx + dy * dy);
 
-                    if (eventDuration >= LONG_PRESS_DELAY && moveDistance < 20) {
+                    if (eventDuration >= LONG_PRESS_DELAY && moveDistance < LONG_PRESS_MAX_SHIFT && longPressMaxShift < LONG_PRESS_MAX_SHIFT) {
                         if (draggingData != null) {
                             chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
                             draggingData = null;
