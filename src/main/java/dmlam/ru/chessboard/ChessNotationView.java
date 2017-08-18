@@ -238,7 +238,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     public void setBackgroundColor(int color) {
         super.setBackgroundColor(color);
         backgroundColor = color;
-        updateNotationHead();
+
+        if (!isInEditMode()) {
+            updateNotationHead();
+        }
     }
 
     public int getBackgroundColor() {
