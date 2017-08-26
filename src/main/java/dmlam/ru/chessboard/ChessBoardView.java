@@ -370,46 +370,45 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         int w = getMeasuredWidth(), h = getMeasuredHeight(), size = Math.min(w, h);
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+/*
+        if (widthMode == MeasureSpec.UNSPECIFIED && heightMode == MeasureSpec.UNSPECIFIED) {
 
-/*
-        if (widthMeasureSpec == MeasureSpec.UNSPECIFIED && heightMeasureSpec == MeasureSpec.UNSPECIFIED) {
-
         }
         else
 */
-        if (widthMeasureSpec == MeasureSpec.UNSPECIFIED && heightMeasureSpec == MeasureSpec.EXACTLY) {
+        if (widthMode == MeasureSpec.UNSPECIFIED && heightMode == MeasureSpec.EXACTLY) {
+            size = Math.min(h, heightSize);
+        }
+        else
+        if (widthMode == MeasureSpec.UNSPECIFIED && heightMode == MeasureSpec.AT_MOST) {
             size = h;
         }
-        else
-/*
-        if (widthMeasureSpec == MeasureSpec.UNSPECIFIED && heightMeasureSpec == MeasureSpec.AT_MOST) {
-            size = h;
-        }
-*/
-        if (widthMeasureSpec == MeasureSpec.EXACTLY && heightMeasureSpec == MeasureSpec.UNSPECIFIED) {
-            size = w;
-        }
-/*
-        else
-        if (widthMeasureSpec == MeasureSpec.EXACTLY && heightMeasureSpec == MeasureSpec.EXACTLY) {
-            size = h;
+        if (widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.UNSPECIFIED) {
+            size = Math.min(widthSize, w);
         }
         else
-        if (widthMeasureSpec == MeasureSpec.EXACTLY && heightMeasureSpec == MeasureSpec.AT_MOST) {
-                size = h;
-        }
-        if (widthMeasureSpec == MeasureSpec.AT_MOST && heightMeasureSpec == MeasureSpec.UNSPECIFIED) {
-            size = w;
+        if (widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.EXACTLY) {
+            size = Math.min(widthSize, heightSize);
         }
         else
-        if (widthMeasureSpec == MeasureSpec.AT_MOST && heightMeasureSpec == MeasureSpec.EXACTLY) {
-            size = w;
+        if (widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.AT_MOST) {
+            size = Math.min(h, heightSize);
+        }
+        if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.UNSPECIFIED) {
+            size = Math.min(w, widthSize);
         }
         else
-        if (widthMeasureSpec == MeasureSpec.AT_MOST && heightMeasureSpec == MeasureSpec.AT_MOST) {
-            size = w;
+        if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.EXACTLY) {
+            size = Math.min(widthSize, heightSize);
         }
-*/
+        else
+        if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.AT_MOST) {
+            size = Math.min(widthSize, heightSize);
+        }
 
         setMeasuredDimension(size, size);
     }
