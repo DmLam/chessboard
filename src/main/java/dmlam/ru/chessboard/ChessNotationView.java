@@ -185,7 +185,9 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
 
-                    showLastMove(chessBoard.getLastMove());
+                    if  (chessBoard != null) {
+                        showLastMove(chessBoard.getLastMove());
+                    }
                 }
             });
         }
