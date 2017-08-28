@@ -25,8 +25,6 @@ import static dmlam.ru.chessboard.Game.GameResult;
  * Created by LamdanDY on 03.07.2015.
  */
 
-//todo: при изменении ориентации экрана сохранять содержимое
-
 public class ChessNotationView extends WebView implements IOnMoveListener{
     private static final String LOGTAG = ChessNotationView.class.getName();
 
@@ -479,7 +477,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return result;
     }
 
-    // todo Функция должна принимать в качестве параметра не Move, а MoveList чтобы можно было отображать ветки первого хода
     private StringBuilder branchNotation(Move move, int level) {
         StringBuilder result = new StringBuilder();
         Move prevMove;

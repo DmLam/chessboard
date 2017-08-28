@@ -369,17 +369,13 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int w = getMeasuredWidth(), h = getMeasuredHeight(), size = Math.min(w, h);
+        int w = getMeasuredWidth(), h = getMeasuredHeight();
+        int size;
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         int heightMode = MeasureSpec.getMode(heightMeasureSpec);
         int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-/*
-        if (widthMode == MeasureSpec.UNSPECIFIED && heightMode == MeasureSpec.UNSPECIFIED) {
 
-        }
-        else
-*/
         if (widthMode == MeasureSpec.UNSPECIFIED && heightMode == MeasureSpec.EXACTLY) {
             size = Math.min(h, heightSize);
         }
@@ -408,6 +404,10 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         else
         if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.AT_MOST) {
             size = Math.min(widthSize, heightSize);
+        }
+        else {
+            //  widthMode == MeasureSpec.UNSPECIFIED && heightMode == MeasureSpec.UNSPECIFIED
+            size = Math.min(w, h);
         }
 
         setMeasuredDimension(size, size);

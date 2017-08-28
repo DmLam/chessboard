@@ -123,8 +123,6 @@ public class PawnPiece extends Piece {
             delta = -1;
         }
 
-        //todo: Если пешка дошла до последней горизонтали, то возможны 4 варианта превращения. Сейчас это не учитывается.
-
         if (checkMoveAvailability(x, y + delta)) result++;
         if (checkMoveAvailability(x, y + delta * 2)) result++;
 
