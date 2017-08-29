@@ -1530,4 +1530,13 @@ public class ChessBoard {
 
         return result;
     }
+
+    public boolean rollbackEnabled() {
+        return getLastMove() != null;
+    }
+
+    public boolean rollupEnabled() {
+        return (getLastMove() != null && getLastMove().getVariantCount() > 0) ||
+                (getLastMove() == null && getFirstMoveVariants() != null && getFirstMoveVariants().size() > 0);
+    }
 }
