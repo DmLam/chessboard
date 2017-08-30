@@ -483,16 +483,17 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     public void setChessBoard(ChessBoard board) {
-        if (board == null) {
-            chessBoard.deleteOnMoveListener(this);
-            chessBoard.setOnNeedPieceForTransformation(null);
+        if (chessBoard != board) {
+            if (board == null) {
+                chessBoard.deleteOnMoveListener(this);
+                chessBoard.setOnNeedPieceForTransformation(null);
+            } else {
+                board.addOnMoveListener(this);
+                board.setOnNeedPieceForTransformation(this);
+                invalidate();
+            }
+            chessBoard = board;
         }
-        else {
-            board.addOnMoveListener(this);
-            board.setOnNeedPieceForTransformation(this);
-            invalidate();
-        }
-        chessBoard = board;
     }
 
     public void onBoardChange() {
