@@ -9,6 +9,7 @@ import dmlam.ru.androidcommonlib.ACRAUtils;
 import dmlam.ru.chessboard.Piece.Color;
 import dmlam.ru.chessboard.Piece.Kind;
 
+import static dmlam.ru.chessboard.ChessBoard.MoveMode.FULL;
 import static dmlam.ru.chessboard.Piece.Color.BLACK;
 import static dmlam.ru.chessboard.Piece.Color.WHITE;
 import static dmlam.ru.chessboard.Piece.Kind.PAWN;
@@ -37,6 +38,8 @@ public class ChessBoard {
 
     public final static String STARTING_POSITION_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+    public enum MoveMode {SIMPLE, FULL};  // упрощенный режим ходов без проверки их правильности, сохранения состояния и вызова событий
+                                          // Нужен для преобразования записи вида "e2e4" в краткую нотацию "e4"
     public enum Castling {QUEEN, KING};
     public enum PromoteTo {QUEEN, ROOK, BISHOP, KNIGHT;
 
@@ -56,6 +59,7 @@ public class ChessBoard {
         }
     }
 
+    private MoveMode moveMode = FULL;
     private OnNeedPieceForTransformation mOnNeedPieceForTransformation;
     private List<IOnMoveListener> mOnMoveListeners = new ArrayList<>();
 
@@ -149,6 +153,16 @@ public class ChessBoard {
         setPieceAt(point.x, point.y, piece);
     }
 
+    public void setMoveMode(MoveMode mode) {
+        if (moveMode != mode) {
+            if (game.getMoves().size() > 0) {
+                throw new RuntimeException("MoveMode may be set only when non moves have been done");
+            }
+
+            moveMode = mode;
+        }
+    }
+
     // forceNewVariant = true - если необходимо создать новый вариант, даже если в вариантах продолжения текущего хода уже есть такой ход
     boolean movePieceTo(Piece piece, int x, int y, boolean forceNewVariant) {
         Point sourceSquare = piece.getXY();
@@ -160,7 +174,7 @@ public class ChessBoard {
             throw new ErrorWaitingForPawnPromotion();
         }
 
-        boolean result = isMovePossible(piece, x, y);
+        boolean result = moveMode == FULL ? isMovePossible(piece, x, y) : true;  // в упрощенном режиме ходов не проверяем корректность хода
 
         if (result) {
             // очищаем признак возможности взятия на проходе
@@ -1257,8 +1271,10 @@ public class ChessBoard {
             gameDrawn = true;
         }
 */
-        checkForCheckCheckmateStalemate();
+        if (moveMode == FULL) {
+            checkForCheckCheckmateStalemate();
         lastMove.saveMoveState(this);
+        }
 
         if (lastMoveVariants == null) {
             if (game.getMoves() != null) {
@@ -1305,29 +1321,29 @@ public class ChessBoard {
             }
         }
 
-        if (doOnMove(lastMove)) {
-            if (moveOrder == WHITE) {
-                Move last = getLastMove();
+        if (moveMode == FULL) {
+            if (doOnMove(lastMove)) {
+                if (moveOrder == WHITE) {
+                    Move last = getLastMove();
 
-                if (last == null) {
-                    moveNumber = 1;
-                } else {
-                    moveNumber = last.getMoveNumber() + 1;
+                    if (last == null) {
+                        moveNumber = 1;
+                    } else {
+                        moveNumber = last.getMoveNumber() + 1;
+                    }
                 }
-            }
 
-            doAfterMove(lastMove);
-            doOnBoardChange();
-        }
-        else {
-            beginUpdate();
-            try {
-                rollback();
+                doAfterMove(lastMove);
+                doOnBoardChange();
+            } else {
+                beginUpdate();
+                try {
+                    rollback();
+                } finally {
+                    endUpdate(false);
+                }
+                removeMove(lastMove);
             }
-            finally {
-                endUpdate(false);
-            }
-            removeMove(lastMove);
         }
     }
 
