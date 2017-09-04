@@ -1345,7 +1345,12 @@ public class ChessBoard {
             }
         }
 
-        if (moveMode == FULL) {
+        if (moveMode == SIMPLE) {
+            if (moveOrder == WHITE) {
+                moveNumber++;
+            }
+        }
+        else {
             if (doOnMove(lastMove)) {
                 if (moveOrder == WHITE) {
                     Move last = getLastMove();

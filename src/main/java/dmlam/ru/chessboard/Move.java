@@ -44,6 +44,7 @@ final public class Move {
 
     public Move(Piece piece) {
         this.piece = piece;
+        this.moveNumber = piece.chessBoard.getMoveNumber();
         id = ++moveIdGenerator;
     }
 
