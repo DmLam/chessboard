@@ -862,7 +862,8 @@ public class ChessBoard {
 
         // номер хода
         builder.append(' ');
-        builder.append(moveOrder == WHITE ? moveNumber + 1: moveNumber);
+        builder.append(moveNumber);
+//        builder.append(moveOrder == WHITE ? moveNumber + 1: moveNumber);
 
         return builder.toString();
     }
@@ -985,7 +986,6 @@ public class ChessBoard {
 
         lastMoveVariants = null;
         lastMoveIndex = -1;
-//        game.clearMoves();
         initialPositionFEN = FEN;
     }
 
