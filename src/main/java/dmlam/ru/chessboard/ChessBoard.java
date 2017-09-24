@@ -347,6 +347,10 @@ public class ChessBoard {
 
     public void restoreBoardState(Move move) {
         loadFromFEN(move.getFEN(), true);
+
+        if (moveOrder == WHITE) {
+            moveNumber++;
+        }
     }
 
     private void gotoInitialPosition() {
@@ -356,7 +360,7 @@ public class ChessBoard {
     // откат к предыдущему ходу
     public void rollback(int variantIndex) {
         if (moveMode == SIMPLE) {
-            throw new RuntimeException("Rollback/Rollup/Goto is not enabled in simple mode");
+            throw new RuntimeException("Rollback/Rollup/Goto are not enabled in simple mode");
         }
 
         if (lastMoveVariants != null && lastMoveVariants.size() > 0) {
@@ -392,7 +396,7 @@ public class ChessBoard {
     // откат к предыдущему ходу (из основной ветки)
     public void rollback() {
         if (moveMode == SIMPLE) {
-            throw new RuntimeException("Rollback/Rollup/Goto is not enabled in simple mode");
+            throw new RuntimeException("Rollback/Rollup/Goto are not enabled in simple mode");
         }
 
         if (lastMoveVariants != null && lastMoveVariants.size() > 0) {
@@ -436,7 +440,7 @@ public class ChessBoard {
         Move nextMove = null;
 
         if (moveMode == SIMPLE) {
-            throw new RuntimeException("Rollback/Rollup/Goto is not enabled in simple mode");
+            throw new RuntimeException("Rollback/Rollup/Goto are not enabled in simple mode");
         }
 
         if (lastMoveVariants == null) {
@@ -496,7 +500,7 @@ public class ChessBoard {
 
     public void gotoMove(Move move) {
         if (moveMode == SIMPLE) {
-            throw new RuntimeException("Rollback/Rollup/Goto is not enabled in simple mode");
+            throw new RuntimeException("Rollback/Rollup/Goto are not enabled in simple mode");
         }
 
         if (move != null) {
@@ -526,7 +530,7 @@ public class ChessBoard {
     // переход в позицию после хода с идентификатором Id
     public void gotoMove(int Id) {
         if (moveMode == SIMPLE) {
-            throw new RuntimeException("Rollback/Rollup/Goto is not enabled in simple mode");
+            throw new RuntimeException("Rollback/Rollup/Goto are not enabled in simple mode");
         }
 
         Move move = findMove(Id);
@@ -541,7 +545,7 @@ public class ChessBoard {
     // переход на полуход number от начала партии
     public void gotoMoveNumber(int number) {
         if (moveMode == SIMPLE) {
-            throw new RuntimeException("Rollback/Rollup/Goto is not enabled in simple mode");
+            throw new RuntimeException("Rollback/Rollup/Goto are not enabled in simple mode");
         }
 
         if (number < 0) {
@@ -863,7 +867,6 @@ public class ChessBoard {
         // номер хода
         builder.append(' ');
         builder.append(moveNumber);
-//        builder.append(moveOrder == WHITE ? moveNumber + 1: moveNumber);
 
         return builder.toString();
     }
@@ -1290,6 +1293,7 @@ public class ChessBoard {
         transformation = ' ';
         moveOrder = moveOrder.opposite();
         halfmoveQnt++; // счетчик незначащих полуходов
+
 /*
         if (halfmoveQnt >= 50) {
             gameDrawn = true;
@@ -1353,13 +1357,7 @@ public class ChessBoard {
         else {
             if (doOnMove(lastMove)) {
                 if (moveOrder == WHITE) {
-                    Move last = getLastMove();
-
-                    if (last == null) {
-                        moveNumber = 1;
-                    } else {
-                        moveNumber = last.getMoveNumber() + 1;
-                    }
+                    moveNumber++;
                 }
 
                 doAfterMove(lastMove);

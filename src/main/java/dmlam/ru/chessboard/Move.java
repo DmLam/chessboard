@@ -44,7 +44,7 @@ final public class Move {
 
     public Move(Piece piece) {
         this.piece = piece;
-        this.moveNumber = piece.chessBoard.getMoveNumber();
+        this.moveNumber = piece.chessBoard.getMoveNumber(); //piece.chessBoard.getMoveOrder() == Piece.Color.WHITE ? piece.chessBoard.getMoveNumber() + 1 : piece.chessBoard.getMoveNumber();
         id = ++moveIdGenerator;
     }
 
@@ -192,7 +192,7 @@ final public class Move {
 
     public void saveMoveState(ChessBoard board) {
         this.moveOrder = board.getMoveOrder();
-        this.moveNumber = board.getMoveNumber();
+//        this.moveNumber = board.getMoveNumber();
         this.opponentChecked = board.isCurrentPlayerChecked();
         this.opponentCheckmated = board.isCurrentPlayerCheckmated();
         this.opponentStalemated = board.isCurrentPlayerStalemated();
