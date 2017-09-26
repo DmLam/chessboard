@@ -38,6 +38,7 @@ public class ChessBoard {
     private static final String LOGTAG = ChessBoard.class.getName();
 
     public final static String STARTING_POSITION_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    public static boolean FORCE_NEW_MOVE = true;
 
     public enum MoveMode {SIMPLE, FULL};  // упрощенный режим ходов без проверки их правильности, сохранения состояния и вызова событий
                                           // Нужен для преобразования записи вида "e2e4" в краткую нотацию "e4"
