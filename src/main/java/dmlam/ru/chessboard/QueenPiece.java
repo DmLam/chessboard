@@ -1,7 +1,5 @@
 package dmlam.ru.chessboard;
 
-import android.graphics.Point;
-
 /**
  * Created by Lam on 13.06.2015.
  */
@@ -9,10 +7,6 @@ public class QueenPiece extends Piece {
 
     public QueenPiece(ChessBoard chessBoard, Piece.Color color, int x, int y) {
         super(chessBoard, Piece.Kind.QUEEN, color, x, y);
-    }
-
-    public QueenPiece(ChessBoard chessBoard, Color color, Point p) {
-        super(chessBoard, Kind.QUEEN, color, p);
     }
 
     @Override

@@ -1,7 +1,5 @@
 package dmlam.ru.chessboard;
 
-import android.graphics.Point;
-
 /**
  * Created by Lam on 13.06.2015.
  */
@@ -9,10 +7,6 @@ public class RookPiece extends Piece {
 
     public RookPiece(ChessBoard chessBoard, Color color, int x, int y) {
         super(chessBoard, Kind.ROOK, color, x, y);
-    }
-
-    public RookPiece(ChessBoard chessBoard, Color color, Point p) {
-        super(chessBoard, Kind.ROOK, color, p);
     }
 
     @Override

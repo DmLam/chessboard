@@ -65,32 +65,26 @@ public class KingPiece extends Piece {
     public void moveTo(int x, int y) {
         int oldX = getX();
 
-        chessBoard.beginUpdate();
-        try {
-            super.moveTo(x, y);
+        super.moveTo(x, y);
 
-            // если это рокировка - переместим ладью тоже
-            if (Math.abs(x - oldX) == 2) {
-                int rookX, newRookX;
+        // если это рокировка - переместим ладью тоже
+        if (Math.abs(x - oldX) == 2) {
+            int rookX, newRookX;
 
-                if (x > oldX) {
-                    rookX = 7;
-                    newRookX = 5;
-                }
-                else {
-                    rookX = 0;
-                    newRookX = 3;
-                }
-                Piece rook = chessBoard.getPiece(rookX, getY());
-
-                chessBoard.setPieceAt(rookX, getY(), null);
-                chessBoard.setPieceAt(newRookX, getY(), rook);
-
-                lastMove.setPiece2(Kind.ROOK, new Point(rookX, getY()), new Point(newRookX, getY()));
+            if (x > oldX) {
+                rookX = 7;
+                newRookX = 5;
             }
-        }
-        finally {
-            chessBoard.endUpdate();
+            else {
+                rookX = 0;
+                newRookX = 3;
+            }
+            Piece rook = chessBoard.getPiece(rookX, getY());
+
+            chessBoard.setPieceAt(rookX, getY(), null);
+            chessBoard.setPieceAt(newRookX, getY(), rook);
+
+            lastMove.setPiece2(Kind.ROOK, new Point(rookX, getY()), new Point(newRookX, getY()));
         }
     }
 
