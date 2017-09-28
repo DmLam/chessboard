@@ -49,7 +49,6 @@ public class PGNLoader {
         boolean result = false;
 
         char[] c = new char[1];
-        int count = 0;
 
         in.mark(1);
         if (in.read(c) == 1 && c[0] == '[') {

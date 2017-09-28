@@ -192,7 +192,6 @@ final public class Move {
 
     public void saveMoveState(ChessBoard board) {
         this.moveOrder = board.getMoveOrder();
-//        this.moveNumber = board.getMoveNumber();
         this.opponentChecked = board.isCurrentPlayerChecked();
         this.opponentCheckmated = board.isCurrentPlayerCheckmated();
         this.opponentStalemated = board.isCurrentPlayerStalemated();

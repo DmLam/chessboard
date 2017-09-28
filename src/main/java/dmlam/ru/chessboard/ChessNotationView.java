@@ -411,13 +411,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         StringBuilder result = new StringBuilder();;
 
         if (level == MAIN_LINE) {
-            if (variants.getComment() != null) {
-                result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
-                        .append(' ')
-                        .append(variants.getComment())
-                        .append("</span>&nbsp;");
-            }
-
             result.append(branchNotation(variants.get(0), level));
         }
 
@@ -436,12 +429,6 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 result.append(String.format("&nbsp;<span class = '%s'>(&nbsp;", TERTIARY_MOVE_CSS_CLASS));
             }
 
-            if (variants.getComment() != null) {
-                result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
-                        .append(' ')
-                        .append(variants.getComment())
-                        .append("</span>&nbsp;");
-            }
             for (int i = 1; i < variants.size(); i++) {
                 result.append(branchNotation(variants.get(i), level));
                 if (i < variants.size() - 1) {
@@ -490,6 +477,12 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     .append("&nbsp;&hellip;");
         }
         do {
+            if (move.getVariants().getComment() != null) {
+                result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
+                        .append(move.getVariants().getComment())
+                        .append("</span>&nbsp;");
+            }
+
             if (wasBranch) {
                 if (move != null) {
                     result.append(move.getMoveNumber())
