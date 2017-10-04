@@ -455,9 +455,9 @@ public class ChessBoard {
             if (nextMove != null)
                 lastMoveVariants = getLastMove().getVariants();  // установим текущий ход в качестве основного варианта после предыдущего, к которому можно будет вернуться с помощью rollup()
         }
-        lastMoveIndex = variantIndex;
 
         if (nextMove != null) {
+            lastMoveIndex = variantIndex;
 
             restoreBoardState(nextMove);
 
