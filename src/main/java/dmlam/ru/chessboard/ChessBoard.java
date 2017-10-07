@@ -640,14 +640,18 @@ public class ChessBoard {
         return promotedPawn != null;
     }
 
-    public void promotePawnTo(Point sourceSquare, PromoteTo piece, boolean forceNewVariant) {
+    public boolean promotePawnTo(Point sourceSquare, PromoteTo piece, boolean forceNewVariant) {
+        boolean result;
+
         PawnPiece pawn = (PawnPiece) getPiece(promotedPawn);
 
         pawn.promoteTo(sourceSquare, piece);
 
         halfmoveQnt = -1; // -1 т.к. в passMoveToOpponent счетчик будет увеличен на 1
-        passMoveToOpponent(forceNewVariant);
+        result = passMoveToOpponent(forceNewVariant);
         promotedPawn = null;
+
+        return result;
     }
 
     public void cancelPawnPromotion() {
@@ -1289,7 +1293,9 @@ public class ChessBoard {
     }
 
     // передаем ход противнику
-    void passMoveToOpponent(boolean forceNewVariant) {
+    private boolean passMoveToOpponent(boolean forceNewVariant) {
+        boolean result = true;
+
         lastMove.saveMoveNotation(this);
         transformation = ' ';
         moveOrder = moveOrder.opposite();
@@ -1364,6 +1370,8 @@ public class ChessBoard {
                 doAfterMove(lastMove);
                 doOnBoardChange();
             } else {
+                result = false;
+
                 beginUpdate();
                 try {
                     rollback();
@@ -1373,6 +1381,8 @@ public class ChessBoard {
                 removeMove(lastMove);
             }
         }
+
+        return result;
     }
 
     public Move findMove(int id) {

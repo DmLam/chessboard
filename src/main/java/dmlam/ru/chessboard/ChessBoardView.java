@@ -592,10 +592,14 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     public void onSelectPawnTransformation(ChessBoard.PromoteTo result) {
-        chessBoard.promotePawnTo(pawnTransformationSourceSquare, result, false);
-        selectingPawnTransformation = false;
-        pawnTransformationSourceSquare = null;
-        transformingPawnColor = null;
+        if (chessBoard.promotePawnTo(pawnTransformationSourceSquare, result, false)) {
+            selectingPawnTransformation = false;
+            pawnTransformationSourceSquare = null;
+            transformingPawnColor = null;
+        }
+        else {
+            invalidate();
+        }
     }
 
 
