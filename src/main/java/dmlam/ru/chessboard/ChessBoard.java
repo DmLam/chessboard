@@ -601,16 +601,18 @@ public class ChessBoard {
 
             if (lastMove != null) {
                 Move prevMove = move.getPrevMove();
-                MoveList variants = prevMove.getVariants();
+                if (move != null) {
+                    MoveList variants = prevMove.getVariants();
 
-                if (move != lastMove) {
-                    if (variants.size() > 1 || variants.get(0).getVariantCount() == 0) {
+                    if (move != lastMove) {
+                        if (variants.size() > 1 || variants.get(0).getVariantCount() == 0) {
+                            variants.removeLine(move);
+                        }
+                    } else {
+                        lastMoveVariants = move.getPrevVariants();
+                        lastMoveIndex = 0;
                         variants.removeLine(move);
                     }
-                } else {
-                    lastMoveVariants = move.getPrevVariants();
-                    lastMoveIndex = 0;
-                    variants.removeLine(move);
                 }
             }
         }
