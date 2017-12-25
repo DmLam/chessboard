@@ -102,7 +102,6 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         public PointF animateToPoint = null;  // если View находится в режиме анимации хода, то в animateTo хранится координаты куда фигура должна прибыть
         public Point animateToSquare = null;
         public int animateIndex = 0;     // в режиме анимации индекс текущего положения анимации
-        public int maxShift = 0; // максимальное смещение в процессе движения от точки начала движения (необходимо для детекции длительного нажатия для вызова контекстного меню)
 
         public DraggingData(Piece piece, Point startSquare) {
             this.piece = piece;
@@ -497,8 +496,11 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     public void onBoardChange() {
-        if (draggingData == null || !draggingData.animating)
+        if (draggingData == null || !(draggingData.animating || draggingData.dragging))
+        {
+            stopPieceDragging();
             invalidate();
+        }
     }
 
     private Point getBoardCoordinatesFromScreen(float x, float y) {
@@ -705,7 +707,6 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     private void copyFENtoClipboard() {
-        int sdk = android.os.Build.VERSION.SDK_INT;
         String FEN = getChessBoard().saveToFEN();
 
         ClipboardUtils.copyTextToClipboard(getContext(), "FEN", FEN);
@@ -754,36 +755,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         if (enabled) {
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
-                    pressDownXY.x = event.getX();
-                    pressDownXY.y = event.getY();
-                    longPressMaxShift = 0;
-
-                    p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
-                    if (p != null) {
-                        Piece piece;
-                        if (draggingData != null && draggingData.startSquare.equals(p)) {
-                            piece = draggingData.piece;
-                        } else {
-                            piece = chessBoard.getPiece(p);
-                        }
-
-                        // здесь обрабатываем только начало хода перетаскиванием.
-                        // Случай когда это тап на целевой клетке (тап на исходной уже сделан) будет обработан на ACTION_UP
-                        if (draggingData != null && (piece != null && piece.getColor() == draggingData.piece.getColor() && draggingData.piece != piece)) {
-                            // Если кликнули на своей фигуре, и при этом была уже другая выбрана для хода, то вернем ее на доску
-                            chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
-                            draggingData = null;
-                            invalidate();
-                        }
-
-                        if (piece != null && piece.getColor() == chessBoard.getMoveOrder()) {
-                            draggingData = new DraggingData(piece, p, new PointF(event.getX(), event.getY()));
-                            draggingData.dragging = true;
-                            chessBoard.setPieceAt(p, null);
-                            invalidate();
-                        }
-                    }
+                    startPieceDragging(event.getX(), event.getY());
                     break;
+
                 case MotionEvent.ACTION_MOVE:
                     if (draggingData != null && draggingData.dragging) {
                         p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
@@ -800,50 +774,17 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                         }
                     }
                     break;
+
                 case MotionEvent.ACTION_UP:
                     long eventDuration = event.getEventTime() - event.getDownTime();
                     double dx = event.getX() - pressDownXY.x, dy = event.getY() - pressDownXY.y;
                     int moveDistance = (int) sqrt(dx * dx + dy * dy);
 
-                    if (eventDuration >= LONG_PRESS_DELAY && moveDistance < LONG_PRESS_MAX_SHIFT && longPressMaxShift < LONG_PRESS_MAX_SHIFT) {
-                        if (draggingData != null) {
-                            chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
-                            draggingData = null;
-                            invalidate();
-                        }
-                        showPopupMenu((int) pressDownXY.x, (int) pressDownXY.y);
-                    }
-                    else
-                    if (draggingData != null) {
-                        p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
+                    stopPieceDragging(event.getX(), event.getY());
+                    invalidate();
 
-                        // если фигуру отпустили за пределами доски, то вернем ее на место
-                        if (p == null) {
-                            chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
-                            draggingData = null;
-                        } else {
-                            // Если клетка на которой был UP не совпадает с той, где был DOWN, то попробуем сделать ход
-                            if (!p.equals(draggingData.startSquare)) {
-                                makeMove(p);
-                            } else {
-                                //если мы в режиме перетаскивания и оно закончилось в той же клетке, где началось - выключим режим перетаскивания,
-                                // будем ждать выбора клетки назначения для фигуры
-                                if (draggingData.dragging) {
-                                    draggingData.dragging = false;
-                                    // Если совпадает и текущая точка совпадает с точкой в которой был DOWN,
-                                    // то останемся в состоянии ожидания нажатия на клетку куда надо переместиться
-                                    if (!draggingData.startPoint.equals(event.getX(), event.getY())) {
-                                        chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
-                                    }
-                                }
-                                // если мы не в режиме перетаскивания, то повторный щелчок по той же фигуре отменяет ее выбор в качестве фигуры для передвижения
-                                else {
-                                    chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
-                                    draggingData = null;
-                                }
-                            }
-                        }
-                        invalidate();
+                    if (eventDuration >= LONG_PRESS_DELAY && moveDistance < LONG_PRESS_MAX_SHIFT && longPressMaxShift < LONG_PRESS_MAX_SHIFT) {
+                        showPopupMenu((int) pressDownXY.x, (int) pressDownXY.y);
                     }
                     break;
                 default:
@@ -851,6 +792,77 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             }
         }
         return true;
+    }
+
+    private void startPieceDragging(float startX, float startY) {
+        Point p;
+        pressDownXY.x = startX;
+        pressDownXY.y = startY;
+        longPressMaxShift = 0;
+
+        p = getBoardCoordinatesFromScreen(startX, startY);
+        if (p != null) {
+            Piece piece;
+            if (draggingData != null && draggingData.startSquare.equals(p)) {
+                piece = draggingData.piece;
+            } else {
+                piece = chessBoard.getPiece(p);
+            }
+
+            // здесь обрабатываем только начало хода перетаскиванием.
+            // Случай когда это тап на целевой клетке (тап на исходной уже сделан) будет обработан на ACTION_UP
+            if (draggingData != null && (piece != null && piece.getColor() == draggingData.piece.getColor() && draggingData.piece != piece)) {
+                // Если кликнули на своей фигуре, и при этом была уже другая выбрана для хода, то вернем ее на доску
+                chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
+                draggingData = null;
+                invalidate();
+            }
+
+            if (piece != null && piece.getColor() == chessBoard.getMoveOrder()) {
+                draggingData = new DraggingData(piece, p, new PointF(startX, startY));
+                draggingData.dragging = true;
+                chessBoard.setPieceAt(p, null);
+                invalidate();
+            }
+        }
+    }
+
+    private void stopPieceDragging() {
+        stopPieceDragging(-1, -1);
+    }
+
+    private void stopPieceDragging(float startX, float startY) {
+        if (draggingData != null) {
+            Point p = getBoardCoordinatesFromScreen(startX, startY);
+
+            // если фигуру отпустили за пределами доски, то вернем ее на место
+            if (p == null) {
+                chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
+                draggingData = null;
+            } else {
+                // Если клетка на которой был UP не совпадает с той, где был DOWN, то попробуем сделать ход
+                if (!p.equals(draggingData.startSquare)) {
+                    makeMove(p);
+                } else {
+                    //если мы в режиме перетаскивания и оно закончилось в той же клетке, где началось - выключим режим перетаскивания,
+                    // будем ждать выбора клетки назначения для фигуры
+                    if (draggingData.dragging) {
+                        draggingData.dragging = false;
+
+                        // Если совпадает и текущая точка совпадает с точкой в которой был DOWN,
+                        // то останемся в состоянии ожидания нажатия на клетку куда надо переместиться
+                        if (!draggingData.startPoint.equals(startX, startY)) {
+                            chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
+                        }
+                    }
+                    // если мы не в режиме перетаскивания, то повторный щелчок по той же фигуре отменяет ее выбор в качестве фигуры для передвижения
+                    else {
+                        chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
+                        draggingData = null;
+                    }
+                }
+            }
+        }
     }
 
     // отрисовка перетаскиваемой фигуры
