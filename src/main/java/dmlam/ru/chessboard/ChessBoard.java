@@ -601,7 +601,7 @@ public class ChessBoard {
 
             if (lastMove != null) {
                 Move prevMove = move.getPrevMove();
-                if (move != null) {
+                if (prevMove != null) {
                     MoveList variants = prevMove.getVariants();
 
                     if (move != lastMove) {
