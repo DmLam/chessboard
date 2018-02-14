@@ -1045,7 +1045,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         @Override
         public void run() {
 
-            if (draggingData.animateIndex == MOVE_ANIMATION_TICK_COUNT) {
+            if (draggingData == null || draggingData.animateIndex == MOVE_ANIMATION_TICK_COUNT) {
                 animationTimer.cancel();
                 animationTimer.purge();
                 animationTimer = null;
