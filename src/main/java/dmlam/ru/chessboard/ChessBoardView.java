@@ -57,7 +57,6 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private String pieceSetName = "Classic";
 
     private boolean showLastMoveSquares = true;
-    private boolean enabled = true;
     private boolean reverseBoard = false;
     private boolean drawCoordinates = true;
 
@@ -79,6 +78,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private PieceSetList pieceSets;
     private ColorScheme colorScheme;
     private boolean soundEnabled = true;
+    private boolean allowTargetSquareFist = false;
 
     // признак того, что мы находимся в процессе выбора фигура для превращения пешки (показан диалог).
     // используется для правильного восстановления диалога при повороте экрана
@@ -91,6 +91,14 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
     // стрелка для анализа
     private String arrowCoordinates = null;
+
+    public boolean isAllowTargetSquareFist() {
+        return allowTargetSquareFist;
+    }
+
+    public void setAllowTargetSquareFist(boolean allowTargetSquareFist) {
+        this.allowTargetSquareFist = allowTargetSquareFist;
+    }
 
     // класс для хранения данных о перетаскиваемой фигуре во время совершения хода перетаскиванием
     class DraggingData {
@@ -264,15 +272,6 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
         initialize(context, attrs, defStyle);
     }
-
-    public boolean getEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
 
     public void addOnMoveListener(IOnMoveListener l) {
         mOnMoveListeners.add(l);
@@ -751,47 +750,36 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
     @Override
     public boolean onTouchEvent(MotionEvent event){
-        Point p;
-
-        if (enabled) {
-            switch (event.getActionMasked()) {
-                case MotionEvent.ACTION_DOWN:
-                    startPieceDragging(event.getX(), event.getY());
-                    break;
-
-                case MotionEvent.ACTION_MOVE:
-                    if (draggingData != null && draggingData.dragging) {
-                        p = getBoardCoordinatesFromScreen(event.getX(), event.getY());
-                        if (p != null) {
-                            double dx = event.getX() - pressDownXY.x, dy = event.getY() - pressDownXY.y;
-                            int shift = (int) sqrt(dx * dx + dy * dy);  // расстояние от точки нажатия
-
-                            draggingData.currentSquare.set(p.x, p.y);
-                            draggingData.currentPoint.set(event.getX(), event.getY());
-                            if (longPressMaxShift < shift) {
-                                longPressMaxShift = shift;
-                            }
-                            invalidate();
-                        }
-                    }
-                    break;
-
-                case MotionEvent.ACTION_UP:
-                    long eventDuration = event.getEventTime() - event.getDownTime();
-                    double dx = event.getX() - pressDownXY.x, dy = event.getY() - pressDownXY.y;
-                    int moveDistance = (int) sqrt(dx * dx + dy * dy);
-
-                    stopPieceDragging(event.getX(), event.getY());
-                    invalidate();
-
-                    if (eventDuration >= LONG_PRESS_DELAY && moveDistance < LONG_PRESS_MAX_SHIFT && longPressMaxShift < LONG_PRESS_MAX_SHIFT) {
-                        showPopupMenu((int) pressDownXY.x, (int) pressDownXY.y);
-                    }
-                    break;
-                default:
-                    break;
-            }
+        if (!isEnabled()) {
+            return false;
         }
+
+
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                startPieceDragging(event.getX(), event.getY());
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                movePieceWhileDragging(event.getX(), event.getY());
+                break;
+
+            case MotionEvent.ACTION_UP:
+                long eventDuration = event.getEventTime() - event.getDownTime();
+                double dx = event.getX() - pressDownXY.x, dy = event.getY() - pressDownXY.y;
+                int moveDistance = (int) sqrt(dx * dx + dy * dy);
+
+                stopPieceDragging(event.getX(), event.getY());
+                invalidate();
+
+                if (eventDuration >= LONG_PRESS_DELAY && moveDistance < LONG_PRESS_MAX_SHIFT && longPressMaxShift < LONG_PRESS_MAX_SHIFT) {
+                    showPopupMenu((int) pressDownXY.x, (int) pressDownXY.y);
+                }
+                break;
+            default:
+                break;
+        }
+
         return true;
     }
 
@@ -804,6 +792,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         p = getBoardCoordinatesFromScreen(startX, startY);
         if (p != null) {
             Piece piece;
+
             if (draggingData != null && draggingData.startSquare.equals(p)) {
                 piece = draggingData.piece;
             } else {
@@ -832,9 +821,9 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         stopPieceDragging(-1, -1);
     }
 
-    private void stopPieceDragging(float startX, float startY) {
+    private void stopPieceDragging(float stopX, float stopY) {
         if (draggingData != null) {
-            Point p = getBoardCoordinatesFromScreen(startX, startY);
+            Point p = getBoardCoordinatesFromScreen(stopX, stopY);
 
             // если фигуру отпустили за пределами доски, то вернем ее на место
             if (p == null) {
@@ -852,7 +841,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
                         // Если совпадает и текущая точка совпадает с точкой в которой был DOWN,
                         // то останемся в состоянии ожидания нажатия на клетку куда надо переместиться
-                        if (!draggingData.startPoint.equals(startX, startY)) {
+                        if (!draggingData.startPoint.equals(stopX, stopY)) {
                             chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
                         }
                     }
@@ -862,6 +851,23 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                         draggingData = null;
                     }
                 }
+            }
+        }
+    }
+
+    private void movePieceWhileDragging(float pieceX, float pieceY) {
+        if (draggingData != null && draggingData.dragging) {
+            Point p = getBoardCoordinatesFromScreen(pieceX, pieceY);
+            if (p != null) {
+                double dx = pieceX - pressDownXY.x, dy = pieceY - pressDownXY.y;
+                int shift = (int) sqrt(dx * dx + dy * dy);  // расстояние от точки нажатия
+
+                draggingData.currentSquare.set(p.x, p.y);
+                draggingData.currentPoint.set(pieceX, pieceY);
+                if (longPressMaxShift < shift) {
+                    longPressMaxShift = shift;
+                }
+                invalidate();
             }
         }
     }
