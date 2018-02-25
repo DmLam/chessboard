@@ -145,9 +145,11 @@ public class ChessBoard {
     public Piece getPiece(Point point) { return squares[point.x][point.y]; };
 
     public void setPieceAt(int x, int y, Piece piece) {
-        squares[x][y] = piece;
-        if (piece != null) {
-            piece.setXY(x, y);
+        if (squares[x][y] != piece) {
+            squares[x][y] = piece;
+            if (piece != null) {
+                piece.setXY(x, y);
+            }
         }
     }
 
@@ -672,6 +674,10 @@ public class ChessBoard {
         boolean result = this.castling[color.ordinal()][castling.ordinal()];
 
         return result;
+    }
+
+    public boolean isMovePossible(Piece piece, Point p) {
+        return isMovePossible(piece, p.x, p.y);
     }
 
     public boolean isMovePossible(Piece piece, int x, int y) {

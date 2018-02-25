@@ -122,22 +122,45 @@ public class ImageColorScheme extends CoordinatesColorScheme {
         }
 
         if (draggingData != null) {
-            int xFrom = draggingData.startSquare.x, yFrom = draggingData.startSquare.y;
-            int xTo = draggingData.currentSquare.x, yTo = draggingData.currentSquare.y;
+            int xFrom, xTo, yFrom, yTo;
+
+            if (draggingData.startSquare != null) {
+                // отрисовываем начальную клетку хода
+                xFrom = draggingData.startSquare.x;
+                yFrom = draggingData.startSquare.y;
+
+                if (reverseBoard) {
+                    xFrom = 7 - xFrom;
+                }
+                else {
+                    yFrom = 7 - yFrom;
+                }
+
+                canvas.drawRect(chessBoardView.vLines[xFrom], chessBoardView.hLines[yFrom], chessBoardView.vLines[xFrom + 1], chessBoardView.hLines[yFrom + 1], currentMoveSourceSquarePaint);
+            }
+
+            // отрисовываем текущую (или конечную) клетку хода
+            if (draggingData.startSquare != null) {
+                // ход делается указанием сначала начальной клетки потом конечной
+                xTo = draggingData.currentSquare.x;
+                yTo = draggingData.currentSquare.y;
+            }
+            else {
+                // ход делается указанием сначала конечной клетки потом начальной
+                xTo = draggingData.endSquare.x;
+                yTo = draggingData.endSquare.y;
+            }
 
             if (reverseBoard) {
-                xFrom = 7 - xFrom;
                 xTo = 7 - xTo;
             }
             else {
-                yFrom = 7 - yFrom;
                 yTo = 7 - yTo;
             }
 
-            canvas.drawRect(chessBoardView.vLines[xFrom], chessBoardView.hLines[yFrom], chessBoardView.vLines[xFrom + 1], chessBoardView.hLines[yFrom + 1], currentMoveSourceSquarePaint);
             canvas.drawRect(chessBoardView.vLines[xTo], chessBoardView.hLines[yTo], chessBoardView.vLines[xTo + 1], chessBoardView.hLines[yTo + 1], currentMoveTargetSquarePaint);
         }
-    };
+    }
 
     @Override
     protected void initPainting() {
