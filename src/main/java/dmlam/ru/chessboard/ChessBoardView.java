@@ -815,27 +815,33 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                 piece = chessBoard.getPiece(p);
             }
 
-            if (piece != null) {
+            if (piece == null) {
+                // Ход еще не был начат и кликнули в пустую клетку. Если в настройках позволено выбирать сначала целевую клетку - сделаем это
+                if ((draggingData == null || draggingData.startedByLastSquare()) && allowTargetSquareFist) {
+                    draggingData = new DraggingData(p);
+                    invalidate();
+                }
+            }
+            else {
+                if (draggingData == null || draggingData.startedByLastSquare() && allowTargetSquareFist) {
+                    if (piece.getColor() != chessBoard.getMoveOrder() ) {
+                        // если тапнули на фигуре чужого цвета, то начнем ход указанием целевой клетки (если позволено в настройках)
+                        draggingData = new DraggingData(p);
+                        invalidate();
+                    }
+                }
                 // в этом методе обрабатываем только начало хода перетаскиванием.
                 // Случай когда это тап на целевой клетке (тап на исходной уже сделан) будет обработан на ACTION_UP
-                if (draggingData != null && draggingData.piece != null && piece.getColor() == draggingData.piece.getColor() && draggingData.piece != piece) {
+                if (draggingData != null && draggingData.startedByFirstSquare() && piece.getColor() == draggingData.piece.getColor() && draggingData.piece != piece) {
                     // Если кликнули на своей фигуре, и при этом была уже другая выбрана для хода, то вернем ее на доску
                     chessBoard.setPieceAt(draggingData.startSquare, draggingData.piece);
                     draggingData = null;
-                    invalidate();
                 }
 
                 if ((draggingData == null || draggingData.startedByFirstSquare()) && piece.getColor() == chessBoard.getMoveOrder()) {
                     draggingData = new DraggingData(piece, p, new PointF(startX, startY));
                     draggingData.dragging = true;
                     chessBoard.setPieceAt(p, null);
-                    invalidate();
-                }
-            }
-            else {
-                // Ход еще не был начат и кликнули в пустую клетку. Если в настройках позволено выбирать сначала целевую клетку - сделаем это
-                if (draggingData == null && allowTargetSquareFist) {
-                    draggingData = new DraggingData(p);
                     invalidate();
                 }
             }
