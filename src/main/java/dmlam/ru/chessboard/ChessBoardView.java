@@ -823,7 +823,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
                 }
             }
             else {
-                if (draggingData == null || draggingData.startedByLastSquare() && allowTargetSquareFist) {
+                if ((draggingData == null || draggingData.startedByLastSquare()) && allowTargetSquareFist) {
                     if (piece.getColor() != chessBoard.getMoveOrder() ) {
                         // если тапнули на фигуре чужого цвета, то начнем ход указанием целевой клетки (если позволено в настройках)
                         draggingData = new DraggingData(p);
