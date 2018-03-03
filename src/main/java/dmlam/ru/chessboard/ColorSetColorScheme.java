@@ -160,16 +160,34 @@ public class ColorSetColorScheme extends CoordinatesColorScheme {
                 }
 
                 if (draggingData != null) {
+                    int xFrom, yFrom, xTo, yTo;
+
+                    if (draggingData.startSquare != null) {
+                        xFrom = draggingData.startSquare.x;
+                        yFrom = draggingData.startSquare.y;
+                        xTo = draggingData.currentSquare.x;
+                        yTo = draggingData.currentSquare.y;
+                        if (reverseBoard) {
+                            if (7 - x == xFrom && y == yFrom) {
+                                paint = currentMoveSourceSquarePaint;
+                            }
+                        } else {
+                            if (x == xFrom && 7 - y == yFrom) {
+                                paint = currentMoveSourceSquarePaint;
+                            }
+                        }
+                    }
+                    else {
+                        xTo = draggingData.endSquare.x;
+                        yTo = draggingData.endSquare.y;
+                    }
+
                     if (reverseBoard) {
-                        if (7 - x == draggingData.startSquare.x && y == draggingData.startSquare.y) {
-                            paint = currentMoveSourceSquarePaint;
-                        } else if (7 - x == draggingData.currentSquare.x && y == draggingData.currentSquare.y) {
+                        if (7 - x == xTo && y == yTo) {
                             paint = currentMoveTargetSquarePaint;
                         }
                     } else {
-                        if (x == draggingData.startSquare.x && 7 - y == draggingData.startSquare.y) {
-                            paint = currentMoveSourceSquarePaint;
-                        } else if (x == draggingData.currentSquare.x && 7 - y == draggingData.currentSquare.y) {
+                        if (x == xTo && 7 - y == yTo) {
                             paint = currentMoveTargetSquarePaint;
                         }
                     }
