@@ -1046,6 +1046,12 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             }
             mp = MediaPlayer.create(getContext(), soundid);
             if (mp != null) {
+                mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        mp.reset();
+                    }
+                });
                 mp.start();
             }
         }

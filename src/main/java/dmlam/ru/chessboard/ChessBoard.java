@@ -1,6 +1,7 @@
 package dmlam.ru.chessboard;
 
 import android.graphics.Point;
+import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -1422,8 +1423,8 @@ public class ChessBoard {
     public boolean shortMove(Color player, String move, boolean forceNewVariant) {
         boolean result = false;
 
-        if (move != null && !move.isEmpty()) {
-            move = move.toLowerCase();
+        if (!TextUtils.isEmpty(move)) {
+//            move = move.toLowerCase();
 
             if (move.charAt(move.length() - 1) == '+' || move.charAt(move.length() - 1) == '#') {
                 move = move.substring(0, move.length() - 1);
@@ -1461,7 +1462,7 @@ public class ChessBoard {
                     }
                 }
                 else
-                if (move.length() > 2 && "kqrbn".indexOf(pieceLetter) >= 0) {
+                if (move.length() > 2 && "KQRBN".indexOf(pieceLetter) >= 0) {
                     String to = move.substring(move.length() - 2);
                     Point p;
 
@@ -1530,7 +1531,7 @@ public class ChessBoard {
 
                     transformation = move.charAt(move.length() - 1);
 
-                    if ("qrbn".indexOf(transformation) >= 0) {
+                    if ("QRBN".indexOf(transformation) >= 0) {
                         // promoting
                         move = move.substring(0, move.length() - 1);
                         if (move.length() > 0 && "/=".indexOf(move.charAt(move.length()-1)) >= 0) {
