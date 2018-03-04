@@ -31,9 +31,9 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(dir: 'libs', include: ['*.jar'])
     //    implementation 'com.android.support:support-annotations:22.0.0'
-    implementation 'com.android.support:support-v4:23.4.0'
-    implementation 'com.android.support:appcompat-v7:23.4.0'
-    implementation project(':androidCommonLib')
+    compile 'com.android.support:support-v4:23.4.0'
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile project(':androidCommonLib')
 }
