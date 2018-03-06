@@ -38,7 +38,7 @@ public class KingPiece extends Piece {
 
             result = chessBoard.isCastlingPossible(this.getColor(), castling) &&
                     // король не должен быть под шахом
-                    !chessBoard.getPlayerChecked(this.getColor());
+                    !chessBoard.isPlayerChecked(this.getColor());
             if (result) {
                 int delta = x > this.x ? 1 : -1;
                 int rookx = delta == 1 ? 7 : 0;

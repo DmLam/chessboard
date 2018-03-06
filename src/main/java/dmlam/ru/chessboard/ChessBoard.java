@@ -755,11 +755,11 @@ public class ChessBoard {
         return result;
     }
 
-    public boolean getPlayerChecked(Color color) {
+    public boolean isPlayerChecked(Color color) {
         return getMoveOrder() == color && currentPlayerChecked;
     }
 
-    public boolean getPlayerCheckmated(Color color) {
+    public boolean isPlayerCheckmated(Color color) {
         return getMoveOrder() == color && currentPlayerMated;
     }
 
