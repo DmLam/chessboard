@@ -889,19 +889,17 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             }
             else {
                 // был начат ход с указанием сначала конечной клетки
-                if (p != null) {
-                    if (!p.equals(draggingData.endSquare)) {
-                        // проверим, есть на указанной клетке фигура того цвета, который должен ходить и может ли она пойти на конечную клетку
-                        Piece piece = chessBoard.getPiece(p);
+                if (p != null && !p.equals(draggingData.endSquare)) {
+                    // проверим, есть на указанной клетке фигура того цвета, который должен ходить и может ли она пойти на конечную клетку
+                    Piece piece = chessBoard.getPiece(p);
 
-                        if (piece != null && piece.getColor() == chessBoard.getMoveOrder() && chessBoard.isMovePossible(piece, draggingData.endSquare)) {
-                            draggingData.startSquare = p;
-                            draggingData.piece = piece;
-                            makeMove();
-                        }
-                        else {
-                            draggingData = null;
-                        }
+                    if (piece != null && piece.getColor() == chessBoard.getMoveOrder() && chessBoard.isMovePossible(piece, draggingData.endSquare)) {
+                        draggingData.startSquare = p;
+                        draggingData.piece = piece;
+                        makeMove();
+                    }
+                    else {
+                        draggingData = null;
                     }
                 }
             }
