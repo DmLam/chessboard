@@ -14,8 +14,8 @@
     <color name="cadet_grey_white_square_finish">#fffdfdfd</color>
     <color name="cadet_grey_black_square_start">#ff7795a3</color>
     <color name="cadet_grey_black_square_finish">#ff9aabaf</color>
-    <color name="cadet_grey_current_move_source_square">#ff444444</color>  <!-- DKGRAY -->
-    <color name="cadet_grey_current_move_target_square">#ff888888</color>  <!-- GRAY -->
+    <color name="cadet_grey_current_move_source_square">#ffffbc45</color>  <!-- DKGRAY -->
+    <color name="cadet_grey_current_move_target_square">#ffffbc45</color>  <!-- GRAY -->
     <color name="cadet_grey_last_move_source_square">#ff9f9fff</color>
     <color name="cadet_grey_last_move_target_square">#ff557fff</color>
 
