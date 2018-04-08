@@ -90,7 +90,7 @@ public class BoardControlFragment extends Fragment {
         return rlBoardControl.getHeight();
     }
 
-    public int setSize(int size) {
+    public void setSize(int size) {
         for (Button button: buttons) {
             button.button.setMaxHeight(size);
         }
