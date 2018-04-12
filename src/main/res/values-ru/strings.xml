@@ -5,4 +5,10 @@
     <!--локальное меню для ChessBordView-->
     <string name="action_copy_fen">Скопировать FEN в буфер</string>
 
+    <!-- contentDescription для управляющих кнопок -->
+    <string name="rollback_description">Отменить ход</string>
+    <string name="rollup_description">Вернуть ход</string>
+    <string name="analyse_description">Запустить анализ</string>
+    <string name="cancel_analyse_description">Остановить анализ</string>
+
 </resources>

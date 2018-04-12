@@ -17,6 +17,7 @@
             android:layout_width="@dimen/control_button_size"
             android:layout_height="@dimen/control_button_size"
             android:background="@android:color/transparent"
+            android:contentDescription="@string/rollback_description"
             android:onClick="OnRollbackClick"
             android:src="@mipmap/rollback" />
     </LinearLayout>
@@ -27,15 +28,17 @@
         android:id="@+id/llRollup"
         android:layout_alignParentRight="false"
         android:layout_toRightOf="@id/llRollback" android:layout_alignParentEnd="false" android:layout_toEndOf="@id/llRollback">
+
         <ImageButton
+            android:id="@+id/ibRollup"
             android:layout_width="@dimen/control_button_size"
             android:layout_height="@dimen/control_button_size"
-            android:id="@+id/ibRollup"
-            android:src="@mipmap/rollup"
-            android:onClick="OnRollupClick"
             android:background="@android:color/transparent"
+            android:clickable="false"
+            android:contentDescription="@string/rollup_description"
             android:focusable="false"
-            android:clickable="false" />
+            android:onClick="OnRollupClick"
+            android:src="@mipmap/rollup" />
     </LinearLayout>
 
     <LinearLayout
@@ -44,15 +47,17 @@
         android:id="@+id/llAnalysis"
         android:layout_alignParentRight="false"
         android:layout_toLeftOf="@id/llCancelAnalysis" android:layout_alignParentEnd="false" android:layout_toStartOf="@id/llCancelAnalysis">
+
         <ImageButton
+            android:id="@+id/ibAnalysis"
             android:layout_width="@dimen/control_button_size"
             android:layout_height="@dimen/control_button_size"
-            android:id="@+id/ibAnalysis"
-            android:onClick="OnAnalysisClick"
             android:background="@android:color/transparent"
-            android:focusable="false"
             android:clickable="false"
+            android:contentDescription="@string/analyse_description"
+            android:focusable="false"
             android:minHeight="35dp"
+            android:onClick="OnAnalysisClick"
             android:src="@mipmap/analysis" />
     </LinearLayout>
 
@@ -61,15 +66,17 @@
         android:layout_height="wrap_content"
         android:id="@+id/llCancelAnalysis"
         android:layout_alignParentRight="true" >
+
         <ImageButton
+            android:id="@+id/ibCancelAnalysis"
             android:layout_width="@dimen/control_button_size"
             android:layout_height="@dimen/control_button_size"
-            android:id="@+id/ibCancelAnalysis"
-            android:onClick="OnCancelAnalysisClick"
             android:background="@android:color/transparent"
-            android:focusable="false"
             android:clickable="false"
+            android:contentDescription="@string/cancel_analyse_description"
+            android:focusable="false"
             android:minHeight="35dp"
+            android:onClick="OnCancelAnalysisClick"
             android:src="@mipmap/cancel_analysis" />
     </LinearLayout>
 

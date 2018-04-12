@@ -2,10 +2,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">Chess board</string>
 
-    <!--локальное меню для ChessBordView-->
+    <!-- local menu for ChessBordView-->
     <string name="action_copy_fen">Copy FEN to clipboard</string>
 
-    <!-- список существующих цветовых схем для доски. Первая в списке - схема по умолчанию-->
+    <!-- control buttons content description -->
+    <string name="rollback_description">Rollback move</string>
+    <string name="rollup_description">Rollup move</string>
+    <string name="analyse_description">Start analysis</string>
+    <string name="cancel_analyse_description">Stop analysis</string>
+
+    <!-- list of the board's color schemes -->
     <string-array name="color_schemes">
         <item>cadet_grey</item>
         <item>light_grey</item>
@@ -21,7 +27,7 @@
         <item>woodboard</item>
     </string-array>
 
-    <!--список существующих наборов фигур в формате prefix=name, где prefix - префикс для имени ресурсов соответствующего набора, name - отображаемое имя-->
+    <!-- liest of piecesets in the form of "prefix=name", where prefix - prefix of the resource name for the corresponding set, name - display name -->
     <string-array name="piecesets">
         <item>classic=Classic</item>
         <item>alpha=Alpha</item>

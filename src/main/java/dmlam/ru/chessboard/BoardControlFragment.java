@@ -87,7 +87,12 @@ public class BoardControlFragment extends Fragment {
     }
 
     public int getSize() {
-        return rlBoardControl.getHeight();
+        int size = rlBoardControl.getHeight();
+
+        if (size == 0) {
+            size = (int) getResources().getDimension(R.dimen.control_button_size);
+        }
+        return size;
     }
 
     public void setSize(int size) {
