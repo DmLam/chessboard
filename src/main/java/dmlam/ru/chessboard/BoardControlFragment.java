@@ -41,6 +41,7 @@ public class BoardControlFragment extends Fragment {
     private int bRollback, bRollup, bAnalysis, bCancelAnalysis;
     private ArrayList<ButtonGroup> buttonGroups = new ArrayList<>();
 
+    private int size = 0;
     private ScreenBackground.SCREEN_BACKGROUND background = WHITE;
 
     private class ButtonGroup {
@@ -87,11 +88,6 @@ public class BoardControlFragment extends Fragment {
     }
 
     public int getSize() {
-        int size = rlBoardControl.getHeight();
-
-        if (size == 0) {
-            size = (int) getResources().getDimension(R.dimen.control_button_size);
-        }
         return size;
     }
 
@@ -319,6 +315,8 @@ public class BoardControlFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.boardcontrol_fragment, container, false);
+
+        size = (int) getResources().getDimension(R.dimen.control_button_size);
 
         rlBoardControl = (RelativeLayout) rootView.findViewById(R.id.rlBoardControl);
         ibRollback = (ImageButton) rootView.findViewById(R.id.ibRollback);
