@@ -62,7 +62,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
     private ArrayList<IOnMoveListener> mOnMoveListeners = new ArrayList<>();
     private Paint antialiasPaint = new Paint();               // paint для гладкого масштабирования фигур
-    private Paint arrowPaint = new Paint();                   // paint для рисования стрелки
+    private Paint[] arrowPaints;                              // paint-ы для рисования стрелки
     protected float[] hLines = new float[9], vLines = new float[9];
 
     private float cellSize;
@@ -90,7 +90,8 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private int longPressMaxShift = 0;                // Максимальное смещение после нажатия до отпускания. Нужно для определения long press
 
     // стрелка для анализа
-    private String arrowCoordinates = null;
+    private int[] arrowColors = null;
+    private String[] arrowsCoordinates = null;
 
     public boolean isAllowTargetSquareFist() {
         return allowTargetSquareFist;
@@ -160,6 +161,13 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private void initialize(Context context, AttributeSet attrs, int defStyle) {
 
         if (!isInEditMode()) {
+            arrowColors = getResources().getIntArray(R.array.arrow_colors);
+            arrowsCoordinates = new String[arrowColors.length];
+            arrowPaints = new Paint[arrowColors.length];
+            for (int i = 0; i < arrowPaints.length; i++) {
+                arrowPaints[i] = new Paint();
+            }
+
             colorSchemes = new ColorSchemeList(this, getResources().getStringArray(R.array.color_schemes));
             pieceSets = new PieceSetList(getResources().getStringArray(R.array.piecesets));
 
@@ -167,11 +175,12 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             antialiasPaint.setFilterBitmap(true);
             antialiasPaint.setAntiAlias(true);
             antialiasPaint.setDither(true);
-            chessBoard.addOnMoveListener(this);
 
+            chessBoard.addOnMoveListener(this);
             chessBoard.setOnNeedPieceForTransformation(this);
 
             loadPieceSet();
+
             chessBoard.SetupInitialPosition();
         }
         else {
@@ -572,8 +581,10 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private void updateBoardPainters() {
         colorScheme.updatePainters(cellSize, min(hLines[0], vLines[0]) * 7 / 10);
 
-        arrowPaint.setColor(0xa0ffaa00);
-        arrowPaint.setAntiAlias(true);
+        for (int i = 0; i < arrowColors.length; i++) {
+            arrowPaints[i].setColor(arrowColors[i]);
+            arrowPaints[i].setAntiAlias(true);
+        }
     }
 
     @Override
@@ -950,7 +961,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         }
     }
 
-    private void drawArrow(Canvas canvas, float xStart, float yStart, float xEnd, float yEnd) {
+    private void drawArrow(Canvas canvas, Paint paint, float xStart, float yStart, float xEnd, float yEnd) {
         final float ARROW_WIDTH = (hLines[1] - hLines[0]) / 3;
         final float ARROW_HEAD_WIDTH = ARROW_WIDTH * 2;
         final float ARROW_HEAD_LENGTH = ARROW_WIDTH;
@@ -992,7 +1003,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         m.postRotate(angle);
         arrow.transform(m);
         arrow.offset(xStart, yStart);
-        canvas.drawPath(arrow, arrowPaint);
+        canvas.drawPath(arrow, paint);
     }
 
     @Override
@@ -1016,17 +1027,19 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
             }
 
 
-        if (arrowCoordinates != null) {
-            float xStart, yStart, xEnd, yEnd;
-            String fromSquare = arrowCoordinates.substring(0, 2), toSquare = arrowCoordinates.substring(2, 4);
-            Point fromPoint = getPointFromSquareName(fromSquare), toPoint = getPointFromSquareName(toSquare);
+        for (int arrowIndex = 0; arrowIndex < arrowsCoordinates.length; arrowIndex++) {
+            if (arrowsCoordinates[arrowIndex] != null) {
+                float xStart, yStart, xEnd, yEnd;
+                String fromSquare = arrowsCoordinates[arrowIndex].substring(0, 2), toSquare = arrowsCoordinates[arrowIndex].substring(2, 4);
+                Point fromPoint = getPointFromSquareName(fromSquare), toPoint = getPointFromSquareName(toSquare);
 
-            xStart = (vLines[fromPoint.x + 1] + vLines[fromPoint.x]) / 2;
-            yStart = (hLines[fromPoint.y + 1] + hLines[fromPoint.y]) / 2;
-            xEnd = (vLines[toPoint.x + 1] + vLines[toPoint.x]) / 2;
-            yEnd = (hLines[toPoint.y + 1] + hLines[toPoint.y]) / 2;
+                xStart = (vLines[fromPoint.x + 1] + vLines[fromPoint.x]) / 2;
+                yStart = (hLines[fromPoint.y + 1] + hLines[fromPoint.y]) / 2;
+                xEnd = (vLines[toPoint.x + 1] + vLines[toPoint.x]) / 2;
+                yEnd = (hLines[toPoint.y + 1] + hLines[toPoint.y]) / 2;
 
-            drawArrow(canvas, xStart, yStart, xEnd, yEnd);
+                drawArrow(canvas, arrowPaints[arrowIndex], xStart, yStart, xEnd, yEnd);
+            }
         }
 
         drawDragging(canvas);
@@ -1152,26 +1165,36 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         }
     }
 
-    public void setArrowCoordinates(String coordinates) {
+    public void setArrowCoordinates(int arrowIndex, String coordinates) {
         if ("".equals(coordinates)) {
             coordinates = null;
         }
 
         if (coordinates != null) {
-            if (coordinates.equals(arrowCoordinates)) {
+            if (coordinates.equals(arrowsCoordinates[arrowIndex])) {
                 return;
             }
         }
         else {
-            if (arrowCoordinates == null) {
+            if (arrowsCoordinates[arrowIndex] == null) {
                 return;
             }
         }
 
-        arrowCoordinates = coordinates;
+        arrowsCoordinates[arrowIndex] = coordinates;
 
         // перерисовать доску
         invalidate();
     }
 
+    public void hideArrow(int arrowIndex) {
+        setArrowCoordinates(arrowIndex, null);
+    }
+
+    public void hideArrows() {
+        for (int i = 0; i < arrowColors.length; i++) {
+            arrowsCoordinates[i] = null;
+        }
+        invalidate();
+    }
 }

@@ -6,6 +6,16 @@
     <color name="chessnotationview_lastmove">#ffffbc45</color>
     <color name="chessnotationview_comment">#ffa0a0a0</color>
 
+    <color name="analysis_arrow1">#a0ffaa00</color>
+    <color name="analysis_arrow2">#a098da4c</color>
+    <color name="analysis_arrow3">#a08085d4</color>
+
+    <array name="arrow_colors">
+        <item>@color/analysis_arrow1</item>
+        <item>@color/analysis_arrow2</item>
+        <item>@color/analysis_arrow3</item>
+    </array>
+
     <string name="cadet_grey_name">Cadet grey</string>
     <string name="cadet_grey_type">colorset</string>
     <color name="cadet_grey_border">#ff363a3d</color>
