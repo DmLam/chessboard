@@ -90,6 +90,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private int longPressMaxShift = 0;                // Максимальное смещение после нажатия до отпускания. Нужно для определения long press
 
     // стрелка для анализа
+    private int maxArrowCount = 0;
     private int[] arrowColors = null;
     private String[] arrowsCoordinates = null;
 
@@ -162,9 +163,10 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
         if (!isInEditMode()) {
             arrowColors = getResources().getIntArray(R.array.arrow_colors);
-            arrowsCoordinates = new String[arrowColors.length];
-            arrowPaints = new Paint[arrowColors.length];
-            for (int i = 0; i < arrowPaints.length; i++) {
+            maxArrowCount = arrowColors.length;
+            arrowsCoordinates = new String[maxArrowCount];
+            arrowPaints = new Paint[maxArrowCount];
+            for (int i = 0; i < maxArrowCount; i++) {
                 arrowPaints[i] = new Paint();
             }
 
@@ -581,7 +583,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     private void updateBoardPainters() {
         colorScheme.updatePainters(cellSize, min(hLines[0], vLines[0]) * 7 / 10);
 
-        for (int i = 0; i < arrowColors.length; i++) {
+        for (int i = 0; i < maxArrowCount; i++) {
             arrowPaints[i].setColor(arrowColors[i]);
             arrowPaints[i].setAntiAlias(true);
         }
@@ -1192,7 +1194,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     public void hideArrows() {
-        for (int i = 0; i < arrowColors.length; i++) {
+        for (int i = 0; i < maxArrowCount; i++) {
             arrowsCoordinates[i] = null;
         }
         invalidate();
