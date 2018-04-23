@@ -7,8 +7,8 @@
     <color name="chessnotationview_comment">#ffa0a0a0</color>
 
     <color name="analysis_arrow1">#a0ffaa00</color>
-    <color name="analysis_arrow2">#a098da4c</color>
-    <color name="analysis_arrow3">#a08085d4</color>
+    <color name="analysis_arrow2">#a0ffc44d</color>
+    <color name="analysis_arrow3">#a0ffdd99</color>
 
     <array name="arrow_colors">
         <item>@color/analysis_arrow1</item>
