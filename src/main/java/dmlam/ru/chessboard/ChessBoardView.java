@@ -282,6 +282,8 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
 
     public ChessBoardView(Context context) {
         super(context);
+
+        initialize(context, null, 0);
     }
 
     public ChessBoardView (Context context, AttributeSet attrs) {
@@ -390,6 +392,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         int w = getMeasuredWidth(), h = getMeasuredHeight();
         int size;
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
@@ -404,6 +407,7 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         if (widthMode == MeasureSpec.UNSPECIFIED && heightMode == MeasureSpec.AT_MOST) {
             size = h;
         }
+        else
         if (widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.UNSPECIFIED) {
             size = Math.min(widthSize, w);
         }
@@ -415,12 +419,13 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         if (widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.AT_MOST) {
             size = Math.min(h, heightSize);
         }
+        else
         if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.UNSPECIFIED) {
-            size = Math.min(w, widthSize);
+            size = Math.max(w, widthSize);
         }
         else
         if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.EXACTLY) {
-            size = Math.min(widthSize, heightSize);
+            size = heightSize;
         }
         else
         if (widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.AT_MOST) {

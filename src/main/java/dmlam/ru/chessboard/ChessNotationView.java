@@ -197,6 +197,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
     public ChessNotationView(Context context) {
         super(context);
+
+        initialize(context, null, 0);
     }
 
     public ChessNotationView(Context context, AttributeSet attrs) {
