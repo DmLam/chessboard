@@ -1,6 +1,6 @@
 package dmlam.ru.chessboard;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,9 +9,8 @@ import android.graphics.PorterDuff;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,24 +21,23 @@ import android.widget.RelativeLayout;
 import java.util.ArrayList;
 
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostLeft;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostRight;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toLeftOf;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toRightOf;
 import static dmlam.ru.chessboard.ScreenBackground.SCREEN_BACKGROUND.WHITE;
 
-/**
- * Created by Lam on 28.07.2015.
- */
-public class BoardControlFragment extends Fragment {
-    public enum Analysis {NONE, ANALYSIS, CANCEL_ANALYSIS}
+public class BoardControlView extends RelativeLayout {
 
+    public enum Analysis {NONE, ANALYSIS, CANCEL_ANALYSIS}
     public enum CONTROLBUTTON {ROLLBACK, ROLLUP, ANALYSIS, CANCEL_ANALYSIS}
     public enum ButtonPosition {mostLeft, toLeftOf, toRightOf, mostRight}
 
-    private FragmentActivity activity = null;
-    private RelativeLayout rlBoardControl = null;
     private ImageButton ibRollback, ibRollup, ibAnalysis, ibCancelAnalysis;
 
-    private ArrayList<Button> buttons = new ArrayList<>();
+    private ArrayList<BoardControlView.Button> buttons = new ArrayList<>();
     private int bRollback, bRollup, bAnalysis, bCancelAnalysis;
-    private ArrayList<ButtonGroup> buttonGroups = new ArrayList<>();
+    private ArrayList<BoardControlView.ButtonGroup> buttonGroups = new ArrayList<>();
 
     private int size = 0;
     private ScreenBackground.SCREEN_BACKGROUND background = WHITE;
@@ -71,7 +69,7 @@ public class BoardControlFragment extends Fragment {
         boolean visible = true; // для сохранения состояния при смене конфигурации
         private int mipmapResourceId;
         private int frameColor = Color.TRANSPARENT;
-        private ButtonPosition buttonPosition;
+        private BoardControlView.ButtonPosition buttonPosition;
         private int anchorButtonIndex = -1;
 
         Button(ImageButton button, int frameId, int mipmapResourceId) {
@@ -80,7 +78,7 @@ public class BoardControlFragment extends Fragment {
             this.mipmapResourceId = mipmapResourceId;
         }
 
-        Button(ImageButton button, int frameId, int mipmapResourceId, ButtonPosition buttonPosition, int anchorButtonIndex) {
+        Button(ImageButton button, int frameId, int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition, int anchorButtonIndex) {
             this(button, frameId, mipmapResourceId);
             this.buttonPosition = buttonPosition;
             this.anchorButtonIndex = anchorButtonIndex;
@@ -92,20 +90,36 @@ public class BoardControlFragment extends Fragment {
     }
 
     public void setSize(int size) {
-        for (Button button: buttons) {
+        for (BoardControlView.Button button: buttons) {
             button.button.setMaxHeight(size);
         }
-
-        this.size = size;
     }
 
-    private int registerButton(ImageButton button, int mipmapResourceId) {
-        int index = buttons.size();
-        Button newButton = new Button(button,((View) button.getParent()).getId(), mipmapResourceId);
-        buttons.add(newButton);
-        newButton.visible = button.getVisibility() == View.VISIBLE;
+    private void initialize(Context context) {
+        size = (int) getResources().getDimension(R.dimen.control_button_size);
 
-        return index;
+        bRollback = addButton(R.id.ibRollback, mostLeft);
+        bRollup = addButton(R.id.ibRollup, toRightOf, bRollback);
+        bCancelAnalysis = addButton(R.id.ibCancelAnalysis, mostRight);
+        bAnalysis = addButton(R.id.ibAnalysis, toLeftOf, bCancelAnalysis);
+    }
+
+    public BoardControlView(Context context) {
+        super(context);
+
+        initialize(context);
+    }
+
+    public BoardControlView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        initialize(context);
+    }
+
+    public BoardControlView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+
+        initialize(context);
     }
 
     // используем т.к. до API 23 не было getRule
@@ -121,8 +135,8 @@ public class BoardControlFragment extends Fragment {
     private enum ButtonSide {LEFT, RIGHT}
 
     // добавляет кнопку в начале или в конце
-    private void addStartingButton(RelativeLayout.LayoutParams frameLayoutParams, ButtonSide buttonSide, int anchorButtonIndex) {
-        int alignment = buttonSide == ButtonSide.LEFT ? RelativeLayout.ALIGN_PARENT_LEFT : RelativeLayout.ALIGN_PARENT_RIGHT;
+    private void addStartingButton(RelativeLayout.LayoutParams frameLayoutParams, BoardControlView.ButtonSide buttonSide, int anchorButtonIndex) {
+        int alignment = buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.ALIGN_PARENT_LEFT : RelativeLayout.ALIGN_PARENT_RIGHT;
         int anchorButtonFrameId = ((View) buttons.get(anchorButtonIndex).button.getParent()).getId();
 
         // найдем все кнопки, которые уже привязаны к указанной стороне и привяжем их слева (справа) к новой кнопке
@@ -134,7 +148,7 @@ public class BoardControlFragment extends Fragment {
 
                 if (rule != 0) {
                     removeRelativeLayoutParamsRule(params, alignment);
-                    params.addRule(buttonSide == ButtonSide.LEFT ? RelativeLayout.RIGHT_OF : RelativeLayout.LEFT_OF, anchorButtonFrameId);
+                    params.addRule(buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.RIGHT_OF : RelativeLayout.LEFT_OF, anchorButtonFrameId);
                     buttonFrame.setLayoutParams(params);
                 }
             }
@@ -143,8 +157,8 @@ public class BoardControlFragment extends Fragment {
     }
 
     // добавляет кнопку справа или слева от указанной
-    private void addSideButtonTo(RelativeLayout.LayoutParams frameLayoutParams, int oldAnchorButtonIndex, int newAnchorButtonIndex, ButtonSide buttonSide) {
-        int alignment = buttonSide == ButtonSide.LEFT ? RelativeLayout.LEFT_OF : RelativeLayout.RIGHT_OF;
+    private void addSideButtonTo(RelativeLayout.LayoutParams frameLayoutParams, int oldAnchorButtonIndex, int newAnchorButtonIndex, BoardControlView.ButtonSide buttonSide) {
+        int alignment = buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.LEFT_OF : RelativeLayout.RIGHT_OF;
         int oldAnchorButtonFrameId = ((View) buttons.get(oldAnchorButtonIndex).button.getParent()).getId();
         int newAnchorButtonFrameId = ((View) buttons.get(newAnchorButtonIndex).button.getParent()).getId();
 
@@ -166,16 +180,15 @@ public class BoardControlFragment extends Fragment {
         frameLayoutParams.addRule(alignment, oldAnchorButtonFrameId);
     }
 
-    public int addButton(int mipmapResourceId, ButtonPosition buttonPosition, int anchorButtonIndex) {
+    public int addButton(int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition, int anchorButtonIndex) {
         return addButton(-1, mipmapResourceId, buttonPosition, anchorButtonIndex);
     }
-
     // buttonIndex - индекс кнопки в массиве button. При смене конфигурации массив buttons содержит описания кнопок, а соответствующие view уже удалены
     // поэтому нужно пересоздать только View - для этого указывает индекс уже существующих элементов в списке buttons. Иначе buttonIndex должен быть -1
-    private int addButton(int buttonIndex, int mipmapResourceId, ButtonPosition buttonPosition, int anchorButtonIndex) {
+    private int addButton(int buttonIndex, int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition, int anchorButtonIndex) {
         int result = buttonIndex == -1 ? buttons.size() : buttonIndex;
-        LinearLayout frame = new LinearLayout(activity);
-        ImageButton imageButton = new ImageButton(activity);
+        LinearLayout frame = new LinearLayout(getContext());
+        ImageButton imageButton = new ImageButton(getContext());
         LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(getSize(), getSize());
         RelativeLayout.LayoutParams frameLayoutParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
 
@@ -184,43 +197,48 @@ public class BoardControlFragment extends Fragment {
         frame.setId(result + 1);
         frame.addView(imageButton, buttonLayoutParams);
         if (buttonIndex == -1) {
-            buttons.add(new Button(imageButton, frame.getId(), mipmapResourceId, buttonPosition, anchorButtonIndex));
+            buttons.add(new BoardControlView.Button(imageButton, frame.getId(), mipmapResourceId, buttonPosition, anchorButtonIndex));
         }
         else {
-            Button button = buttons.get(result);
+            BoardControlView.Button button = buttons.get(result);
 
             button.button = imageButton;
         }
 
         switch (buttonPosition) {
             case mostLeft:
-                addStartingButton(frameLayoutParams, ButtonSide.LEFT, result);
+                addStartingButton(frameLayoutParams, BoardControlView.ButtonSide.LEFT, result);
                 break;
             case toLeftOf:
-                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, ButtonSide.LEFT);
+                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, BoardControlView.ButtonSide.LEFT);
                 break;
             case toRightOf:
-                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, ButtonSide.RIGHT);
+                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, BoardControlView.ButtonSide.RIGHT);
                 break;
             case mostRight:
-                addStartingButton(frameLayoutParams, ButtonSide.RIGHT, result);
+                addStartingButton(frameLayoutParams, BoardControlView.ButtonSide.RIGHT, result);
                 break;
             default:
                 assert(false);
         }
-        rlBoardControl.addView(frame, frameLayoutParams);
+        addView(frame, frameLayoutParams);
 
         DrawButton(result);
 
         return result;
     }
 
-    public int addButton(int mipmapResourceId, ButtonPosition buttonPosition) {
-        return addButton(mipmapResourceId, buttonPosition, -1);
+    public int addButton(int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition) {
+        if (buttonPosition == mostLeft || buttonPosition == mostRight) {
+            return addButton(mipmapResourceId, buttonPosition, -1);
+        }
+        else {
+            throw new RuntimeException("Anchor button index is absent");
+        }
     }
 
     public void setButtonClickListener(int buttonIndex,View.OnClickListener onClickListener) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
         button.button.setOnClickListener(onClickListener);
     }
@@ -232,7 +250,7 @@ public class BoardControlFragment extends Fragment {
         for (int i = 0; i < buttons.length; i++) {
             array[i] = buttons[i];
         }
-        buttonGroups.add(new ButtonGroup(array));
+        buttonGroups.add(new BoardControlView.ButtonGroup(array));
 
         return index;
     }
@@ -247,7 +265,7 @@ public class BoardControlFragment extends Fragment {
         }
     }
 
-    public int getButton(CONTROLBUTTON CONTROLBUTTON) {
+    public int getButton(BoardControlView.CONTROLBUTTON CONTROLBUTTON) {
         switch (CONTROLBUTTON) {
             case ROLLBACK:
                 return bRollback;
@@ -263,7 +281,7 @@ public class BoardControlFragment extends Fragment {
     }
 
     public void setButtonImage(int buttonIndex, int mipmapResourceId) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
         if (button != null && button.mipmapResourceId != mipmapResourceId) {
             button.mipmapResourceId = mipmapResourceId;
@@ -273,7 +291,7 @@ public class BoardControlFragment extends Fragment {
     }
 
     public void setButtonFrame(int buttonIndex, int frameColor) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
         if (button != null && button.frameColor != frameColor) {
             button.frameColor = frameColor;
@@ -286,74 +304,6 @@ public class BoardControlFragment extends Fragment {
         setButtonFrame(buttonIndex, Color.TRANSPARENT);
     }
 
-    @Override
-    public void onAttach (Activity activity) {
-        super.onAttach(activity);
-
-        this.activity = (FragmentActivity) activity;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        activity = null;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-//        setRetainInstance(true);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        setEnabled(true);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.boardcontrol_fragment, container, false);
-
-        size = (int) getResources().getDimension(R.dimen.control_button_size);
-
-        rlBoardControl = (RelativeLayout) rootView.findViewById(R.id.rlBoardControl);
-        ibRollback = (ImageButton) rootView.findViewById(R.id.ibRollback);
-        ibRollup = (ImageButton) rootView.findViewById(R.id.ibRollup);
-        ibAnalysis = (ImageButton) rootView.findViewById(R.id.ibAnalysis);
-        ibCancelAnalysis = (ImageButton) rootView.findViewById(R.id.ibCancelAnalysis);
-
-        if (savedInstanceState == null) {
-            bRollback = registerButton(ibRollback, R.mipmap.rollback);                              // 0
-            bRollup = registerButton(ibRollup, R.mipmap.rollup);                                    // 1
-            bAnalysis = registerButton(ibAnalysis, R.mipmap.analysis);                              // 4
-            bCancelAnalysis = registerButton(ibCancelAnalysis, R.mipmap.cancel_analysis);           // 5
-        }
-        else {
-            // savedInstanceState != null - fragment is being restored after changing configuration. Buttons already registered
-            for (int i = 0; i < buttons.size(); i++) {
-                Button button = buttons.get(i);
-                ViewGroup frame = (ViewGroup) rlBoardControl.findViewById(button.frameId);
-                if (frame != null) {
-                    // Button is already exists with its frame - standard button created in the layout
-                    button.button = (ImageButton) frame.getChildAt(0);
-
-                }
-                else {
-                    // button and its frame doesn't exists - dynamically created button, need to recreate it using info in buttons
-                    addButton(i, button.mipmapResourceId, button.buttonPosition, button.anchorButtonIndex);
-                }
-
-                setButtonVisibility(i, button.visible);
-            }
-        }
-
-        return rootView;
-    }
-
     public void setBackground(ScreenBackground.SCREEN_BACKGROUND background) {
         this.background = background;
 
@@ -363,7 +313,7 @@ public class BoardControlFragment extends Fragment {
     }
 
     public void setButtonVisibility(int buttonIndex, boolean visible) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
         button.visible = visible;
         button.button.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -374,7 +324,7 @@ public class BoardControlFragment extends Fragment {
     }
 
     public void setButtonEnabled(int buttonIndex, boolean enabled) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
         if (button.enabled != enabled) {
             button.enabled = enabled;
@@ -388,26 +338,26 @@ public class BoardControlFragment extends Fragment {
     }
 
     public void setButtonSelected(int buttonIndex, boolean selected) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
         if (button.button.isSelected() != selected) {
             button.button.setSelected(selected);
         }
     }
 
-    public void setAnalysisButtonVisibility(Analysis button) {
+    public void setAnalysisButtonVisibility(BoardControlView.Analysis button) {
         switch (button) {
             case NONE:
-                setButtonVisibility(getButton(CONTROLBUTTON.ANALYSIS), false);
-                setButtonVisibility(getButton(CONTROLBUTTON.CANCEL_ANALYSIS), false);
+                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.ANALYSIS), false);
+                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.CANCEL_ANALYSIS), false);
                 break;
             case ANALYSIS:
-                setButtonVisibility(getButton(CONTROLBUTTON.ANALYSIS), true);
-                setButtonVisibility(getButton(CONTROLBUTTON.CANCEL_ANALYSIS), false);
+                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.ANALYSIS), true);
+                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.CANCEL_ANALYSIS), false);
                 break;
             case CANCEL_ANALYSIS:
-                setButtonVisibility(getButton(CONTROLBUTTON.ANALYSIS), false);
-                setButtonVisibility(getButton(CONTROLBUTTON.CANCEL_ANALYSIS), true);
+                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.ANALYSIS), false);
+                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.CANCEL_ANALYSIS), true);
                 break;
             default:
                 assert(false);
@@ -427,7 +377,7 @@ public class BoardControlFragment extends Fragment {
     }
 
     private void DrawButton(int buttonIndex) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
         if (activity != null) {
             setImageButtonDrawable(button.enabled && buttonGroupsEnabled(buttonIndex), button.button, button.mipmapResourceId, button.frameColor);
@@ -456,7 +406,7 @@ public class BoardControlFragment extends Fragment {
         item.setEnabled(enabled);
 
         // используем ContextCompat т.к. getDrawable(int) deprecated в API >= 21
-        Drawable originalIcon = ContextCompat.getDrawable(activity, iconResId);
+        Drawable originalIcon = ContextCompat.getDrawable(getContext(), iconResId);
 
         Drawable icon = imageEnabled ? originalIcon : convertDrawableToGrayScale(originalIcon);
 
@@ -499,4 +449,5 @@ public class BoardControlFragment extends Fragment {
         r.setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN);
         return r;
     }
+
 }
