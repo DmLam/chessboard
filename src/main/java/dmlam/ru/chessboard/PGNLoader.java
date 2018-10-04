@@ -1,6 +1,7 @@
 package dmlam.ru.chessboard;
 
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -317,7 +318,7 @@ public class PGNLoader {
         readLine(in);  // skip empty line between tags and moves
 
         line = readLine(in);
-        while (!"".equals(line)) {
+        while (!TextUtils.isEmpty(line)) {
             line = line.trim();
 
             if (!moves.isEmpty()) {

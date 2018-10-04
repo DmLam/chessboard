@@ -33,5 +33,8 @@
         <item>alpha=Alpha</item>
         <item>uscf=USCF</item>
         <item>wiki=Wiki</item>
+        <item>merida=Merida</item>
+        <item>leipzig=Leipzig</item>
+        <item>cburnett=CBurnett</item>
     </string-array>
 </resources>
