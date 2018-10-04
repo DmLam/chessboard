@@ -304,7 +304,7 @@ public class BoardControlFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        setRetainInstance(true);
+        setRetainInstance(true);
     }
 
     @Override
@@ -329,8 +329,8 @@ public class BoardControlFragment extends Fragment {
         if (savedInstanceState == null) {
             bRollback = registerButton(ibRollback, R.mipmap.rollback);                              // 0
             bRollup = registerButton(ibRollup, R.mipmap.rollup);                                    // 1
-            bAnalysis = registerButton(ibAnalysis, R.mipmap.analysis);                              // 4
-            bCancelAnalysis = registerButton(ibCancelAnalysis, R.mipmap.cancel_analysis);           // 5
+            bAnalysis = registerButton(ibAnalysis, R.mipmap.analysis);                              // 2
+            bCancelAnalysis = registerButton(ibCancelAnalysis, R.mipmap.cancel_analysis);           // 3
         }
         else {
             // savedInstanceState != null - fragment is being restored after changing configuration. Buttons already registered

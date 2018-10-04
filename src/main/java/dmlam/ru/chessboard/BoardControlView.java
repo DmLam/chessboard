@@ -8,12 +8,10 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
+import android.os.Parcel;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -23,24 +21,23 @@ import java.util.ArrayList;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostLeft;
 import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostRight;
-import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toLeftOf;
 import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toRightOf;
+import static dmlam.ru.chessboard.ScreenBackground.SCREEN_BACKGROUND;
 import static dmlam.ru.chessboard.ScreenBackground.SCREEN_BACKGROUND.WHITE;
 
-public class BoardControlView extends RelativeLayout {
+public class BoardControlView extends RelativeLayout implements IOnMoveListener, View.OnClickListener {
 
     public enum Analysis {NONE, ANALYSIS, CANCEL_ANALYSIS}
     public enum CONTROLBUTTON {ROLLBACK, ROLLUP, ANALYSIS, CANCEL_ANALYSIS}
     public enum ButtonPosition {mostLeft, toLeftOf, toRightOf, mostRight}
 
-    private ImageButton ibRollback, ibRollup, ibAnalysis, ibCancelAnalysis;
-
-    private ArrayList<BoardControlView.Button> buttons = new ArrayList<>();
+    private ChessBoard chessBoard;
     private int bRollback, bRollup, bAnalysis, bCancelAnalysis;
-    private ArrayList<BoardControlView.ButtonGroup> buttonGroups = new ArrayList<>();
+    private ArrayList<Button> buttons = new ArrayList<>();
+    private ArrayList<ButtonGroup> buttonGroups = new ArrayList<>();
 
     private int size = 0;
-    private ScreenBackground.SCREEN_BACKGROUND background = WHITE;
+    private SCREEN_BACKGROUND background = WHITE;
 
     private class ButtonGroup {
         private int[] buttons;
@@ -78,10 +75,19 @@ public class BoardControlView extends RelativeLayout {
             this.mipmapResourceId = mipmapResourceId;
         }
 
-        Button(ImageButton button, int frameId, int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition, int anchorButtonIndex) {
+        Button(ImageButton button, int frameId, int mipmapResourceId, ButtonPosition buttonPosition, int anchorButtonIndex) {
             this(button, frameId, mipmapResourceId);
             this.buttonPosition = buttonPosition;
             this.anchorButtonIndex = anchorButtonIndex;
+        }
+
+        protected Button(Parcel in) {
+            frameId = in.readInt();
+            enabled = in.readByte() != 0;
+            visible = in.readByte() != 0;
+            mipmapResourceId = in.readInt();
+            frameColor = in.readInt();
+            anchorButtonIndex = in.readInt();
         }
     }
 
@@ -90,7 +96,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     public void setSize(int size) {
-        for (BoardControlView.Button button: buttons) {
+        for (Button button: buttons) {
             button.button.setMaxHeight(size);
         }
     }
@@ -98,10 +104,15 @@ public class BoardControlView extends RelativeLayout {
     private void initialize(Context context) {
         size = (int) getResources().getDimension(R.dimen.control_button_size);
 
-        bRollback = addButton(R.id.ibRollback, mostLeft);
-        bRollup = addButton(R.id.ibRollup, toRightOf, bRollback);
-        bCancelAnalysis = addButton(R.id.ibCancelAnalysis, mostRight);
-        bAnalysis = addButton(R.id.ibAnalysis, toLeftOf, bCancelAnalysis);
+        bRollback = addButton(R.mipmap.rollback, mostLeft);
+        bRollup = addButton(R.mipmap.rollup, toRightOf, bRollback);
+        bCancelAnalysis = addButton(R.mipmap.cancel_analysis, mostRight);
+        bAnalysis = addButton(R.mipmap.analysis, mostRight);
+
+        setButtonEnabled(bRollback, false);
+        setButtonEnabled(bRollup, false);
+        setButtonVisibility(bAnalysis, false);
+        setButtonVisibility(bCancelAnalysis, false);
     }
 
     public BoardControlView(Context context) {
@@ -122,6 +133,67 @@ public class BoardControlView extends RelativeLayout {
         initialize(context);
     }
 
+    public void setChessBoard(ChessBoard chessBoard) {
+        if (chessBoard != null) {
+            chessBoard.deleteOnMoveListener(this);
+            setButtonEnabled(bRollback, false);
+            setButtonEnabled(bRollup, false);
+        }
+
+        this.chessBoard = chessBoard;
+
+        if (chessBoard != null) {
+            chessBoard.addOnMoveListener(this);
+            setButtonEnabled(bRollback, true);
+            setButtonEnabled(bRollup, true);
+            setButtonEnabled(bRollback, chessBoard.rollbackEnabled());
+            setButtonEnabled(bRollup, chessBoard.rollupEnabled());
+        }
+    }
+
+    @Override
+    public boolean onMove(Move move) {
+        return true;
+    }
+
+    @Override
+    public void onRollback(Move move) {
+
+    }
+
+    @Override
+    public void onRollup(Move move) {
+
+    }
+
+    @Override
+    public void onGoto(Move move) {
+
+    }
+
+    @Override
+    public void onBoardChange() {
+        setButtonEnabled(bRollback, chessBoard.rollbackEnabled());
+        setButtonEnabled(bRollup, chessBoard.rollupEnabled());
+    }
+
+    @Override
+    public void afterMove(Move move) {
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (chessBoard != null) {
+            if (v == buttons.get(bRollback).button) {
+                chessBoard.rollback();
+            }
+            else if (v == buttons.get(bRollup).button) {
+                chessBoard.rollup();
+            }
+        }
+    }
+
     // используем т.к. до API 23 не было getRule
     private int getRelativeLayoutParamsRule(RelativeLayout.LayoutParams params, int rule) {
         return params.getRules()[rule];
@@ -135,7 +207,7 @@ public class BoardControlView extends RelativeLayout {
     private enum ButtonSide {LEFT, RIGHT}
 
     // добавляет кнопку в начале или в конце
-    private void addStartingButton(RelativeLayout.LayoutParams frameLayoutParams, BoardControlView.ButtonSide buttonSide, int anchorButtonIndex) {
+    private void addStartingButton(RelativeLayout.LayoutParams frameLayoutParams, ButtonSide buttonSide, int anchorButtonIndex) {
         int alignment = buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.ALIGN_PARENT_LEFT : RelativeLayout.ALIGN_PARENT_RIGHT;
         int anchorButtonFrameId = ((View) buttons.get(anchorButtonIndex).button.getParent()).getId();
 
@@ -157,7 +229,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     // добавляет кнопку справа или слева от указанной
-    private void addSideButtonTo(RelativeLayout.LayoutParams frameLayoutParams, int oldAnchorButtonIndex, int newAnchorButtonIndex, BoardControlView.ButtonSide buttonSide) {
+    private void addSideButtonTo(RelativeLayout.LayoutParams frameLayoutParams, int oldAnchorButtonIndex, int newAnchorButtonIndex, ButtonSide buttonSide) {
         int alignment = buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.LEFT_OF : RelativeLayout.RIGHT_OF;
         int oldAnchorButtonFrameId = ((View) buttons.get(oldAnchorButtonIndex).button.getParent()).getId();
         int newAnchorButtonFrameId = ((View) buttons.get(newAnchorButtonIndex).button.getParent()).getId();
@@ -180,12 +252,13 @@ public class BoardControlView extends RelativeLayout {
         frameLayoutParams.addRule(alignment, oldAnchorButtonFrameId);
     }
 
-    public int addButton(int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition, int anchorButtonIndex) {
+    public int addButton(int mipmapResourceId, ButtonPosition buttonPosition, int anchorButtonIndex) {
         return addButton(-1, mipmapResourceId, buttonPosition, anchorButtonIndex);
     }
+
     // buttonIndex - индекс кнопки в массиве button. При смене конфигурации массив buttons содержит описания кнопок, а соответствующие view уже удалены
     // поэтому нужно пересоздать только View - для этого указывает индекс уже существующих элементов в списке buttons. Иначе buttonIndex должен быть -1
-    private int addButton(int buttonIndex, int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition, int anchorButtonIndex) {
+    private int addButton(int buttonIndex, int mipmapResourceId, ButtonPosition buttonPosition, int anchorButtonIndex) {
         int result = buttonIndex == -1 ? buttons.size() : buttonIndex;
         LinearLayout frame = new LinearLayout(getContext());
         ImageButton imageButton = new ImageButton(getContext());
@@ -197,26 +270,26 @@ public class BoardControlView extends RelativeLayout {
         frame.setId(result + 1);
         frame.addView(imageButton, buttonLayoutParams);
         if (buttonIndex == -1) {
-            buttons.add(new BoardControlView.Button(imageButton, frame.getId(), mipmapResourceId, buttonPosition, anchorButtonIndex));
+            buttons.add(new Button(imageButton, frame.getId(), mipmapResourceId, buttonPosition, anchorButtonIndex));
         }
         else {
-            BoardControlView.Button button = buttons.get(result);
+            Button button = buttons.get(result);
 
             button.button = imageButton;
         }
 
         switch (buttonPosition) {
             case mostLeft:
-                addStartingButton(frameLayoutParams, BoardControlView.ButtonSide.LEFT, result);
+                addStartingButton(frameLayoutParams, ButtonSide.LEFT, result);
                 break;
             case toLeftOf:
-                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, BoardControlView.ButtonSide.LEFT);
+                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, ButtonSide.LEFT);
                 break;
             case toRightOf:
-                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, BoardControlView.ButtonSide.RIGHT);
+                addSideButtonTo(frameLayoutParams, anchorButtonIndex, result, ButtonSide.RIGHT);
                 break;
             case mostRight:
-                addStartingButton(frameLayoutParams, BoardControlView.ButtonSide.RIGHT, result);
+                addStartingButton(frameLayoutParams, ButtonSide.RIGHT, result);
                 break;
             default:
                 assert(false);
@@ -225,10 +298,12 @@ public class BoardControlView extends RelativeLayout {
 
         DrawButton(result);
 
+        imageButton.setOnClickListener(this);
+
         return result;
     }
 
-    public int addButton(int mipmapResourceId, BoardControlView.ButtonPosition buttonPosition) {
+    public int addButton(int mipmapResourceId, ButtonPosition buttonPosition) {
         if (buttonPosition == mostLeft || buttonPosition == mostRight) {
             return addButton(mipmapResourceId, buttonPosition, -1);
         }
@@ -238,7 +313,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     public void setButtonClickListener(int buttonIndex,View.OnClickListener onClickListener) {
-        BoardControlView.Button button = buttons.get(buttonIndex);
+        Button button = buttons.get(buttonIndex);
 
         button.button.setOnClickListener(onClickListener);
     }
@@ -250,7 +325,7 @@ public class BoardControlView extends RelativeLayout {
         for (int i = 0; i < buttons.length; i++) {
             array[i] = buttons[i];
         }
-        buttonGroups.add(new BoardControlView.ButtonGroup(array));
+        buttonGroups.add(new ButtonGroup(array));
 
         return index;
     }
@@ -265,8 +340,8 @@ public class BoardControlView extends RelativeLayout {
         }
     }
 
-    public int getButton(BoardControlView.CONTROLBUTTON CONTROLBUTTON) {
-        switch (CONTROLBUTTON) {
+    public int getButton(CONTROLBUTTON ControlButton) {
+        switch (ControlButton) {
             case ROLLBACK:
                 return bRollback;
             case ROLLUP:
@@ -281,7 +356,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     public void setButtonImage(int buttonIndex, int mipmapResourceId) {
-        BoardControlView.Button button = buttons.get(buttonIndex);
+        Button button = buttons.get(buttonIndex);
 
         if (button != null && button.mipmapResourceId != mipmapResourceId) {
             button.mipmapResourceId = mipmapResourceId;
@@ -291,7 +366,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     public void setButtonFrame(int buttonIndex, int frameColor) {
-        BoardControlView.Button button = buttons.get(buttonIndex);
+        Button button = buttons.get(buttonIndex);
 
         if (button != null && button.frameColor != frameColor) {
             button.frameColor = frameColor;
@@ -304,7 +379,7 @@ public class BoardControlView extends RelativeLayout {
         setButtonFrame(buttonIndex, Color.TRANSPARENT);
     }
 
-    public void setBackground(ScreenBackground.SCREEN_BACKGROUND background) {
+    public void setBackground(SCREEN_BACKGROUND background) {
         this.background = background;
 
         for (int i = 0; i < buttons.size(); i++) {
@@ -313,7 +388,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     public void setButtonVisibility(int buttonIndex, boolean visible) {
-        BoardControlView.Button button = buttons.get(buttonIndex);
+        Button button = buttons.get(buttonIndex);
 
         button.visible = visible;
         button.button.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -324,7 +399,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     public void setButtonEnabled(int buttonIndex, boolean enabled) {
-        BoardControlView.Button button = buttons.get(buttonIndex);
+        Button button = buttons.get(buttonIndex);
 
         if (button.enabled != enabled) {
             button.enabled = enabled;
@@ -338,7 +413,7 @@ public class BoardControlView extends RelativeLayout {
     }
 
     public void setButtonSelected(int buttonIndex, boolean selected) {
-        BoardControlView.Button button = buttons.get(buttonIndex);
+        Button button = buttons.get(buttonIndex);
 
         if (button.button.isSelected() != selected) {
             button.button.setSelected(selected);
@@ -348,16 +423,16 @@ public class BoardControlView extends RelativeLayout {
     public void setAnalysisButtonVisibility(BoardControlView.Analysis button) {
         switch (button) {
             case NONE:
-                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.ANALYSIS), false);
-                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.CANCEL_ANALYSIS), false);
+                setButtonVisibility(getButton(CONTROLBUTTON.ANALYSIS), false);
+                setButtonVisibility(getButton(CONTROLBUTTON.CANCEL_ANALYSIS), false);
                 break;
             case ANALYSIS:
-                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.ANALYSIS), true);
-                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.CANCEL_ANALYSIS), false);
+                setButtonVisibility(getButton(CONTROLBUTTON.ANALYSIS), true);
+                setButtonVisibility(getButton(CONTROLBUTTON.CANCEL_ANALYSIS), false);
                 break;
             case CANCEL_ANALYSIS:
-                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.ANALYSIS), false);
-                setButtonVisibility(getButton(BoardControlView.CONTROLBUTTON.CANCEL_ANALYSIS), true);
+                setButtonVisibility(getButton(CONTROLBUTTON.ANALYSIS), false);
+                setButtonVisibility(getButton(CONTROLBUTTON.CANCEL_ANALYSIS), true);
                 break;
             default:
                 assert(false);
@@ -379,9 +454,7 @@ public class BoardControlView extends RelativeLayout {
     private void DrawButton(int buttonIndex) {
         BoardControlView.Button button = buttons.get(buttonIndex);
 
-        if (activity != null) {
-            setImageButtonDrawable(button.enabled && buttonGroupsEnabled(buttonIndex), button.button, button.mipmapResourceId, button.frameColor);
-        }
+        setImageButtonDrawable(button.enabled && buttonGroupsEnabled(buttonIndex), button.button, button.mipmapResourceId, button.frameColor);
     }
 
     public void setEnabled(boolean enabled) {
