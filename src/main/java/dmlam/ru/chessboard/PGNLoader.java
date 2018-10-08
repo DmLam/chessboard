@@ -218,7 +218,7 @@ public class PGNLoader {
         Move variantStart = null;
         String comment = parseComment(moves);
 
-        if (!"".equals(comment)) {
+        if (!TextUtils.isEmpty(comment)) {
             if (chessboard.getLastMove() == null) {
                 chessboard.getFirstMoveVariants().setComment(comment);
             } else {
@@ -513,11 +513,11 @@ public class PGNLoader {
         } catch (IOException E) {
             Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.toString()));
 
-            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (%s, line %d): %s", moves, lineNum, E.getMessage()));
+            throw new PGNError(String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.getMessage()));
         } catch (PGNError E) {
             Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.toString()));
 
-            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (%s, line %d): %s", moves, lineNum, E.getMessage()));
+            throw new PGNError(String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.getMessage()));
         }
 
         return result;
