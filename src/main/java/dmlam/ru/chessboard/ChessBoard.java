@@ -1519,7 +1519,7 @@ public class ChessBoard {
                     } else {
                         // pawn move - special case
                         String to;
-                        Point p;
+                        Point pTo;
 
                         listPieces(PAWN, player, pieces);
 
@@ -1538,44 +1538,60 @@ public class ChessBoard {
 
                         to = move.substring(move.length() - 2);
                         try {
-                            p = getPointFromSquareName(to);
+                            pTo = getPointFromSquareName(to);
                         } catch (ErrorIllegalSquareName E) {
-                            p = null;
+                            pTo = null;
                         }
 
-                        if (p != null) {
+                        if (pTo != null) {
                             move = move.substring(0, move.length() - 2);
 
                             if (move.length() == 2 && move.charAt(1) == 'x') {
                                 // capturing
-                                if (squares[p.x][p.y] != null && squares[p.x][p.y].getColor() != player) {
-                                    int fromRow = getLetterRow(move.charAt(0));
+                                int fromRow = getLetterRow(move.charAt(0));
+
+                                if (squares[pTo.x][pTo.y] != null && squares[pTo.x][pTo.y].getColor() != player) {
 
                                     if (fromRow >= 0 && fromRow <= 7) {
                                         for (int i = pieces.size() - 1; i >= 0; i--) {
-                                            if (pieces.get(i).getX() != fromRow || !isMovePossible(pieces.get(i), p.x, p.y)) {
+                                            if (pieces.get(i).getX() != fromRow || !isMovePossible(pieces.get(i), pTo.x, pTo.y)) {
                                                 pieces.remove(i);
                                             }
                                         }
 
                                         if (pieces.size() == 1) {
                                             // the only possible move is rest
-                                            result = movePieceTo(pieces.get(0), p, forceNewVariant);
+                                            result = movePieceTo(pieces.get(0), pTo, forceNewVariant);
                                         }
                                     }
+                                }
+                                else  // check enpassant capturing
+                                if (pTo.equals(enPassantSquare)) {
+                                    Piece movedPawn = null;
+
+                                    switch (player) {
+                                        case WHITE:
+                                            movedPawn = squares[fromRow][pTo.y - 1];
+                                            break;
+                                        case BLACK:
+                                            movedPawn = squares[fromRow][pTo.y + 1];
+                                            break;
+                                    }
+
+                                    result = movePieceTo(movedPawn, pTo, forceNewVariant);
                                 }
                             } else
                                 // move here should be empty, in other case this is a wrong move
                                 if ("".equals(move)) {
                                     for (int i = pieces.size() - 1; i >= 0; i--) {
-                                        if (!isMovePossible(pieces.get(i), p.x, p.y)) {
+                                        if (!isMovePossible(pieces.get(i), pTo.x, pTo.y)) {
                                             pieces.remove(i);
                                         }
                                     }
 
                                     if (pieces.size() == 1) {
                                         // the only possible move is rest
-                                        result = movePieceTo(pieces.get(0), p, forceNewVariant);
+                                        result = movePieceTo(pieces.get(0), pTo, forceNewVariant);
                                     }
                                 }
                         }
