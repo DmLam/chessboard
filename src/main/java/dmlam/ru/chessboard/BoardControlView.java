@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostLeft;
 import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostRight;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toLeftOf;
 import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toRightOf;
 import static dmlam.ru.chessboard.ScreenBackground.SCREEN_BACKGROUND;
 import static dmlam.ru.chessboard.ScreenBackground.SCREEN_BACKGROUND.WHITE;
@@ -31,7 +32,7 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
     public enum CONTROLBUTTON {ROLLBACK, ROLLUP, ANALYSIS, CANCEL_ANALYSIS}
     public enum ButtonPosition {mostLeft, toLeftOf, toRightOf, mostRight}
 
-    private ChessBoard chessBoard;
+    private ChessBoardView chessBoardView;
     private int bRollback, bRollup, bAnalysis, bCancelAnalysis;
     private ArrayList<Button> buttons = new ArrayList<>();
     private ArrayList<ButtonGroup> buttonGroups = new ArrayList<>();
@@ -96,8 +97,14 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
     }
 
     public void setSize(int size) {
-        for (Button button: buttons) {
-            button.button.setMaxHeight(size);
+        if (size > 0) {
+            for (Button button : buttons) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size);
+                button.button.setMaxHeight(size);
+                button.button.setLayoutParams(lp);
+            }
+
+            setMinimumHeight(size);
         }
     }
 
@@ -107,7 +114,7 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
         bRollback = addButton(R.mipmap.rollback, mostLeft);
         bRollup = addButton(R.mipmap.rollup, toRightOf, bRollback);
         bCancelAnalysis = addButton(R.mipmap.cancel_analysis, mostRight);
-        bAnalysis = addButton(R.mipmap.analysis, mostRight);
+        bAnalysis = addButton(R.mipmap.analysis, toLeftOf, bCancelAnalysis);
 
         setButtonEnabled(bRollback, false);
         setButtonEnabled(bRollup, false);
@@ -133,16 +140,22 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
         initialize(context);
     }
 
-    public void setChessBoard(ChessBoard chessBoard) {
-        if (chessBoard != null) {
-            chessBoard.deleteOnMoveListener(this);
+    public void setChessBoardView(ChessBoardView chessBoardView) {
+        if (chessBoardView != null) {
+            chessBoardView.getChessBoard().deleteOnMoveListener(this);
             setButtonEnabled(bRollback, false);
             setButtonEnabled(bRollup, false);
         }
 
-        this.chessBoard = chessBoard;
+        this.chessBoardView = chessBoardView;
 
-        if (chessBoard != null) {
+        if (chessBoardView != null) {
+            ChessBoard chessBoard = chessBoardView.getChessBoard();
+
+            if (size > chessBoardView.getWidth() / 5 ) {
+                setSize(chessBoardView.getWidth() / 5);
+            }
+
             chessBoard.addOnMoveListener(this);
             setButtonEnabled(bRollback, true);
             setButtonEnabled(bRollup, true);
@@ -173,8 +186,8 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
 
     @Override
     public void onBoardChange() {
-        setButtonEnabled(bRollback, chessBoard.rollbackEnabled());
-        setButtonEnabled(bRollup, chessBoard.rollupEnabled());
+        setButtonEnabled(bRollback, chessBoardView.getChessBoard().rollbackEnabled());
+        setButtonEnabled(bRollup, chessBoardView.getChessBoard().rollupEnabled());
     }
 
     @Override
@@ -184,12 +197,12 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
 
     @Override
     public void onClick(View v) {
-        if (chessBoard != null) {
+        if (chessBoardView != null) {
             if (v == buttons.get(bRollback).button) {
-                chessBoard.rollback();
+                chessBoardView.getChessBoard().rollback();
             }
             else if (v == buttons.get(bRollup).button) {
-                chessBoard.rollup();
+                chessBoardView.getChessBoard().rollup();
             }
         }
     }
@@ -262,10 +275,11 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
         int result = buttonIndex == -1 ? buttons.size() : buttonIndex;
         LinearLayout frame = new LinearLayout(getContext());
         ImageButton imageButton = new ImageButton(getContext());
-        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(getSize(), getSize());
+        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(size, size);
         RelativeLayout.LayoutParams frameLayoutParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
 
-        imageButton.setMinimumHeight(35);
+        imageButton.setMinimumHeight(size);
+        imageButton.setMaxHeight(size);
         imageButton.setBackgroundColor(Color.TRANSPARENT);
         frame.setId(result + 1);
         frame.addView(imageButton, buttonLayoutParams);
