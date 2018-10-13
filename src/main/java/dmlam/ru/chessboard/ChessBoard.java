@@ -1440,7 +1440,7 @@ public class ChessBoard {
                 }
                 else {
                     char pieceLetter = move.charAt(0);
-                    ArrayList<Piece> pieces = new ArrayList<Piece>();
+                    ArrayList<Piece> pieces = new ArrayList<>();
 
                     if (pieceLetter == 'o') {
                         // castling

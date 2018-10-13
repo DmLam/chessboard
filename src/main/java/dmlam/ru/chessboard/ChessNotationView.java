@@ -330,7 +330,15 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
     }
 
-    private String annotationString(int annotationGlyph) {
+    private String annotationString(Move move) {
+        String annotation = move.getAnnotation();
+
+        if (annotation != null) {
+            return annotation;
+        }
+
+        int annotationGlyph = move.getNumericAnnotationGlyph();
+
         switch (annotationGlyph) {
             case 1:
                 return "!";
@@ -400,7 +408,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
         result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">", move.getMoveId(), htmlElementClass, move.getMoveId())).
                 append(move.getNotation()).
-                append(annotationString(move.getNumericAnnotationGlyph())).
+                append(annotationString(move)).
                 append("</a>").
                 append(commentString(move.getComment())).
                 // после хода черных добавим еще один пробел для визуальной приятности
@@ -417,7 +425,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
 
         if (variants.size() > 1) {
-            if (level == 1) {
+//            if (level == 1) {
                 if (newLineOnEachVariant) {
                     result.append("<br>");
                 }
@@ -425,8 +433,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     result.append("&nbsp;");
                 }
                 result.append(String.format("<div class = '%s'>[&nbsp;", SECONDARY_MOVE_CSS_CLASS));
-            }
-            else
+//            }
+//            else
             if (level > 1) {
                 result.append(String.format("&nbsp;<span class = '%s'>(&nbsp;", TERTIARY_MOVE_CSS_CLASS));
             }
@@ -450,10 +458,10 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 }
             }
 
-            if (level == 1) {
+//            if (level == 1) {
                 result.append("&nbsp;]</div>");
-            }
-            else
+//            }
+//            else
             if (level > 1) {
                 result.append("&nbsp;)&nbsp;</span>");
             }

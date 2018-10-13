@@ -109,7 +109,7 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
     }
 
     private void initialize(Context context) {
-        size = (int) getResources().getDimension(R.dimen.control_button_size);
+        size = (int) getResources().getDimension(R.dimen.board_control_view_size);
 
         bRollback = addButton(R.mipmap.rollback, mostLeft);
         bRollup = addButton(R.mipmap.rollup, toRightOf, bRollback);
@@ -278,8 +278,8 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
         LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(size, size);
         RelativeLayout.LayoutParams frameLayoutParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
 
-        imageButton.setMinimumHeight(size);
-        imageButton.setMaxHeight(size);
+//        imageButton.setMinimumHeight(size);
+//        imageButton.setMaxHeight(size);
         imageButton.setBackgroundColor(Color.TRANSPARENT);
         frame.setId(result + 1);
         frame.addView(imageButton, buttonLayoutParams);

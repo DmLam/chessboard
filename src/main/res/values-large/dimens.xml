@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="board_control_view_size">50dp</dimen>
+    <dimen name="chessnotationview_fontsize">7sp</dimen>
+</resources>

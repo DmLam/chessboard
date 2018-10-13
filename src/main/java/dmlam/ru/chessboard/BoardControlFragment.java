@@ -318,7 +318,7 @@ public class BoardControlFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.boardcontrol_fragment, container, false);
 
-        size = (int) getResources().getDimension(R.dimen.control_button_size);
+        size = (int) getResources().getDimension(R.dimen.board_control_view_size);
 
         rlBoardControl = (RelativeLayout) rootView.findViewById(R.id.rlBoardControl);
         ibRollback = (ImageButton) rootView.findViewById(R.id.ibRollback);
