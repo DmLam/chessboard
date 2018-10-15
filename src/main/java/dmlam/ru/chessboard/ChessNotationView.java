@@ -425,16 +425,14 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
 
         if (variants.size() > 1) {
-//            if (level == 1) {
-                if (newLineOnEachVariant) {
-                    result.append("<br>");
-                }
-                else {
-                    result.append("&nbsp;");
-                }
-                result.append(String.format("<div class = '%s'>[&nbsp;", SECONDARY_MOVE_CSS_CLASS));
-//            }
-//            else
+            if (newLineOnEachVariant) {
+                result.append("<br>");
+            }
+            else {
+                result.append("&nbsp;");
+            }
+            result.append(String.format("<div class = '%s'>[&nbsp;", SECONDARY_MOVE_CSS_CLASS));
+
             if (level > 1) {
                 result.append(String.format("&nbsp;<span class = '%s'>(&nbsp;", TERTIARY_MOVE_CSS_CLASS));
             }
@@ -458,10 +456,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                 }
             }
 
-//            if (level == 1) {
-                result.append("&nbsp;]</div>");
-//            }
-//            else
+            result.append("&nbsp;]</div>");
+            
             if (level > 1) {
                 result.append("&nbsp;)&nbsp;</span>");
             }

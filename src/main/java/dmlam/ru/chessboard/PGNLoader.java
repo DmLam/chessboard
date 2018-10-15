@@ -244,7 +244,7 @@ public class PGNLoader {
     private boolean parseMoves(Game game, StringBuilder moves, int variantLevel) throws PGNError {
         boolean result = true;
         Move variantStart = null;
-        String lineComment = parseComment(moves);  // parse comment if there is and add it to line comment after adding the first line's move
+        String variantComment = parseComment(moves);  // parse comment if there is and add it to line comment after adding the first line's move
 
         while (moves.length() > 0) {
             do {
@@ -276,9 +276,9 @@ public class PGNLoader {
                 }
 
                 parseMove(game, moves);
-                if (lineComment != null) {
-                    chessboard.getLastMove().getVariants().setComment(lineComment);
-                    lineComment = null;
+                if (variantComment != null) {
+                    chessboard.getLastMove().getVariants().setComment(variantComment);
+                    variantComment = null;
                 }
                 if (variantStart == null) {
                     variantStart = chessboard.getLastMove();
