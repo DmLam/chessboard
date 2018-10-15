@@ -335,7 +335,7 @@ public class PGNLoader {
         private boolean readMoves(BufferedReader in, Game game) throws IOException, PGNError {
         boolean result;
         String FEN = game.tagByName("FEN");
-        String moves = "";
+        StringBuilder moves = new StringBuilder();
         String line;
 
         chessboard = new ChessBoard();
@@ -345,16 +345,23 @@ public class PGNLoader {
         game.setStartPosition(FEN);
         chessboard.loadFromFEN(FEN);
 
-        readLine(in);  // skip empty line between tags and moves
+        line = readLine(in);
+        if (line == null) {
+            throw new PGNError("Bad pgn: unexpected end of file");
+        }
+        // skip empty line between tags and moves
+        if (!TextUtils.isEmpty(line)) {
+            throw new PGNError("Bad pgn: empty line after tags expected");
+        }
 
         line = readLine(in);
-        while (!TextUtils.isEmpty(line)) {
+        while (line != null) {
             line = line.trim();
 
-            if (!moves.isEmpty()) {
-                moves = moves + ' ';
+            if (moves.length() > 0) {
+                moves.append('\n');
             }
-            moves = moves + line;
+            moves.append(line);
 
             line = readLine(in);
         }
@@ -371,7 +378,6 @@ public class PGNLoader {
         if (!readTags(in, result) || !readMoves(in, result)) {
             result = null;
         }
-        ;
 
         return result;
     }

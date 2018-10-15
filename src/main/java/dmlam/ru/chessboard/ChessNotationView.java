@@ -162,8 +162,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             setTextSize(settings);
             configureLayerType();
 //            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
-            // установим обработчик ссылок для просмотра записи партии
 
+            // установим обработчик ссылок для просмотра записи партии
             setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -394,7 +394,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
     private String commentString(String comment) {
         if (comment != null) {
-            return String.format("<span class=\"%s\"> %s</span>", COMMENT_CSS_CLASS, comment);
+            return String.format("<span class=\"%s\">%s</span>", COMMENT_CSS_CLASS, comment.replaceAll("\n", "<br>"));
         }
         else
             return "";
