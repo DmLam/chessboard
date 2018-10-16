@@ -30,6 +30,7 @@ final public class Move {
     private String comment = null;              // комментарий к ходу
     private String info = null;                 // дополнительная информация, не отображающаяся в нотации
     private int numericAnnotationGlyph = 0;     // код аннотации для хода (используется в PGN), т.к. !!, ?, +- ...
+    private String annotation = null;           // аннотация заданная знаками (?, !, !!, ?! ...)
 
     private boolean opponentChecked = false;    // противник получил шах этим ходом
     private boolean opponentCheckmated = false; // противник получил мат этим ходом
@@ -479,5 +480,11 @@ final public class Move {
         this.numericAnnotationGlyph = numericAnnotationGlyph;
     }
 
+    public void setAnnotation(String annotation) {
+        this.annotation = annotation;
+    }
 
+    public String getAnnotation() {
+        return annotation;
+    }
 }

@@ -105,8 +105,9 @@ public class PGNLoader {
 
     private int parseNumericAnnotationGlyph(StringBuilder moves) {
         StringBuilder sb = new StringBuilder();
+        int result = 0;
 
-        if (moves.charAt(0) == '$') {
+        if (!TextUtils.isEmpty(moves) && moves.charAt(0) == '$') {
             int i = 1;
             while (i < moves.length() && Character.isDigit(moves.charAt(i))) {
                 sb.append(moves.charAt(i));
@@ -114,9 +115,29 @@ public class PGNLoader {
             }
             moves.delete(0, i);
             skipSpace(moves);
+
+            if (i > 1) {
+                result = Integer.parseInt(sb.toString());
+            }
         }
 
-        return Integer.parseInt(sb.toString());
+        return result;
+    }
+
+    private String parseAnnotation(StringBuilder moves) {
+        String result = null;
+        StringBuilder sb = new StringBuilder();
+
+        if (!TextUtils.isEmpty(moves)) {
+            for (int i = 0; i < moves.length() && "!?".indexOf(moves.charAt(i)) >= 0; i++)
+                sb.append(moves.charAt(i));
+            if (sb.length() > 0) {
+                moves.delete(0, sb.length());
+                result = sb.toString();
+            }
+        }
+
+        return result;
     }
 
     private String parseComment(StringBuilder moves) throws PGNError {
@@ -133,6 +154,7 @@ public class PGNLoader {
                 if (commentEnd > 0) {
                     result = moves.substring(1, commentEnd);
                     moves.delete(0, commentEnd + 1);
+                    skipSpace(moves);
                 } else {
                     throw new PGNError("End of comment not found");
                 }
@@ -210,19 +232,27 @@ public class PGNLoader {
 
             if (!chessboard.shortMove(moveOrder, sb.toString(), true))
                 throw new PGNError(String.format("Incorrect move '%s'", sb.toString()));
+
+            chessboard.getLastMove().setNumericAnnotationGlyph(parseNumericAnnotationGlyph(moves));
+            chessboard.getLastMove().setAnnotation(parseAnnotation(moves));
+
+            skipSpace(moves);
         }
+
     }
 
     private boolean parseMoves(Game game, StringBuilder moves, int variantLevel) throws PGNError {
         boolean result = true;
         Move variantStart = null;
-        String comment = parseComment(moves);
+        String variantComment = parseComment(moves);  // parse comment if there is and add it to line comment after adding the first line's move
 
-        if (!"".equals(comment)) {
-            if (chessboard.getLastMove() == null) {
-                chessboard.getFirstMoveVariants().setComment(comment);
-            } else {
-                chessboard.getLastMove().getVariants().setComment(comment);
+        if (moves.length() == 0 && variantComment != null) {
+            // there is only comment in this variant
+            if (chessboard.getLastMove() != null) {
+                chessboard.getLastMove().getVariants().setComment(variantComment);
+            }
+            else {
+                chessboard.getFirstMoveVariants().setComment(variantComment);
             }
         }
 
@@ -256,6 +286,10 @@ public class PGNLoader {
                 }
 
                 parseMove(game, moves);
+                if (variantComment != null) {
+                    chessboard.getLastMove().getVariants().setComment(variantComment);
+                    variantComment = null;
+                }
                 if (variantStart == null) {
                     variantStart = chessboard.getLastMove();
                 }
@@ -268,8 +302,6 @@ public class PGNLoader {
                     if (moves.charAt(0) == '{') {
                         chessboard.getLastMove().setComment(parseComment(moves));
                         skipSpace(moves);
-                    } else if (moves.charAt(0) == '$') {
-                        chessboard.getLastMove().setNumericAnnotationGlyph(parseNumericAnnotationGlyph(moves));
                     } else if (moves.charAt(0) == '(') {
                         // variant
                         int lastMoveId = chessboard.getLastMove().getMoveId();
@@ -279,6 +311,15 @@ public class PGNLoader {
                         chessboard.rollback();
                         parseMoves(game, moves, variantLevel + 1);
                         chessboard.gotoMove(lastMoveId);
+                        if (moves.length() > 0 && moves.charAt(0) == '{') {
+                            String oldComment = chessboard.getLastMove().getComment();
+                            String newComment = parseComment(moves);
+
+                            if (oldComment != null) {
+                                newComment = oldComment + ' ' + newComment;
+                            }
+                            chessboard.getLastMove().setComment(newComment);
+                        }
                         if (moves.length() == 0 || "()".indexOf(moves.charAt(0)) < 0) {
                             // after a variant can be only another variant or earlier variant ending
                             break;
@@ -288,7 +329,6 @@ public class PGNLoader {
                         moves.delete(0, 1);
                         skipSpace(moves);
                         chessboard.moveVariantDown(variantStart);
-
                         return true;
                     } else {
                         break;
@@ -302,10 +342,10 @@ public class PGNLoader {
         return result;
     }
 
-    private boolean readMoves(BufferedReader in, Game game) throws IOException, PGNError {
+        private boolean readMoves(BufferedReader in, Game game) throws IOException, PGNError {
         boolean result;
         String FEN = game.tagByName("FEN");
-        String moves = "";
+        StringBuilder moves = new StringBuilder();
         String line;
 
         chessboard = new ChessBoard();
@@ -315,16 +355,23 @@ public class PGNLoader {
         game.setStartPosition(FEN);
         chessboard.loadFromFEN(FEN);
 
-        readLine(in);  // skip empty line between tags and moves
+        line = readLine(in);
+        if (line == null) {
+            throw new PGNError("Bad pgn: unexpected end of file");
+        }
+        // skip empty line between tags and moves
+        if (!TextUtils.isEmpty(line)) {
+            throw new PGNError("Bad pgn: empty line after tags expected");
+        }
 
         line = readLine(in);
-        while (!TextUtils.isEmpty(line)) {
+        while (line != null) {
             line = line.trim();
 
-            if (!moves.isEmpty()) {
-                moves = moves + ' ';
+            if (moves.length() > 0) {
+                moves.append(' ');
             }
-            moves = moves + line;
+            moves.append(line);
 
             line = readLine(in);
         }
@@ -341,7 +388,6 @@ public class PGNLoader {
         if (!readTags(in, result) || !readMoves(in, result)) {
             result = null;
         }
-        ;
 
         return result;
     }
@@ -513,11 +559,11 @@ public class PGNLoader {
         } catch (IOException E) {
             Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.toString()));
 
-            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (%s, line %d): %s", moves, lineNum, E.getMessage()));
+            throw new PGNError(String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.getMessage()));
         } catch (PGNError E) {
             Log.e(LOGTAG, String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.toString()));
 
-            throw new PGNError(String.format(LOGTAG + "Error reading PGN file %s (%s, line %d): %s", moves, lineNum, E.getMessage()));
+            throw new PGNError(String.format(LOGTAG + "Error reading PGN moves (%s, line %d): %s", moves, lineNum, E.getMessage()));
         }
 
         return result;

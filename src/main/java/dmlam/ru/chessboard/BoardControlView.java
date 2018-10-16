@@ -1,6 +1,6 @@
 package dmlam.ru.chessboard;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -8,13 +8,10 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
+import android.os.Parcel;
 import android.support.v4.content.ContextCompat;
-import android.view.LayoutInflater;
+import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -22,27 +19,26 @@ import android.widget.RelativeLayout;
 import java.util.ArrayList;
 
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostLeft;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.mostRight;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toLeftOf;
+import static dmlam.ru.chessboard.BoardControlView.ButtonPosition.toRightOf;
+import static dmlam.ru.chessboard.ScreenBackground.SCREEN_BACKGROUND;
 import static dmlam.ru.chessboard.ScreenBackground.SCREEN_BACKGROUND.WHITE;
 
-/**
- * Created by Lam on 28.07.2015.
- */
-public class BoardControlFragment extends Fragment {
-    public enum Analysis {NONE, ANALYSIS, CANCEL_ANALYSIS}
+public class BoardControlView extends RelativeLayout implements IOnMoveListener, View.OnClickListener {
 
+    public enum Analysis {NONE, ANALYSIS, CANCEL_ANALYSIS}
     public enum CONTROLBUTTON {ROLLBACK, ROLLUP, ANALYSIS, CANCEL_ANALYSIS}
     public enum ButtonPosition {mostLeft, toLeftOf, toRightOf, mostRight}
 
-    private FragmentActivity activity = null;
-    private RelativeLayout rlBoardControl = null;
-    private ImageButton ibRollback, ibRollup, ibAnalysis, ibCancelAnalysis;
-
-    private ArrayList<Button> buttons = new ArrayList<>();
+    private ChessBoardView chessBoardView;
     private int bRollback, bRollup, bAnalysis, bCancelAnalysis;
+    private ArrayList<Button> buttons = new ArrayList<>();
     private ArrayList<ButtonGroup> buttonGroups = new ArrayList<>();
 
     private int size = 0;
-    private ScreenBackground.SCREEN_BACKGROUND background = WHITE;
+    private SCREEN_BACKGROUND background = WHITE;
 
     private class ButtonGroup {
         private int[] buttons;
@@ -71,7 +67,7 @@ public class BoardControlFragment extends Fragment {
         boolean visible = true; // для сохранения состояния при смене конфигурации
         private int mipmapResourceId;
         private int frameColor = Color.TRANSPARENT;
-        private ButtonPosition buttonPosition;
+        private BoardControlView.ButtonPosition buttonPosition;
         private int anchorButtonIndex = -1;
 
         Button(ImageButton button, int frameId, int mipmapResourceId) {
@@ -85,6 +81,15 @@ public class BoardControlFragment extends Fragment {
             this.buttonPosition = buttonPosition;
             this.anchorButtonIndex = anchorButtonIndex;
         }
+
+        protected Button(Parcel in) {
+            frameId = in.readInt();
+            enabled = in.readByte() != 0;
+            visible = in.readByte() != 0;
+            mipmapResourceId = in.readInt();
+            frameColor = in.readInt();
+            anchorButtonIndex = in.readInt();
+        }
     }
 
     public int getSize() {
@@ -92,20 +97,114 @@ public class BoardControlFragment extends Fragment {
     }
 
     public void setSize(int size) {
-        for (Button button: buttons) {
-            button.button.setMaxHeight(size);
-        }
+        if (size > 0) {
+            for (Button button : buttons) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(size, size);
+                button.button.setMaxHeight(size);
+                button.button.setLayoutParams(lp);
+            }
 
-        this.size = size;
+            setMinimumHeight(size);
+        }
     }
 
-    private int registerButton(ImageButton button, int mipmapResourceId) {
-        int index = buttons.size();
-        Button newButton = new Button(button,((View) button.getParent()).getId(), mipmapResourceId);
-        buttons.add(newButton);
-        newButton.visible = button.getVisibility() == View.VISIBLE;
+    private void initialize(Context context) {
+        size = (int) getResources().getDimension(R.dimen.board_control_view_size);
 
-        return index;
+        bRollback = addButton(R.mipmap.rollback, mostLeft);
+        bRollup = addButton(R.mipmap.rollup, toRightOf, bRollback);
+        bCancelAnalysis = addButton(R.mipmap.cancel_analysis, mostRight);
+        bAnalysis = addButton(R.mipmap.analysis, toLeftOf, bCancelAnalysis);
+
+        setButtonEnabled(bRollback, false);
+        setButtonEnabled(bRollup, false);
+        setButtonVisibility(bAnalysis, false);
+        setButtonVisibility(bCancelAnalysis, false);
+    }
+
+    public BoardControlView(Context context) {
+        super(context);
+
+        initialize(context);
+    }
+
+    public BoardControlView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        initialize(context);
+    }
+
+    public BoardControlView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+
+        initialize(context);
+    }
+
+    public void setChessBoardView(ChessBoardView chessBoardView) {
+        if (chessBoardView != null) {
+            chessBoardView.getChessBoard().deleteOnMoveListener(this);
+            setButtonEnabled(bRollback, false);
+            setButtonEnabled(bRollup, false);
+        }
+
+        this.chessBoardView = chessBoardView;
+
+        if (chessBoardView != null) {
+            ChessBoard chessBoard = chessBoardView.getChessBoard();
+
+            if (size > chessBoardView.getWidth() / 5 ) {
+                setSize(chessBoardView.getWidth() / 5);
+            }
+
+            chessBoard.addOnMoveListener(this);
+            setButtonEnabled(bRollback, true);
+            setButtonEnabled(bRollup, true);
+            setButtonEnabled(bRollback, chessBoard.rollbackEnabled());
+            setButtonEnabled(bRollup, chessBoard.rollupEnabled());
+        }
+    }
+
+    @Override
+    public boolean onMove(Move move) {
+        return true;
+    }
+
+    @Override
+    public void onRollback(Move move) {
+
+    }
+
+    @Override
+    public void onRollup(Move move) {
+
+    }
+
+    @Override
+    public void onGoto(Move move) {
+
+    }
+
+    @Override
+    public void onBoardChange() {
+        setButtonEnabled(bRollback, chessBoardView.getChessBoard().rollbackEnabled());
+        setButtonEnabled(bRollup, chessBoardView.getChessBoard().rollupEnabled());
+    }
+
+    @Override
+    public void afterMove(Move move) {
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (chessBoardView != null) {
+            if (v == buttons.get(bRollback).button) {
+                chessBoardView.getChessBoard().rollback();
+            }
+            else if (v == buttons.get(bRollup).button) {
+                chessBoardView.getChessBoard().rollup();
+            }
+        }
     }
 
     // используем т.к. до API 23 не было getRule
@@ -122,7 +221,7 @@ public class BoardControlFragment extends Fragment {
 
     // добавляет кнопку в начале или в конце
     private void addStartingButton(RelativeLayout.LayoutParams frameLayoutParams, ButtonSide buttonSide, int anchorButtonIndex) {
-        int alignment = buttonSide == ButtonSide.LEFT ? RelativeLayout.ALIGN_PARENT_LEFT : RelativeLayout.ALIGN_PARENT_RIGHT;
+        int alignment = buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.ALIGN_PARENT_LEFT : RelativeLayout.ALIGN_PARENT_RIGHT;
         int anchorButtonFrameId = ((View) buttons.get(anchorButtonIndex).button.getParent()).getId();
 
         // найдем все кнопки, которые уже привязаны к указанной стороне и привяжем их слева (справа) к новой кнопке
@@ -134,7 +233,7 @@ public class BoardControlFragment extends Fragment {
 
                 if (rule != 0) {
                     removeRelativeLayoutParamsRule(params, alignment);
-                    params.addRule(buttonSide == ButtonSide.LEFT ? RelativeLayout.RIGHT_OF : RelativeLayout.LEFT_OF, anchorButtonFrameId);
+                    params.addRule(buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.RIGHT_OF : RelativeLayout.LEFT_OF, anchorButtonFrameId);
                     buttonFrame.setLayoutParams(params);
                 }
             }
@@ -144,7 +243,7 @@ public class BoardControlFragment extends Fragment {
 
     // добавляет кнопку справа или слева от указанной
     private void addSideButtonTo(RelativeLayout.LayoutParams frameLayoutParams, int oldAnchorButtonIndex, int newAnchorButtonIndex, ButtonSide buttonSide) {
-        int alignment = buttonSide == ButtonSide.LEFT ? RelativeLayout.LEFT_OF : RelativeLayout.RIGHT_OF;
+        int alignment = buttonSide == BoardControlView.ButtonSide.LEFT ? RelativeLayout.LEFT_OF : RelativeLayout.RIGHT_OF;
         int oldAnchorButtonFrameId = ((View) buttons.get(oldAnchorButtonIndex).button.getParent()).getId();
         int newAnchorButtonFrameId = ((View) buttons.get(newAnchorButtonIndex).button.getParent()).getId();
 
@@ -174,12 +273,13 @@ public class BoardControlFragment extends Fragment {
     // поэтому нужно пересоздать только View - для этого указывает индекс уже существующих элементов в списке buttons. Иначе buttonIndex должен быть -1
     private int addButton(int buttonIndex, int mipmapResourceId, ButtonPosition buttonPosition, int anchorButtonIndex) {
         int result = buttonIndex == -1 ? buttons.size() : buttonIndex;
-        LinearLayout frame = new LinearLayout(activity);
-        ImageButton imageButton = new ImageButton(activity);
-        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(getSize(), getSize());
+        LinearLayout frame = new LinearLayout(getContext());
+        ImageButton imageButton = new ImageButton(getContext());
+        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(size, size);
         RelativeLayout.LayoutParams frameLayoutParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
 
-        imageButton.setMinimumHeight(35);
+//        imageButton.setMinimumHeight(size);
+//        imageButton.setMaxHeight(size);
         imageButton.setBackgroundColor(Color.TRANSPARENT);
         frame.setId(result + 1);
         frame.addView(imageButton, buttonLayoutParams);
@@ -208,15 +308,22 @@ public class BoardControlFragment extends Fragment {
             default:
                 assert(false);
         }
-        rlBoardControl.addView(frame, frameLayoutParams);
+        addView(frame, frameLayoutParams);
 
         DrawButton(result);
+
+        imageButton.setOnClickListener(this);
 
         return result;
     }
 
     public int addButton(int mipmapResourceId, ButtonPosition buttonPosition) {
-        return addButton(mipmapResourceId, buttonPosition, -1);
+        if (buttonPosition == mostLeft || buttonPosition == mostRight) {
+            return addButton(mipmapResourceId, buttonPosition, -1);
+        }
+        else {
+            throw new RuntimeException("Anchor button index is absent");
+        }
     }
 
     public void setButtonClickListener(int buttonIndex,View.OnClickListener onClickListener) {
@@ -247,8 +354,8 @@ public class BoardControlFragment extends Fragment {
         }
     }
 
-    public int getButton(CONTROLBUTTON CONTROLBUTTON) {
-        switch (CONTROLBUTTON) {
+    public int getButton(CONTROLBUTTON ControlButton) {
+        switch (ControlButton) {
             case ROLLBACK:
                 return bRollback;
             case ROLLUP:
@@ -286,75 +393,7 @@ public class BoardControlFragment extends Fragment {
         setButtonFrame(buttonIndex, Color.TRANSPARENT);
     }
 
-    @Override
-    public void onAttach (Activity activity) {
-        super.onAttach(activity);
-
-        this.activity = (FragmentActivity) activity;
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        activity = null;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        setRetainInstance(true);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        setEnabled(true);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.boardcontrol_fragment, container, false);
-
-        size = (int) getResources().getDimension(R.dimen.board_control_view_size);
-
-        rlBoardControl = (RelativeLayout) rootView.findViewById(R.id.rlBoardControl);
-        ibRollback = (ImageButton) rootView.findViewById(R.id.ibRollback);
-        ibRollup = (ImageButton) rootView.findViewById(R.id.ibRollup);
-        ibAnalysis = (ImageButton) rootView.findViewById(R.id.ibAnalysis);
-        ibCancelAnalysis = (ImageButton) rootView.findViewById(R.id.ibCancelAnalysis);
-
-        if (savedInstanceState == null) {
-            bRollback = registerButton(ibRollback, R.mipmap.rollback);                              // 0
-            bRollup = registerButton(ibRollup, R.mipmap.rollup);                                    // 1
-            bAnalysis = registerButton(ibAnalysis, R.mipmap.analysis);                              // 2
-            bCancelAnalysis = registerButton(ibCancelAnalysis, R.mipmap.cancel_analysis);           // 3
-        }
-        else {
-            // savedInstanceState != null - fragment is being restored after changing configuration. Buttons already registered
-            for (int i = 0; i < buttons.size(); i++) {
-                Button button = buttons.get(i);
-                ViewGroup frame = (ViewGroup) rlBoardControl.findViewById(button.frameId);
-                if (frame != null) {
-                    // Button is already exists with its frame - standard button created in the layout
-                    button.button = (ImageButton) frame.getChildAt(0);
-
-                }
-                else {
-                    // button and its frame doesn't exists - dynamically created button, need to recreate it using info in buttons
-                    addButton(i, button.mipmapResourceId, button.buttonPosition, button.anchorButtonIndex);
-                }
-
-                setButtonVisibility(i, button.visible);
-            }
-        }
-
-        return rootView;
-    }
-
-    public void setBackground(ScreenBackground.SCREEN_BACKGROUND background) {
+    public void setBackground(SCREEN_BACKGROUND background) {
         this.background = background;
 
         for (int i = 0; i < buttons.size(); i++) {
@@ -395,7 +434,7 @@ public class BoardControlFragment extends Fragment {
         }
     }
 
-    public void setAnalysisButtonVisibility(Analysis button) {
+    public void setAnalysisButtonVisibility(BoardControlView.Analysis button) {
         switch (button) {
             case NONE:
                 setButtonVisibility(getButton(CONTROLBUTTON.ANALYSIS), false);
@@ -427,11 +466,9 @@ public class BoardControlFragment extends Fragment {
     }
 
     private void DrawButton(int buttonIndex) {
-        Button button = buttons.get(buttonIndex);
+        BoardControlView.Button button = buttons.get(buttonIndex);
 
-        if (activity != null) {
-            setImageButtonDrawable(button.enabled && buttonGroupsEnabled(buttonIndex), button.button, button.mipmapResourceId, button.frameColor);
-        }
+        setImageButtonDrawable(button.enabled && buttonGroupsEnabled(buttonIndex), button.button, button.mipmapResourceId, button.frameColor);
     }
 
     public void setEnabled(boolean enabled) {
@@ -456,7 +493,7 @@ public class BoardControlFragment extends Fragment {
         item.setEnabled(enabled);
 
         // используем ContextCompat т.к. getDrawable(int) deprecated в API >= 21
-        Drawable originalIcon = ContextCompat.getDrawable(activity, iconResId);
+        Drawable originalIcon = ContextCompat.getDrawable(getContext(), iconResId);
 
         Drawable icon = imageEnabled ? originalIcon : convertDrawableToGrayScale(originalIcon);
 
@@ -499,4 +536,5 @@ public class BoardControlFragment extends Fragment {
         r.setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN);
         return r;
     }
+
 }

@@ -14,8 +14,8 @@
 
         <ImageButton
             android:id="@+id/ibRollback"
-            android:layout_width="@dimen/control_button_size"
-            android:layout_height="@dimen/control_button_size"
+            android:layout_width="@dimen/board_control_view_size"
+            android:layout_height="@dimen/board_control_view_size"
             android:background="@android:color/transparent"
             android:contentDescription="@string/rollback_description"
             android:onClick="OnRollbackClick"
@@ -31,8 +31,8 @@
 
         <ImageButton
             android:id="@+id/ibRollup"
-            android:layout_width="@dimen/control_button_size"
-            android:layout_height="@dimen/control_button_size"
+            android:layout_width="@dimen/board_control_view_size"
+            android:layout_height="@dimen/board_control_view_size"
             android:background="@android:color/transparent"
             android:clickable="false"
             android:contentDescription="@string/rollup_description"
@@ -50,8 +50,8 @@
 
         <ImageButton
             android:id="@+id/ibAnalysis"
-            android:layout_width="@dimen/control_button_size"
-            android:layout_height="@dimen/control_button_size"
+            android:layout_width="@dimen/board_control_view_size"
+            android:layout_height="@dimen/board_control_view_size"
             android:background="@android:color/transparent"
             android:clickable="false"
             android:contentDescription="@string/analyse_description"
@@ -69,8 +69,8 @@
 
         <ImageButton
             android:id="@+id/ibCancelAnalysis"
-            android:layout_width="@dimen/control_button_size"
-            android:layout_height="@dimen/control_button_size"
+            android:layout_width="@dimen/board_control_view_size"
+            android:layout_height="@dimen/board_control_view_size"
             android:background="@android:color/transparent"
             android:clickable="false"
             android:contentDescription="@string/cancel_analyse_description"

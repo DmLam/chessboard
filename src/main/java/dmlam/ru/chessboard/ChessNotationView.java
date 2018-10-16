@@ -162,8 +162,8 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
             setTextSize(settings);
             configureLayerType();
 //            setWebChromeClient(new WebChromeClient());  // нужно только для отладки JS - чтобы работал alert
-            // установим обработчик ссылок для просмотра записи партии
 
+            // установим обработчик ссылок для просмотра записи партии
             setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -330,7 +330,15 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         }
     }
 
-    private String annotationString(int annotationGlyph) {
+    private String annotationString(Move move) {
+        String annotation = move.getAnnotation();
+
+        if (annotation != null) {
+            return annotation;
+        }
+
+        int annotationGlyph = move.getNumericAnnotationGlyph();
+
         switch (annotationGlyph) {
             case 1:
                 return "!";
@@ -386,7 +394,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
     private String commentString(String comment) {
         if (comment != null) {
-            return String.format("<span class=\"%s\"> %s</span>", COMMENT_CSS_CLASS, comment);
+            return String.format("<span class=\"%s\">%s</span>", COMMENT_CSS_CLASS, comment.replaceAll("\n", "<br>"));
         }
         else
             return "";
@@ -400,7 +408,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
 
         result.append(String.format("<a id=\"%d\" class=\"%s\" href=\"move:%d\">", move.getMoveId(), htmlElementClass, move.getMoveId())).
                 append(move.getNotation()).
-                append(annotationString(move.getNumericAnnotationGlyph())).
+                append(annotationString(move)).
                 append("</a>").
                 append(commentString(move.getComment())).
                 // после хода черных добавим еще один пробел для визуальной приятности
@@ -409,58 +417,63 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
         return result;
     }
 
-    private StringBuilder variantsNotation(MoveList variants, int level) {
-        StringBuilder result = new StringBuilder();;
+    private void formatComment(StringBuilder builder, String comment) {
+        builder.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
+                .append(comment)
+                .append("</span>&nbsp;");
+    }
 
-        if (level == MAIN_LINE) {
-            result.append(branchNotation(variants.get(0), level));
+    private StringBuilder variantsNotation(MoveList variants, int level) {
+        StringBuilder result = new StringBuilder();
+
+        if (level == MAIN_LINE && variants.getComment() != null) {
+            formatComment(result, variants.getComment());
         }
 
-        if (variants.size() > 1) {
-            if (level == 1) {
+        if (variants.size() > 0) {
+            if (level == MAIN_LINE) {
+                result.append(branchNotation(variants.get(0), level));
+            }
+
+            if (variants.size() > 1) {
                 if (newLineOnEachVariant) {
                     result.append("<br>");
-                }
-                else {
+                } else {
                     result.append("&nbsp;");
                 }
                 result.append(String.format("<div class = '%s'>[&nbsp;", SECONDARY_MOVE_CSS_CLASS));
-            }
-            else
-            if (level > 1) {
-                result.append(String.format("&nbsp;<span class = '%s'>(&nbsp;", TERTIARY_MOVE_CSS_CLASS));
-            }
 
-            for (int i = 1; i < variants.size(); i++) {
-                result.append(branchNotation(variants.get(i), level));
-                if (i < variants.size() - 1) {
-                    if (level == 1) {
-                        result.append("&nbsp;]");
-                        if (newLineOnEachVariant) {
-                            result.append("<br>");
+                if (level > 1) {
+                    result.append(String.format("&nbsp;<span class = '%s'>(&nbsp;", TERTIARY_MOVE_CSS_CLASS));
+                }
+
+                for (int i = 1; i < variants.size(); i++) {
+                    result.append(branchNotation(variants.get(i), level));
+                    if (i < variants.size() - 1) {
+                        if (level == 1) {
+                            result.append("&nbsp;]");
+                            if (newLineOnEachVariant) {
+                                result.append("<br>");
+                            } else {
+                                result.append("&nbsp;");
+                            }
+                            result.append("[&nbsp;");
+                        } else if (level > 1) {
+                            result.append(';');
                         }
-                        else {
-                            result.append("&nbsp;");
-                        }
-                        result.append("[&nbsp;");
                     }
-                    else if (level > 1) {
-                        result.append(';');
-                    }
+                }
+
+                result.append("&nbsp;]</div>");
+
+                if (level > 1) {
+                    result.append("&nbsp;)&nbsp;</span>");
                 }
             }
 
-            if (level == 1) {
-                result.append("&nbsp;]</div>");
+            if (level == MAIN_LINE && chessBoard.game.getResult() != GameResult.UNKNOWN) {
+                result.append("<br>").append(gameResultString(chessBoard.game.getResult()));
             }
-            else
-            if (level > 1) {
-                result.append("&nbsp;)&nbsp;</span>");
-            }
-        }
-
-        if (level == MAIN_LINE && chessBoard.game.getResult() != GameResult.UNKNOWN) {
-            result.append("<br>").append(gameResultString(chessBoard.game.getResult()));
         }
 
         return result;
@@ -479,11 +492,11 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
                     .append("&nbsp;&hellip;");
         }
         do {
+
             if (move.getVariants().getComment() != null) {
-                result.append("<span class=\"").append(COMMENT_CSS_CLASS).append("\">&nbsp;")
-                        .append(move.getVariants().getComment())
-                        .append("</span>&nbsp;");
+                formatComment(result, move.getVariants().getComment());
             }
+
 
             if (wasBranch) {
                 if (move != null) {
@@ -529,7 +542,7 @@ public class ChessNotationView extends WebView implements IOnMoveListener{
     public void updateNotation(boolean forceUpdate) {
         String newNotation;
 
-        if (chessBoard == null || chessBoard.getFirstMoveVariants() == null || chessBoard.getFirstMoveVariants().size() == 0) {
+        if (chessBoard == null || chessBoard.getFirstMoveVariants() == null) {
             newNotation = "";
         }
         else {

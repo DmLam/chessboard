@@ -1276,7 +1276,14 @@ public class ChessBoard {
     public void setGame(Game game) {
         if (game != this.game) {
             this.game = game;
-            loadFromFEN(game.getStartPosition());
+
+            if (game == null) {
+                game.clearMoves();
+                setupStartingPosition();
+            }
+            else {
+                loadFromFEN(game.getStartPosition());
+            }
         }
     }
 
@@ -1424,168 +1431,176 @@ public class ChessBoard {
         boolean result = false;
 
         if (!TextUtils.isEmpty(move)) {
-//            move = move.toLowerCase();
+            int lastCharIndex = move.length() - 1;
 
-            if (move.charAt(move.length() - 1) == '+' || move.charAt(move.length() - 1) == '#') {
-                move = move.substring(0, move.length() - 1);
+            if (move.charAt(lastCharIndex) == '+' || move.charAt(lastCharIndex) == '#') {
+                String m = move.substring(0, lastCharIndex);
+                move = m;
             }
 
-            if (move.equals("--") || move.equals("<>")) {
-                // null-move
-                lastMove = new Move(null);
-                passMoveToOpponent(false);
-                result = true;
-            }
-            else
             if (!move.isEmpty()) {
-                char pieceLetter = move.charAt(0);
-                ArrayList<Piece> pieces = new ArrayList<Piece>();
-
-                if (pieceLetter == 'o') {
-                    // castling
-                    if (move.equals("o-o")) {
-                        if (player == WHITE) {
-                            result = fromtomove("e1g1", forceNewVariant);
-                        }
-                        else {
-                            result = fromtomove("e8g8", forceNewVariant);
-                        }
-                    }
-                    else
-                    if (move.equals("o-o-o")) {
-                        if (player == WHITE) {
-                            result = fromtomove("e1c1", forceNewVariant);
-                        }
-                        else {
-                            result = fromtomove("e8c8", forceNewVariant);
-                        }
-                    }
+                if (move.equals("--") || move.equals("<>")) {
+                    // null-move
+                    lastMove = new Move(null);
+                    passMoveToOpponent(false);
+                    result = true;
                 }
-                else
-                if (move.length() > 2 && "KQRBN".indexOf(pieceLetter) >= 0) {
-                    String to = move.substring(move.length() - 2);
-                    Point p;
+                else {
+                    char pieceLetter = move.charAt(0);
+                    ArrayList<Piece> pieces = new ArrayList<>();
 
-                    try {
-                        p = getPointFromSquareName(to);
-                    }
-                    catch(ErrorIllegalSquareName E) {
-                        p = null;
-                    }
+                    if (pieceLetter == 'o') {
+                        // castling
+                        if (move.equals("o-o")) {
+                            if (player == WHITE) {
+                                result = fromtomove("e1g1", forceNewVariant);
+                            } else {
+                                result = fromtomove("e8g8", forceNewVariant);
+                            }
+                        } else if (move.equals("o-o-o")) {
+                            if (player == WHITE) {
+                                result = fromtomove("e1c1", forceNewVariant);
+                            } else {
+                                result = fromtomove("e8c8", forceNewVariant);
+                            }
+                        }
+                    } else if (move.length() > 2 && "KQRBN".indexOf(pieceLetter) >= 0) {
+                        String to = move.substring(move.length() - 2);
+                        Point p;
 
-                    if (p != null) {
-                        Piece targetPiece = squares[p.x][p.y];
-                        boolean capturing;
-
-                        move = move.substring(1, move.length() - 2);
-                        capturing = move.length() > 0 && move.substring(move.length() - 1).equals("x");
-                        if (capturing) {
-                            move = move.substring(0, move.length() - 1);
+                        try {
+                            p = getPointFromSquareName(to);
+                        } catch (ErrorIllegalSquareName E) {
+                            p = null;
                         }
 
-                        if ((capturing && targetPiece != null && targetPiece.getColor() != player) ||
-                                (targetPiece == null)) {
+                        if (p != null) {
+                            Piece targetPiece = squares[p.x][p.y];
+                            boolean capturing;
 
-                            listPieces(Piece.Kind.kindByLetter(Character.toUpperCase(pieceLetter)), player, pieces);
-                            for (int i = pieces.size() - 1; i >= 0; i--) {
-                                if (!isMovePossible(pieces.get(i), p.x, p.y)) {
-                                    pieces.remove(i);
-                                }
+                            move = move.substring(1, move.length() - 2);
+                            capturing = move.length() > 0 && move.substring(move.length() - 1).equals("x");
+                            if (capturing) {
+                                move = move.substring(0, move.length() - 1);
                             }
 
-                            if (pieces.size() > 1) {
-                                // there are more than 1 piece can be placed on the square
-                                char fromposchar = move.charAt(0);
+                            if ((capturing && targetPiece != null && targetPiece.getColor() != player) ||
+                                    (targetPiece == null)) {
 
-                                if (Character.isDigit(fromposchar)) {
-                                    int y = getLetterColumn(fromposchar);
-
-                                    for (int i = pieces.size() - 1; i >= 0; i--) {
-                                        if (pieces.get(i).getY() != y) {
-                                            pieces.remove(i);
-                                        }
-                                    }
-                                } else {
-                                    int x = getLetterRow(fromposchar);
-
-                                    for (int i = pieces.size() - 1; i >= 0; i--) {
-                                        if (pieces.get(i).getX() != x) {
-                                            pieces.remove(i);
-                                        }
+                                listPieces(Piece.Kind.kindByLetter(Character.toUpperCase(pieceLetter)), player, pieces);
+                                for (int i = pieces.size() - 1; i >= 0; i--) {
+                                    if (!isMovePossible(pieces.get(i), p.x, p.y)) {
+                                        pieces.remove(i);
                                     }
                                 }
-                            }
 
-                            if (pieces.size() == 1) {
-                                // the only possible move is rest
-                                result = movePieceTo(pieces.get(0), p, forceNewVariant);
+                                if (pieces.size() > 1) {
+                                    // there are more than 1 piece can be placed on the square
+                                    char fromposchar = move.charAt(0);
+
+                                    if (Character.isDigit(fromposchar)) {
+                                        int y = getLetterColumn(fromposchar);
+
+                                        for (int i = pieces.size() - 1; i >= 0; i--) {
+                                            if (pieces.get(i).getY() != y) {
+                                                pieces.remove(i);
+                                            }
+                                        }
+                                    } else {
+                                        int x = getLetterRow(fromposchar);
+
+                                        for (int i = pieces.size() - 1; i >= 0; i--) {
+                                            if (pieces.get(i).getX() != x) {
+                                                pieces.remove(i);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (pieces.size() == 1) {
+                                    // the only possible move is rest
+                                    result = movePieceTo(pieces.get(0), p, forceNewVariant);
+                                }
                             }
                         }
-                    }
-                } else {
-                    // pawn move - special case
-                    String to;
-                    Point p;
+                    } else {
+                        // pawn move - special case
+                        String to;
+                        Point pTo;
 
-                    listPieces(PAWN, player, pieces);
+                        listPieces(PAWN, player, pieces);
 
-                    transformation = move.charAt(move.length() - 1);
+                        transformation = move.charAt(move.length() - 1);
 
-                    if ("QRBN".indexOf(transformation) >= 0) {
-                        // promoting
-                        move = move.substring(0, move.length() - 1);
-                        if (move.length() > 0 && "/=".indexOf(move.charAt(move.length()-1)) >= 0) {
-                            // notation like e8/Q or e8=Q - simply delete last character
+                        if ("QRBN".indexOf(transformation) >= 0) {
+                            // promoting
                             move = move.substring(0, move.length() - 1);
+                            if (move.length() > 0 && "/=".indexOf(move.charAt(move.length() - 1)) >= 0) {
+                                // notation like e8/Q or e8=Q - simply delete last character
+                                move = move.substring(0, move.length() - 1);
+                            }
+                        } else {
+                            transformation = ' ';
                         }
-                    }
-                    else {
-                        transformation = ' ';
-                    }
 
-                    to = move.substring(move.length() - 2);
-                    try {
-                        p = getPointFromSquareName(to);
-                    }
-                    catch(ErrorIllegalSquareName E) {
-                        p = null;
-                    }
+                        to = move.substring(move.length() - 2);
+                        try {
+                            pTo = getPointFromSquareName(to);
+                        } catch (ErrorIllegalSquareName E) {
+                            pTo = null;
+                        }
 
-                    if (p != null) {
-                        move = move.substring(0, move.length() - 2);
+                        if (pTo != null) {
+                            move = move.substring(0, move.length() - 2);
 
-                        if (move.length() == 2 && move.charAt(1) == 'x') {
-                            // capturing
-                            if (squares[p.x][p.y] != null && squares[p.x][p.y].getColor() != player) {
+                            if (move.length() == 2 && move.charAt(1) == 'x') {
+                                // capturing
                                 int fromRow = getLetterRow(move.charAt(0));
 
-                                if (fromRow >= 0 && fromRow <= 7) {
+                                if (squares[pTo.x][pTo.y] != null && squares[pTo.x][pTo.y].getColor() != player) {
+
+                                    if (fromRow >= 0 && fromRow <= 7) {
+                                        for (int i = pieces.size() - 1; i >= 0; i--) {
+                                            if (pieces.get(i).getX() != fromRow || !isMovePossible(pieces.get(i), pTo.x, pTo.y)) {
+                                                pieces.remove(i);
+                                            }
+                                        }
+
+                                        if (pieces.size() == 1) {
+                                            // the only possible move is rest
+                                            result = movePieceTo(pieces.get(0), pTo, forceNewVariant);
+                                        }
+                                    }
+                                }
+                                else  // check enpassant capturing
+                                if (pTo.equals(enPassantSquare)) {
+                                    Piece movedPawn = null;
+
+                                    switch (player) {
+                                        case WHITE:
+                                            movedPawn = squares[fromRow][pTo.y - 1];
+                                            break;
+                                        case BLACK:
+                                            movedPawn = squares[fromRow][pTo.y + 1];
+                                            break;
+                                    }
+
+                                    result = movePieceTo(movedPawn, pTo, forceNewVariant);
+                                }
+                            } else
+                                // move here should be empty, in other case this is a wrong move
+                                if ("".equals(move)) {
                                     for (int i = pieces.size() - 1; i >= 0; i--) {
-                                        if (pieces.get(i).getX() != fromRow || !isMovePossible(pieces.get(i), p.x, p.y)) {
+                                        if (!isMovePossible(pieces.get(i), pTo.x, pTo.y)) {
                                             pieces.remove(i);
                                         }
                                     }
 
                                     if (pieces.size() == 1) {
                                         // the only possible move is rest
-                                        result = movePieceTo(pieces.get(0), p, forceNewVariant);
+                                        result = movePieceTo(pieces.get(0), pTo, forceNewVariant);
                                     }
                                 }
-                            }
-                        }
-                        else
-                        // move here should be empty, in other case this is a wrong move
-                        if ("".equals(move)) {
-                            for (int i = pieces.size() - 1; i >= 0; i--) {
-                                if (!isMovePossible(pieces.get(i), p.x, p.y)) {
-                                    pieces.remove(i);
-                                }
-                            }
-
-                            if (pieces.size() == 1) {
-                                // the only possible move is rest
-                                result = movePieceTo(pieces.get(0), p, forceNewVariant);
-                            }
                         }
                     }
                 }
