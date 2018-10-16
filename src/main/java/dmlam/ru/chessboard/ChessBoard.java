@@ -1276,7 +1276,14 @@ public class ChessBoard {
     public void setGame(Game game) {
         if (game != this.game) {
             this.game = game;
-            loadFromFEN(game.getStartPosition());
+
+            if (game == null) {
+                game.clearMoves();
+                setupStartingPosition();
+            }
+            else {
+                loadFromFEN(game.getStartPosition());
+            }
         }
     }
 

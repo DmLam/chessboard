@@ -246,6 +246,16 @@ public class PGNLoader {
         Move variantStart = null;
         String variantComment = parseComment(moves);  // parse comment if there is and add it to line comment after adding the first line's move
 
+        if (moves.length() == 0 && variantComment != null) {
+            // there is only comment in this variant
+            if (chessboard.getLastMove() != null) {
+                chessboard.getLastMove().getVariants().setComment(variantComment);
+            }
+            else {
+                chessboard.getFirstMoveVariants().setComment(variantComment);
+            }
+        }
+
         while (moves.length() > 0) {
             do {
                 if (moves.length() > 0) {
@@ -359,7 +369,7 @@ public class PGNLoader {
             line = line.trim();
 
             if (moves.length() > 0) {
-                moves.append('\n');
+                moves.append(' ');
             }
             moves.append(line);
 
