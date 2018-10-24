@@ -1024,23 +1024,25 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
     }
 
     private void drawArrows(Canvas canvas) {
-        for (int arrowIndex = 0; arrowIndex < arrowsCoordinates.length; arrowIndex++) {
-            if (arrowsCoordinates[arrowIndex] != null) {
-                // проверим, не нарисована ли уже стрелка с такими же координатами, но с меньшим индексом.
-                // предполагаем, что стрелка с меньшим индексом обозначаем более хороший ход
-                int sameArrowIndex = indexOfArrow(arrowsCoordinates[arrowIndex], arrowIndex - 1);
+        if (!isInEditMode()) {
+            for (int arrowIndex = 0; arrowIndex < arrowsCoordinates.length; arrowIndex++) {
+                if (arrowsCoordinates[arrowIndex] != null) {
+                    // проверим, не нарисована ли уже стрелка с такими же координатами, но с меньшим индексом.
+                    // предполагаем, что стрелка с меньшим индексом обозначаем более хороший ход
+                    int sameArrowIndex = indexOfArrow(arrowsCoordinates[arrowIndex], arrowIndex - 1);
 
-                if (sameArrowIndex == -1) {
-                    float xStart, yStart, xEnd, yEnd;
-                    String fromSquare = arrowsCoordinates[arrowIndex].substring(0, 2), toSquare = arrowsCoordinates[arrowIndex].substring(2, 4);
-                    Point fromPoint = getPointFromSquareName(fromSquare), toPoint = getPointFromSquareName(toSquare);
+                    if (sameArrowIndex == -1) {
+                        float xStart, yStart, xEnd, yEnd;
+                        String fromSquare = arrowsCoordinates[arrowIndex].substring(0, 2), toSquare = arrowsCoordinates[arrowIndex].substring(2, 4);
+                        Point fromPoint = getPointFromSquareName(fromSquare), toPoint = getPointFromSquareName(toSquare);
 
-                    xStart = (vLines[fromPoint.x + 1] + vLines[fromPoint.x]) / 2;
-                    yStart = (hLines[fromPoint.y + 1] + hLines[fromPoint.y]) / 2;
-                    xEnd = (vLines[toPoint.x + 1] + vLines[toPoint.x]) / 2;
-                    yEnd = (hLines[toPoint.y + 1] + hLines[toPoint.y]) / 2;
+                        xStart = (vLines[fromPoint.x + 1] + vLines[fromPoint.x]) / 2;
+                        yStart = (hLines[fromPoint.y + 1] + hLines[fromPoint.y]) / 2;
+                        xEnd = (vLines[toPoint.x + 1] + vLines[toPoint.x]) / 2;
+                        yEnd = (hLines[toPoint.y + 1] + hLines[toPoint.y]) / 2;
 
-                    drawArrow(canvas, arrowPaints[arrowIndex], xStart, yStart, xEnd, yEnd);
+                        drawArrow(canvas, arrowPaints[arrowIndex], xStart, yStart, xEnd, yEnd);
+                    }
                 }
             }
         }

@@ -8,7 +8,8 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.os.Parcel;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -33,6 +34,7 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
     public enum ButtonPosition {mostLeft, toLeftOf, toRightOf, mostRight}
 
     private ChessBoardView chessBoardView;
+    private ChessBoard chessBoard = null;
     private int bRollback, bRollup, bAnalysis, bCancelAnalysis;
     private ArrayList<Button> buttons = new ArrayList<>();
     private ArrayList<ButtonGroup> buttonGroups = new ArrayList<>();
@@ -80,15 +82,6 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
             this(button, frameId, mipmapResourceId);
             this.buttonPosition = buttonPosition;
             this.anchorButtonIndex = anchorButtonIndex;
-        }
-
-        protected Button(Parcel in) {
-            frameId = in.readInt();
-            enabled = in.readByte() != 0;
-            visible = in.readByte() != 0;
-            mipmapResourceId = in.readInt();
-            frameColor = in.readInt();
-            anchorButtonIndex = in.readInt();
         }
     }
 
@@ -140,6 +133,26 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
         initialize(context);
     }
 
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Bundle bundle = new Bundle();
+
+        bundle.putParcelable("relativelLayoutSaveState", super.onSaveInstanceState());
+
+        return bundle;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state)
+    {
+        if (state instanceof Bundle)
+        {
+            Bundle bundle = (Bundle) state;
+            state = bundle.getParcelable("relativelLayoutSaveState");
+        }
+        super.onRestoreInstanceState(state);
+    }
+
     public void setChessBoardView(ChessBoardView chessBoardView) {
         if (chessBoardView != null) {
             chessBoardView.getChessBoard().deleteOnMoveListener(this);
@@ -148,40 +161,45 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
         }
 
         this.chessBoardView = chessBoardView;
+        this.chessBoard = chessBoardView.getChessBoard();
 
         if (chessBoardView != null) {
-            ChessBoard chessBoard = chessBoardView.getChessBoard();
+            chessBoard = chessBoardView.getChessBoard();
 
             if (size > chessBoardView.getWidth() / 5 ) {
                 setSize(chessBoardView.getWidth() / 5);
             }
 
             chessBoard.addOnMoveListener(this);
-            setButtonEnabled(bRollback, true);
-            setButtonEnabled(bRollup, true);
-            setButtonEnabled(bRollback, chessBoard.rollbackEnabled());
-            setButtonEnabled(bRollup, chessBoard.rollupEnabled());
+            checkRollbackRollupEnabled();
         }
+    }
+
+    private void checkRollbackRollupEnabled() {
+        setButtonEnabled(bRollback, chessBoard.rollbackEnabled());
+        setButtonEnabled(bRollup, chessBoard.rollupEnabled());
     }
 
     @Override
     public boolean onMove(Move move) {
+        checkRollbackRollupEnabled();
+
         return true;
     }
 
     @Override
     public void onRollback(Move move) {
-
+        checkRollbackRollupEnabled();
     }
 
     @Override
     public void onRollup(Move move) {
-
+        checkRollbackRollupEnabled();
     }
 
     @Override
     public void onGoto(Move move) {
-
+        checkRollbackRollupEnabled();
     }
 
     @Override
@@ -278,8 +296,6 @@ public class BoardControlView extends RelativeLayout implements IOnMoveListener,
         LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(size, size);
         RelativeLayout.LayoutParams frameLayoutParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
 
-//        imageButton.setMinimumHeight(size);
-//        imageButton.setMaxHeight(size);
         imageButton.setBackgroundColor(Color.TRANSPARENT);
         frame.setId(result + 1);
         frame.addView(imageButton, buttonLayoutParams);
