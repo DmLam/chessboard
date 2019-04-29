@@ -1527,6 +1527,15 @@ public class ChessBoard {
                         // pawn move - special case
                         String to;
                         Point pTo;
+                        boolean enPassant = move.length() >= 4 && move.substring(move.length() - 4).equals("e.p.");
+
+                        if (enPassant) {
+                            if (enPassantSquare == null) {
+                                throw new RuntimeException("En passant is impossible");
+                            }
+
+                            move = move.substring(0, move.length() - 5);
+                        }
 
                         listPieces(PAWN, player, pieces);
 

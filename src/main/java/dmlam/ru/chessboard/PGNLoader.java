@@ -35,7 +35,7 @@ public class PGNLoader {
     ArrayList<Integer> gamesIndex = new ArrayList<Integer>();
     private ChessBoard chessboard;
 
-    private String readLine(BufferedReader in) throws IOException {
+    private String readLine(@NonNull BufferedReader in) throws IOException {
         String line;
 
         line = in.readLine();
@@ -47,7 +47,7 @@ public class PGNLoader {
         return line;
     }
 
-    private boolean readTag(BufferedReader in, Game game) throws PGNError, IOException {
+    private boolean readTag(@NonNull BufferedReader in, Game game) throws PGNError, IOException {
         boolean result = false;
 
         char[] c = new char[1];
@@ -94,7 +94,7 @@ public class PGNLoader {
     }
 
     @NonNull
-    private void skipSpace(StringBuilder moves) {
+    private void skipSpace(@NonNull StringBuilder moves) {
         int i;
 
         for (i = 0; i < moves.length() && moves.charAt(i) == ' '; i++) ;
@@ -140,7 +140,7 @@ public class PGNLoader {
         return result;
     }
 
-    private String parseComment(StringBuilder moves) throws PGNError {
+    private String parseComment(@NonNull StringBuilder moves) throws PGNError {
         String result = null;
 
         if (moves.length() > 0) {
@@ -229,6 +229,12 @@ public class PGNLoader {
 
             moves.delete(0, i);
             skipSpace(moves);
+
+            if (moves.length() >= 4 && moves.substring(0, 4).equals("e.p.")) {
+                sb.append(" e.p.");
+                moves.delete(0, 4);
+                skipSpace(moves);
+            }
 
             if (!chessboard.shortMove(moveOrder, sb.toString(), true))
                 throw new PGNError(String.format("Incorrect move '%s'", sb.toString()));
@@ -342,7 +348,7 @@ public class PGNLoader {
         return result;
     }
 
-        private boolean readMoves(BufferedReader in, Game game) throws IOException, PGNError {
+        private boolean readMoves(BufferedReader in, @NonNull Game game) throws IOException, PGNError {
         boolean result;
         String FEN = game.tagByName("FEN");
         StringBuilder moves = new StringBuilder();
