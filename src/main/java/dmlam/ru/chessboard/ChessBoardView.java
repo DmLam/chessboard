@@ -16,13 +16,15 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ListPopupWindow;
-import android.support.v7.widget.PopupMenu;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.ShowableListMenu;
+import androidx.appcompat.widget.ForwardingListener;
+import androidx.appcompat.widget.PopupMenu;
 import android.util.AttributeSet;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ListPopupWindow;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -768,14 +770,16 @@ public class ChessBoardView extends View implements SelectPawnTransformationDial
         View.OnTouchListener dragToOpenListener = popupMenu.getDragToOpenListener();
 
         // сдвинем меню в центр доски
-        if (dragToOpenListener instanceof ListPopupWindow.ForwardingListener)
+        if (dragToOpenListener instanceof ForwardingListener)
         {
-            ListPopupWindow popup = ((ListPopupWindow.ForwardingListener) dragToOpenListener).getPopup();
+            ShowableListMenu popup = ((ForwardingListener) dragToOpenListener).getPopup();
 
-            popup.setHorizontalOffset(x);
-            popup.setVerticalOffset(-(getHeight() - y));
-
-            popup.show();
+            if (popup instanceof ListPopupWindow) {
+                ListPopupWindow listPopup = (ListPopupWindow) popup;
+                listPopup.setHorizontalOffset(x);
+                listPopup.setVerticalOffset(-(getHeight() - y));
+                listPopup.show();
+            }
         }
     }
 
